@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 
 import { env } from '../../../config/env';
 import { AppError } from '../../../middlewares/error.middleware';
+import { hasRole } from '../permissions/roles';
 import { AuthRepository } from '../repository/auth.repository';
 import type { AuthResult, JwtPayload } from '../types/auth.types';
 import type { LoginInput, RegisterInput } from '../validation/auth.validation';
@@ -28,7 +29,7 @@ function createToken(user: UserDocument): string {
 }
 
 export function hasCargo(userCargo: Cargo, allowedCargos: Cargo[]): boolean {
-  return allowedCargos.includes(userCargo);
+  return hasRole(userCargo, allowedCargos);
 }
 
 export class AuthService {
@@ -51,6 +52,7 @@ export class AuthService {
       turma: input.turma,
       cargo: Cargo.ALUNO,
       fotoPerfil: '',
+      bannerPerfil: '',
       bio: '',
       redeSocial: '',
       ativo: true

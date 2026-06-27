@@ -1,17 +1,21 @@
 import { UserRepository } from '../repository/user.repository';
-import type { PublicUser } from '../types/user.types';
+import { Cargo, type PublicUser, type UpdateProfileData } from '../types/user.types';
 import type { UserDocument } from '../models/user.model';
+import { canViewRole } from '../../auth/permissions/roles';
 
 export function toPublicUser(user: UserDocument): PublicUser {
+  const isAdmin = user.cargo === Cargo.ADMIN;
+
   return {
     id: user.id,
     nomeCompleto: user.nomeCompleto,
     usuario: user.usuario,
-    dataNascimento: user.dataNascimento,
-    turno: user.turno,
-    turma: user.turma,
+    dataNascimento: isAdmin ? undefined : user.dataNascimento,
+    turno: isAdmin ? undefined : user.turno,
+    turma: isAdmin ? undefined : user.turma,
     cargo: user.cargo,
     fotoPerfil: user.fotoPerfil,
+    bannerPerfil: user.bannerPerfil,
     bio: user.bio,
     redeSocial: user.redeSocial,
     ativo: user.ativo,
@@ -23,15 +27,25 @@ export function toPublicUser(user: UserDocument): PublicUser {
 export class UserService {
   constructor(private readonly userRepository = new UserRepository()) {}
 
-  async findPublicById(id: string): Promise<PublicUser | null> {
+  async findPublicById(id: string, viewer: PublicUser): Promise<PublicUser | null> {
     const user = await this.userRepository.findById(id);
 
-    return user ? toPublicUser(user) : null;
+    if (!user || !canViewRole(viewer.cargo, user.cargo)) {
+      return null;
+    }
+
+    return toPublicUser(user);
   }
 
-  async listActiveUsers(): Promise<PublicUser[]> {
-    const users = await this.userRepository.listActive();
+  async listActiveUsers(viewer: PublicUser): Promise<PublicUser[]> {
+    const users = await this.userRepository.listActive({ includeAdmins: viewer.cargo === Cargo.ADMIN });
 
     return users.map(toPublicUser);
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileData): Promise<PublicUser | null> {
+    const user = await this.userRepository.updateProfile(userId, data);
+
+    return user ? toPublicUser(user) : null;
   }
 }

@@ -23,18 +23,15 @@ const userSchema = new Schema<User>(
       select: false
     },
     dataNascimento: {
-      type: Date,
-      required: true
+      type: Date
     },
     turno: {
       type: String,
-      enum: Object.values(Turno),
-      required: true
+      enum: Object.values(Turno)
     },
     turma: {
       type: String,
-      enum: Object.values(Turma),
-      required: true
+      enum: Object.values(Turma)
     },
     cargo: {
       type: String,
@@ -43,6 +40,10 @@ const userSchema = new Schema<User>(
       required: true
     },
     fotoPerfil: {
+      type: String,
+      default: ''
+    },
+    bannerPerfil: {
       type: String,
       default: ''
     },

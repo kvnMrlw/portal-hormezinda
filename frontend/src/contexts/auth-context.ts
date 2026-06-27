@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import type { User } from '../types/auth';
+import type { ProfileUpdatePayload, User } from '../types/auth';
 
 export type LoginCredentials = {
   usuario: string;
@@ -23,6 +23,7 @@ export type AuthContextValue = {
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
+  updateProfile: (payload: ProfileUpdatePayload) => Promise<void>;
   logout: () => void;
 };
 

@@ -1,5 +1,5 @@
 import { UserModel, type UserDocument } from '../models/user.model';
-import type { CreateUserData } from '../types/user.types';
+import { Cargo, type CreateUserData, type UpdateProfileData } from '../types/user.types';
 
 export class UserRepository {
   async create(data: CreateUserData): Promise<UserDocument> {
@@ -18,7 +18,14 @@ export class UserRepository {
     return UserModel.findOne({ usuario }).select('+senha');
   }
 
-  async listActive(): Promise<UserDocument[]> {
-    return UserModel.find({ ativo: true }).sort({ nomeCompleto: 1 });
+  async listActive({ includeAdmins = false }: { includeAdmins?: boolean } = {}): Promise<UserDocument[]> {
+    return UserModel.find({
+      ativo: true,
+      ...(includeAdmins ? {} : { cargo: { $ne: Cargo.ADMIN } })
+    }).sort({ nomeCompleto: 1 });
+  }
+
+  async updateProfile(id: string, data: UpdateProfileData): Promise<UserDocument | null> {
+    return UserModel.findByIdAndUpdate(id, data, { new: true });
   }
 }

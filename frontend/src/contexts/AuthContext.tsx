@@ -1,7 +1,8 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { AUTH_SESSION_EXPIRED_EVENT, api } from '../services/api';
-import type { ApiResponse, AuthResponse, User } from '../types/auth';
+import { updateMyProfile } from '../services/users';
+import type { ApiResponse, AuthResponse, ProfileUpdatePayload, User } from '../types/auth';
 import { AuthContext, type LoginCredentials, type RegisterPayload } from './auth-context';
 
 const TOKEN_KEY = 'portal_hormezinda_token';
@@ -83,6 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(response.data.data.usuario);
   }
 
+  async function updateProfile(payload: ProfileUpdatePayload): Promise<void> {
+    const updatedUser = await updateMyProfile(payload);
+    localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  }
+
   function logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -98,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login,
       register,
+      updateProfile,
       logout
     }),
     [isLoading, token, user]

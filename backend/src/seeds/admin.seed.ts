@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 
 import { connectDatabase } from '../config/database';
 import { UserModel } from '../modules/users/models/user.model';
-import { Cargo, Turma, Turno } from '../modules/users/types/user.types';
+import { Cargo } from '../modules/users/types/user.types';
 
 const ADMIN_USER = 'admin';
 const ADMIN_PASSWORD = 'administrador@123';
@@ -14,6 +14,12 @@ async function seedAdmin(): Promise<void> {
   const existingAdmin = await UserModel.findOne({ usuario: ADMIN_USER });
 
   if (existingAdmin) {
+    existingAdmin.cargo = Cargo.ADMIN;
+    existingAdmin.dataNascimento = undefined;
+    existingAdmin.turno = undefined;
+    existingAdmin.turma = undefined;
+    existingAdmin.bio = existingAdmin.bio || 'Administrador do Sistema';
+    await existingAdmin.save();
     console.log('Admin seed skipped: usuario admin ja existe');
     return;
   }
@@ -24,11 +30,9 @@ async function seedAdmin(): Promise<void> {
     nomeCompleto: 'Administrador Padrao',
     usuario: ADMIN_USER,
     senha,
-    dataNascimento: new Date('2000-01-01T00:00:00.000Z'),
-    turno: Turno.MATUTINO,
-    turma: Turma.PRIMEIRO_A,
     cargo: Cargo.ADMIN,
     fotoPerfil: '',
+    bannerPerfil: '',
     bio: '',
     redeSocial: '',
     ativo: true

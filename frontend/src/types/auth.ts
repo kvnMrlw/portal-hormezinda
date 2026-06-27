@@ -35,11 +35,12 @@ export type User = {
   id: string;
   nomeCompleto: string;
   usuario: string;
-  dataNascimento: string;
-  turno: Turno;
-  turma: Turma;
+  dataNascimento?: string;
+  turno?: Turno;
+  turma?: Turma;
   cargo: Cargo;
   fotoPerfil: string;
+  bannerPerfil: string;
   bio: string;
   redeSocial: string;
   ativo: boolean;
@@ -57,6 +58,8 @@ export type AuthResponse = {
   token: string;
   usuario: User;
 };
+
+export type ProfileUpdatePayload = Partial<Pick<User, 'fotoPerfil' | 'bannerPerfil' | 'bio' | 'redeSocial'>>;
 
 export const turmasPorTurno: Record<Turno, Turma[]> = {
   [Turno.MATUTINO]: [

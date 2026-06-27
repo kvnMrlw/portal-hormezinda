@@ -58,11 +58,12 @@ export type User = {
   nomeCompleto: string;
   usuario: string;
   senha: string;
-  dataNascimento: Date;
-  turno: Turno;
-  turma: Turma;
+  dataNascimento?: Date;
+  turno?: Turno;
+  turma?: Turma;
   cargo: Cargo;
   fotoPerfil: string;
+  bannerPerfil: string;
   bio: string;
   redeSocial: string;
   ativo: boolean;
@@ -75,3 +76,5 @@ export type PublicUser = Omit<User, 'senha'> & {
 };
 
 export type CreateUserData = Omit<User, 'criadoEm' | 'atualizadoEm'>;
+
+export type UpdateProfileData = Partial<Pick<User, 'fotoPerfil' | 'bannerPerfil' | 'bio' | 'redeSocial'>>;
