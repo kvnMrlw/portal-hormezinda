@@ -21,7 +21,7 @@ function isDuplicateKeyError(error: Error): boolean {
 }
 
 export function notFoundMiddleware(request: Request, _response: Response, next: NextFunction): void {
-  next(new AppError(`Route not found: ${request.method} ${request.originalUrl}`, 404));
+  next(new AppError('Recurso nao encontrado', 404));
 }
 
 export function errorMiddleware(
@@ -34,7 +34,7 @@ export function errorMiddleware(
   const message = isDuplicateKeyError(error)
     ? 'Usuario ja cadastrado'
     : statusCode === 500
-      ? 'Internal server error'
+      ? 'Nao foi possivel concluir a solicitacao'
       : error.message;
 
   if (env.NODE_ENV !== 'test') {
@@ -44,8 +44,7 @@ export function errorMiddleware(
   return response.status(statusCode).json(
     apiResponse(null, {
       success: false,
-      message,
-      error: env.NODE_ENV === 'production' ? undefined : error.name
+      message
     })
   );
 }

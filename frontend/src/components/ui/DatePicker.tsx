@@ -1,5 +1,5 @@
 import { CalendarDays } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { cn } from '../../lib/utils';
 
@@ -12,7 +12,7 @@ type DatePickerProps = {
 };
 
 function isoToBrazilianDate(value: string): string {
-  if (!value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return '';
   }
 
@@ -31,21 +31,72 @@ function brazilianDateToIso(value: string): string {
   return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
+function maskDate(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+
+  if (digits.length <= 2) {
+    return digits;
+  }
+
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+function isValidBrazilianDate(value: string): boolean {
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+    return false;
+  }
+
+  const [day, month, year] = value.split('/').map(Number);
+  const date = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day &&
+    date <= today
+  );
+}
+
 export function DatePicker({ error, label, name, onChange, value }: DatePickerProps) {
   const [manualValue, setManualValue] = useState(() => isoToBrazilianDate(value));
+  const [localError, setLocalError] = useState<string>();
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const displayedError = error ?? localError;
+
+  useEffect(() => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      setManualValue(isoToBrazilianDate(value));
+      return;
+    }
+
+    setManualValue(maskDate(value));
+  }, [value]);
 
   function handleManualChange(nextValue: string): void {
-    setManualValue(nextValue);
+    const maskedValue = maskDate(nextValue);
+    setManualValue(maskedValue);
+    setLocalError(undefined);
 
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(nextValue)) {
-      onChange(brazilianDateToIso(nextValue));
+    if (maskedValue.length === 10) {
+      if (isValidBrazilianDate(maskedValue)) {
+        onChange(brazilianDateToIso(maskedValue));
+      } else {
+        setLocalError('Informe uma data valida, sem datas futuras');
+        onChange(maskedValue);
+      }
     } else {
-      onChange(nextValue);
+      onChange(maskedValue);
     }
   }
 
   function handleCalendarChange(nextValue: string): void {
+    setLocalError(undefined);
     onChange(nextValue);
     setManualValue(isoToBrazilianDate(nextValue));
   }
@@ -57,9 +108,10 @@ export function DatePicker({ error, label, name, onChange, value }: DatePickerPr
         <input
           className={cn(
             'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-brand-navy outline-none transition placeholder:text-slate-400 focus:ring-4',
-            error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
+            displayedError ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
           )}
           inputMode="numeric"
+          maxLength={10}
           name={name}
           onChange={(event) => handleManualChange(event.target.value)}
           placeholder="dd/mm/aaaa"
@@ -69,7 +121,10 @@ export function DatePicker({ error, label, name, onChange, value }: DatePickerPr
           <CalendarDays className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-blue" />
           <input
             aria-label={label}
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-brand-navy outline-none transition focus:border-brand-blue focus:ring-4 focus:ring-blue-100 sm:w-48"
+            className={cn(
+              'w-full rounded-2xl border bg-white py-3 pl-11 pr-4 text-sm text-brand-navy outline-none transition focus:ring-4 sm:w-48',
+              displayedError ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
+            )}
             max={today}
             onChange={(event) => handleCalendarChange(event.target.value)}
             type="date"
@@ -77,7 +132,7 @@ export function DatePicker({ error, label, name, onChange, value }: DatePickerPr
           />
         </span>
       </div>
-      {error ? <span className="mt-2 block text-sm text-red-600">{error}</span> : null}
+      {displayedError ? <span className="mt-2 block text-sm text-red-600">{displayedError}</span> : null}
     </label>
   );
 }

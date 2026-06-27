@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { api } from '../services/api';
+import { AUTH_SESSION_EXPIRED_EVENT, api } from '../services/api';
 import type { ApiResponse, AuthResponse, User } from '../types/auth';
 import { AuthContext, type LoginCredentials, type RegisterPayload } from './auth-context';
 
@@ -12,13 +12,25 @@ function persistSession(authResponse: AuthResponse): void {
   localStorage.setItem(USER_KEY, JSON.stringify(authResponse.usuario));
 }
 
+function readStoredUser(): User | null {
+  const storedUser = localStorage.getItem(USER_KEY);
+
+  if (!storedUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedUser) as User;
+  } catch {
+    localStorage.removeItem(USER_KEY);
+    return null;
+  }
+}
+
 // Provedor global do estado de autenticacao do frontend.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
-  const [user, setUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem(USER_KEY);
-    return storedUser ? (JSON.parse(storedUser) as User) : null;
-  });
+  const [user, setUser] = useState<User | null>(() => readStoredUser());
   const [isLoading, setIsLoading] = useState(Boolean(token));
 
   useEffect(() => {
@@ -44,6 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void loadCurrentUser();
   }, [token]);
+
+  useEffect(() => {
+    function clearSession() {
+      setToken(null);
+      setUser(null);
+      setIsLoading(false);
+    }
+
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, clearSession);
+
+    return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, clearSession);
+  }, []);
 
   async function login(credentials: LoginCredentials): Promise<void> {
     const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', credentials);

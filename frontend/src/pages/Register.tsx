@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { type FormEvent, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ZodError } from 'zod';
 
 import { AuthLayout } from '../components/layout/AuthLayout';
@@ -48,12 +48,18 @@ function zodErrorsToFormErrors(error: ZodError): RegisterErrors {
 // Pagina de cadastro em etapas para novos alunos.
 export function Register() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { isAuthenticated, isLoading, register } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<RegisterFormData>(initialFormData);
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const availableTurmas = useMemo(() => turmasPorTurno[formData.turno], [formData.turno]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/home', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   function updateField<TField extends keyof RegisterFormData>(field: TField, value: RegisterFormData[TField]) {
     setFormData((current) => ({ ...current, [field]: value }));
@@ -98,12 +104,16 @@ export function Register() {
         turno: parsedData.data.turno,
         turma: parsedData.data.turma
       });
-      navigate('/');
+      navigate('/home', { replace: true });
     } catch {
       setErrors({ form: 'Nao foi possivel cadastrar. Tente outro usuario.' });
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (!isLoading && isAuthenticated) {
+    return <Navigate replace to="/home" />;
   }
 
   return (

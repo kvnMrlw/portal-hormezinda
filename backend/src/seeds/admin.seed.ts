@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt';
 
 import { connectDatabase } from '../config/database';
-import { Cargo, Turma, Turno, UserModel } from '../models/user.model';
+import { UserModel } from '../modules/users/models/user.model';
+import { Cargo, Turma, Turno } from '../modules/users/types/user.types';
 
 const ADMIN_USER = 'admin';
 const ADMIN_PASSWORD = 'administrador@123';

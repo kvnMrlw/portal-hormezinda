@@ -17,4 +17,8 @@ export class UserRepository {
   async findByUsuarioWithPassword(usuario: string): Promise<UserDocument | null> {
     return UserModel.findOne({ usuario }).select('+senha');
   }
+
+  async listActive(): Promise<UserDocument[]> {
+    return UserModel.find({ ativo: true }).sort({ nomeCompleto: 1 });
+  }
 }

@@ -1,6 +1,6 @@
 import { ArrowRight, LockKeyhole, UserRound } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { type FormEvent, useEffect, useState } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ZodError } from 'zod';
 
 import { AuthLayout } from '../components/layout/AuthLayout';
@@ -28,10 +28,16 @@ function zodErrorsToFormErrors(error: ZodError): LoginErrors {
 // Pagina de login por usuario e senha.
 export function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { isAuthenticated, isLoading, login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({ usuario: '', senha: '' });
   const [errors, setErrors] = useState<LoginErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/home', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,12 +53,16 @@ export function Login() {
     try {
       setIsSubmitting(true);
       await login(parsedData.data);
-      navigate('/');
+      navigate('/home', { replace: true });
     } catch {
       setErrors({ form: 'Nao foi possivel entrar. Confira usuario e senha.' });
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (!isLoading && isAuthenticated) {
+    return <Navigate replace to="/home" />;
   }
 
   return (

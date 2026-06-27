@@ -1,9 +1,11 @@
 import { Router } from 'express';
 
-import { usersHealth } from '../controller/user.controller';
+import { authenticate } from '../../auth/middlewares/auth.middleware';
+import { getUserById, listUsers } from '../controller/user.controller';
 
 const router = Router();
 
-router.get('/health', usersHealth);
+router.get('/', authenticate, listUsers);
+router.get('/:id', authenticate, getUserById);
 
 export default router;

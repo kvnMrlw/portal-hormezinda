@@ -28,4 +28,10 @@ export class UserService {
 
     return user ? toPublicUser(user) : null;
   }
+
+  async listActiveUsers(): Promise<PublicUser[]> {
+    const users = await this.userRepository.listActive();
+
+    return users.map(toPublicUser);
+  }
 }

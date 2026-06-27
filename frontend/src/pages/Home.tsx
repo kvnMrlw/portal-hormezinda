@@ -115,12 +115,12 @@ export function Home() {
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl bg-brand-lightGray p-4">
-                  <p className="text-sm text-slate-500">Status</p>
-                  <p className="mt-1 font-semibold text-brand-green">Fase 0 ativa</p>
+                  <p className="text-sm text-slate-500">Ambiente escolar</p>
+                  <p className="mt-1 font-semibold text-brand-green">Comunidade conectada</p>
                 </div>
                 <div className="rounded-2xl bg-blue-50 p-4">
-                  <p className="text-sm text-slate-500">API</p>
-                  <p className="mt-1 font-semibold text-brand-blue">/api/health</p>
+                  <p className="text-sm text-slate-500">Acesso</p>
+                  <p className="mt-1 font-semibold text-brand-blue">Portal seguro</p>
                 </div>
               </div>
             </div>
