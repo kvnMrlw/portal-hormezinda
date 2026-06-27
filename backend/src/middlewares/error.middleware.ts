@@ -12,6 +12,14 @@ export class AppError extends Error {
   }
 }
 
+type DuplicateKeyError = Error & {
+  code?: number;
+};
+
+function isDuplicateKeyError(error: Error): boolean {
+  return (error as DuplicateKeyError).code === 11000;
+}
+
 export function notFoundMiddleware(request: Request, _response: Response, next: NextFunction): void {
   next(new AppError(`Route not found: ${request.method} ${request.originalUrl}`, 404));
 }
@@ -22,7 +30,12 @@ export function errorMiddleware(
   response: Response,
   _next: NextFunction
 ): Response {
-  const statusCode = error instanceof AppError ? error.statusCode : 500;
+  const statusCode = error instanceof AppError ? error.statusCode : isDuplicateKeyError(error) ? 409 : 500;
+  const message = isDuplicateKeyError(error)
+    ? 'Usuario ja cadastrado'
+    : statusCode === 500
+      ? 'Internal server error'
+      : error.message;
 
   if (env.NODE_ENV !== 'test') {
     console.error(error);
@@ -31,7 +44,7 @@ export function errorMiddleware(
   return response.status(statusCode).json(
     apiResponse(null, {
       success: false,
-      message: statusCode === 500 ? 'Internal server error' : error.message,
+      message,
       error: env.NODE_ENV === 'production' ? undefined : error.name
     })
   );

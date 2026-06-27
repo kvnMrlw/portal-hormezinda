@@ -6,6 +6,7 @@ import morgan from 'morgan';
 
 import { env } from './config/env';
 import { errorMiddleware, notFoundMiddleware } from './middlewares/error.middleware';
+import authRoutes from './routes/auth.routes';
 import healthRoutes from './routes/health.routes';
 
 const app = express();
@@ -30,6 +31,7 @@ app.use(express.urlencoded({ extended: true, limit: env.JSON_LIMIT }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.use('/api/health', healthRoutes);
+app.use('/api/auth', authRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

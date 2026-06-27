@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, GraduationCap, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const highlights = [
   {
@@ -52,13 +53,19 @@ export function Home() {
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-blue px-6 py-3 text-base font-semibold text-white shadow-soft transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
+              <Link
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-blue px-6 py-3 text-base font-semibold text-white shadow-soft transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                to="/login"
+              >
                 Entrar
                 <ArrowRight aria-hidden="true" className="h-5 w-5" />
-              </button>
-              <button className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/80 px-6 py-3 text-base font-semibold text-brand-navy shadow-sm transition hover:border-blue-200 hover:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100">
+              </Link>
+              <Link
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/80 px-6 py-3 text-base font-semibold text-brand-navy shadow-sm transition hover:border-blue-200 hover:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100"
+                to="/cadastro"
+              >
                 Criar conta
-              </button>
+              </Link>
             </div>
           </motion.div>
 
