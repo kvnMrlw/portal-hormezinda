@@ -1,6 +1,6 @@
 import { Schema, model, type HydratedDocument, type Model } from 'mongoose';
 
-import type { Post } from '../types/feed.types';
+import { reactionEmojis, type Post } from '../types/feed.types';
 
 export type PostDocument = HydratedDocument<Post>;
 
@@ -35,7 +35,7 @@ const postSchema = new Schema<Post>(
     },
     texto: {
       type: String,
-      required: true,
+      default: '',
       trim: true,
       maxlength: 1000
     },
@@ -43,20 +43,27 @@ const postSchema = new Schema<Post>(
       type: [postImageSchema],
       default: []
     },
-    curtidas: {
-      type: [Schema.Types.ObjectId],
-      ref: 'User',
+    reacoes: {
+      type: [
+        {
+          usuario: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+          },
+          emoji: {
+            type: String,
+            enum: reactionEmojis,
+            required: true
+          }
+        }
+      ],
       default: []
     },
-    quantidadeCurtidas: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    quantidadeComentarios: {
-      type: Number,
-      default: 0,
-      min: 0
+    fixado: {
+      type: Boolean,
+      default: false,
+      index: true
     }
   },
   {
@@ -68,15 +75,16 @@ const postSchema = new Schema<Post>(
       virtuals: true,
       versionKey: false,
       transform: (_document, returnedPost) => {
-        const postObject = returnedPost as Partial<Post> & { _id?: unknown; curtidas?: unknown };
+        const postObject = returnedPost as Partial<Post> & { _id?: unknown; reacoes?: unknown };
 
         delete postObject._id;
-        delete postObject.curtidas;
+        delete postObject.reacoes;
       }
     }
   }
 );
 
+postSchema.index({ fixado: -1, data: -1 });
 postSchema.index({ data: -1 });
 
 export const PostModel: Model<Post> = model<Post>('Post', postSchema);

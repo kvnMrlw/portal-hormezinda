@@ -1,14 +1,15 @@
 import { Types } from 'mongoose';
 
 import { PostModel, type PostDocument } from '../models/post.model';
-import type { CreatePostData, ListPostsOptions } from '../types/feed.types';
+import { StoryModel, type StoryDocument } from '../models/story.model';
+import type { CreatePostData, CreateStoryData, ListPostsOptions, ReactionEmoji } from '../types/feed.types';
 
 export class FeedRepository {
   async create(data: CreatePostData): Promise<PostDocument> {
     const post = await PostModel.create({
       autor: data.autor,
       texto: data.texto,
-      imagens: []
+      imagens: data.imagem ? [data.imagem] : []
     });
 
     return post.populate('autor');
@@ -17,7 +18,7 @@ export class FeedRepository {
   async list({ limit, page }: ListPostsOptions): Promise<PostDocument[]> {
     return PostModel.find()
       .populate('autor')
-      .sort({ data: -1 })
+      .sort({ fixado: -1, data: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
   }
@@ -26,21 +27,61 @@ export class FeedRepository {
     return PostModel.countDocuments();
   }
 
-  async like(postId: string, userId: string): Promise<PostDocument | null> {
+  async react(postId: string, userId: string, emoji: ReactionEmoji): Promise<PostDocument | null> {
     const post = await PostModel.findById(postId);
 
     if (!post) {
       return null;
     }
 
-    const alreadyLiked = post.curtidas.some((likeUserId) => likeUserId.toString() === userId);
+    const existingReaction = post.reacoes.find((reaction) => reaction.usuario.toString() === userId);
 
-    if (!alreadyLiked) {
-      post.curtidas.push(new Types.ObjectId(userId));
-      post.quantidadeCurtidas = post.curtidas.length;
-      await post.save();
+    if (existingReaction) {
+      existingReaction.emoji = emoji;
+    } else {
+      post.reacoes.push({ usuario: new Types.ObjectId(userId), emoji });
     }
 
+    await post.save();
+
     return post.populate('autor');
+  }
+
+  async setPinned(postId: string, pinned: boolean): Promise<PostDocument | null> {
+    return PostModel.findByIdAndUpdate(postId, { fixado: pinned }, { new: true }).populate('autor');
+  }
+
+  async createStory(data: CreateStoryData): Promise<StoryDocument> {
+    const story = await StoryModel.create({
+      autor: data.autor,
+      tipo: data.tipo,
+      texto: data.texto,
+      imagem: data.imagem,
+      fundo: data.fundo,
+      expiraEm: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    });
+
+    return story.populate('autor');
+  }
+
+  async listActiveStories(): Promise<StoryDocument[]> {
+    return StoryModel.find({ expiraEm: { $gt: new Date() } }).populate('autor').sort({ data: 1 });
+  }
+
+  async markStoryAsViewed(storyId: string, userId: string): Promise<StoryDocument | null> {
+    const story = await StoryModel.findById(storyId);
+
+    if (!story) {
+      return null;
+    }
+
+    const alreadyViewed = story.visualizacoes.some((viewerId) => viewerId.toString() === userId);
+
+    if (!alreadyViewed) {
+      story.visualizacoes.push(new Types.ObjectId(userId));
+      await story.save();
+    }
+
+    return story.populate('autor');
   }
 }

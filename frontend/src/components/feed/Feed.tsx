@@ -3,15 +3,26 @@ import { AlertCircle } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { useAuth } from '../../contexts/useAuth';
-import { canCreateFeedPost } from './feedUtils';
-import { createFeedPost, likeFeedPost, listFeedPosts } from '../../services/feed';
-import type { FeedResponse } from '../../types/feed';
-import { CreatePost } from './CreatePost';
+import { canCreateFeedPost, canPinFeedPost, groupStories } from './feedUtils';
+import {
+  createFeedPost,
+  createFeedStory,
+  listFeedPosts,
+  listFeedStories,
+  markFeedStoryAsViewed,
+  reactToFeedPost,
+  setFeedPostPinned
+} from '../../services/feed';
+import type { CreatePostPayload, CreateStoryPayload, FeedResponse, FeedStory, ReactionEmoji } from '../../types/feed';
+import { CreateContentButton, CreateContentModal } from './CreateContentModal';
 import { EmptyFeed } from './EmptyFeed';
 import { LoadingFeed } from './LoadingFeed';
 import { PostCard } from './PostCard';
+import { StoriesBar } from './StoriesBar';
+import { StoryViewer } from './StoryViewer';
 
 const feedQueryKey = ['feed', 'posts'] as const;
+const storiesQueryKey = ['feed', 'stories'] as const;
 
 function FeedError() {
   return (
@@ -33,15 +44,24 @@ export function Feed() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [createError, setCreateError] = useState<string>();
-  const [likingPostId, setLikingPostId] = useState<string>();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [reactingPostId, setReactingPostId] = useState<string>();
+  const [pinningPostId, setPinningPostId] = useState<string>();
+  const [viewerGroupIndex, setViewerGroupIndex] = useState<number>();
   const canCreate = canCreateFeedPost(user?.cargo);
+  const canPin = canPinFeedPost(user?.cargo);
 
   const feedQuery = useQuery({
     queryKey: feedQueryKey,
     queryFn: () => listFeedPosts({ limit: 10, page: 1 })
   });
 
-  const createMutation = useMutation({
+  const storiesQuery = useQuery({
+    queryKey: storiesQueryKey,
+    queryFn: listFeedStories
+  });
+
+  const createPostMutation = useMutation({
     mutationFn: createFeedPost,
     onError: () => setCreateError('Nao foi possivel publicar agora.'),
     onMutate: () => setCreateError(undefined),
@@ -50,10 +70,19 @@ export function Feed() {
     }
   });
 
-  const likeMutation = useMutation({
-    mutationFn: likeFeedPost,
-    onMutate: (postId) => setLikingPostId(postId),
-    onSettled: () => setLikingPostId(undefined),
+  const createStoryMutation = useMutation({
+    mutationFn: createFeedStory,
+    onError: () => setCreateError('Nao foi possivel publicar agora.'),
+    onMutate: () => setCreateError(undefined),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: storiesQueryKey });
+    }
+  });
+
+  const reactionMutation = useMutation({
+    mutationFn: ({ emoji, postId }: { emoji: ReactionEmoji; postId: string }) => reactToFeedPost(postId, emoji),
+    onMutate: ({ postId }) => setReactingPostId(postId),
+    onSettled: () => setReactingPostId(undefined),
     onSuccess: (updatedPost) => {
       queryClient.setQueryData<FeedResponse>(feedQueryKey, (current) => {
         if (!current) {
@@ -68,36 +97,111 @@ export function Feed() {
     }
   });
 
+  const pinMutation = useMutation({
+    mutationFn: ({ pinned, postId }: { pinned: boolean; postId: string }) => setFeedPostPinned(postId, pinned),
+    onMutate: ({ postId }) => setPinningPostId(postId),
+    onSettled: () => setPinningPostId(undefined),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: feedQueryKey });
+    }
+  });
+
+  const viewStoryMutation = useMutation({
+    mutationFn: markFeedStoryAsViewed,
+    onSuccess: (updatedStory) => {
+      queryClient.setQueryData<FeedStory[]>(storiesQueryKey, (current) =>
+        current?.map((story) => (story.id === updatedStory.id ? updatedStory : story))
+      );
+    }
+  });
+
   const posts = useMemo(() => feedQuery.data?.publicacoes ?? [], [feedQuery.data?.publicacoes]);
+  const storyGroups = useMemo(() => groupStories(storiesQuery.data ?? []), [storiesQuery.data]);
 
   const handleCreate = useCallback(
-    async (text: string) => {
-      await createMutation.mutateAsync(text);
+    async (payload: CreatePostPayload) => {
+      await createPostMutation.mutateAsync(payload);
     },
-    [createMutation]
+    [createPostMutation]
   );
 
-  const handleLike = useCallback(
-    (postId: string) => {
-      if (!likeMutation.isPending) {
-        likeMutation.mutate(postId);
+  const handleCreateStory = useCallback(
+    async (payload: CreateStoryPayload) => {
+      await createStoryMutation.mutateAsync(payload);
+    },
+    [createStoryMutation]
+  );
+
+  const handleReact = useCallback(
+    (postId: string, emoji: ReactionEmoji) => {
+      if (!reactionMutation.isPending) {
+        reactionMutation.mutate({ postId, emoji });
       }
     },
-    [likeMutation]
+    [reactionMutation]
+  );
+
+  const handlePin = useCallback(
+    (postId: string, pinned: boolean) => {
+      if (!pinMutation.isPending) {
+        pinMutation.mutate({ postId, pinned });
+      }
+    },
+    [pinMutation]
+  );
+
+  const handleViewStory = useCallback(
+    (storyId: string) => {
+      if (!viewStoryMutation.isPending) {
+        viewStoryMutation.mutate(storyId);
+      }
+    },
+    [viewStoryMutation]
   );
 
   return (
     <section aria-label="Feed social" className="mx-auto w-full max-w-2xl space-y-4">
-      {canCreate ? <CreatePost error={createError} isSubmitting={createMutation.isPending} onCreate={handleCreate} /> : null}
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold text-brand-navy">Feed</h2>
+          <p className="text-sm text-slate-500">Novidades da comunidade escolar.</p>
+        </div>
+        {canCreate ? <CreateContentButton onClick={() => setIsCreateOpen(true)} /> : null}
+      </div>
+      <StoriesBar groups={storyGroups} isLoading={storiesQuery.isLoading} onOpen={setViewerGroupIndex} />
       {feedQuery.isLoading ? <LoadingFeed /> : null}
       {feedQuery.isError ? <FeedError /> : null}
       {!feedQuery.isLoading && !feedQuery.isError && posts.length === 0 ? <EmptyFeed /> : null}
       {!feedQuery.isLoading && !feedQuery.isError && posts.length > 0 ? (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard isLiking={likingPostId === post.id} key={post.id} onLike={handleLike} post={post} />
+            <PostCard
+              canPin={canPin}
+              isPinning={pinningPostId === post.id}
+              isReacting={reactingPostId === post.id}
+              key={post.id}
+              onPin={handlePin}
+              onReact={handleReact}
+              post={post}
+            />
           ))}
         </div>
+      ) : null}
+      <CreateContentModal
+        error={createError}
+        isOpen={isCreateOpen}
+        isSubmitting={createPostMutation.isPending || createStoryMutation.isPending}
+        onClose={() => setIsCreateOpen(false)}
+        onCreatePost={handleCreate}
+        onCreateStory={handleCreateStory}
+      />
+      {viewerGroupIndex !== undefined ? (
+        <StoryViewer
+          groups={storyGroups}
+          initialGroupIndex={viewerGroupIndex}
+          onClose={() => setViewerGroupIndex(undefined)}
+          onView={handleViewStory}
+        />
       ) : null}
     </section>
   );

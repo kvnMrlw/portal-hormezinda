@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import path from 'node:path';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -13,7 +14,13 @@ import healthRoutes from './routes/health.routes';
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: 'cross-origin'
+    }
+  })
+);
 app.use(
   cors({
     origin: env.FRONTEND_URL,
@@ -31,6 +38,7 @@ app.use(
 app.use(express.json({ limit: env.JSON_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: env.JSON_LIMIT }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'src/uploads')));
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
