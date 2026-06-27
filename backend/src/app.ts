@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import { env } from './config/env';
 import { errorMiddleware, notFoundMiddleware } from './middlewares/error.middleware';
 import authRoutes from './modules/auth/routes/auth.routes';
+import feedRoutes from './modules/feed/routes/feed.routes';
 import userRoutes from './modules/users/routes/user.routes';
 import healthRoutes from './routes/health.routes';
 
@@ -33,6 +34,7 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/feed', feedRoutes);
 app.use('/api/users', userRoutes);
 
 app.use(notFoundMiddleware);
