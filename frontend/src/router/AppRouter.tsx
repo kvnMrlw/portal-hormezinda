@@ -2,10 +2,12 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import { Home } from '../pages/Home';
 import { Login } from '../pages/Login';
+import { ModulePlaceholder } from '../pages/ModulePlaceholder';
 import { PlatformHome } from '../pages/PlatformHome';
 import { Profile } from '../pages/Profile';
 import { Register } from '../pages/Register';
 import { ProtectedRoute } from '../routes/ProtectedRoute';
+import { schoolModules } from '../data/schoolModules';
 
 const router = createBrowserRouter([
   {
@@ -36,6 +38,14 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
+  ...schoolModules.map((module) => ({
+    path: module.href,
+    element: (
+      <ProtectedRoute>
+        <ModulePlaceholder module={module} />
+      </ProtectedRoute>
+    )
+  })),
   {
     path: '*',
     element: <Navigate replace to="/home" />

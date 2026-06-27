@@ -8,6 +8,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
+import { schoolModules } from '../../data/schoolModules';
 import { cn } from '../../lib/utils';
 
 type NavigationItem = {
@@ -25,7 +26,12 @@ type SidebarProps = {
 
 const navigation: NavigationItem[] = [
   { href: '/home', icon: Home, label: 'Inicio' },
-  { href: '/perfil', icon: UserRound, label: 'Perfil' }
+  { href: '/perfil', icon: UserRound, label: 'Perfil' },
+  ...schoolModules.map((module) => ({
+    href: module.href,
+    icon: module.icon,
+    label: module.title
+  }))
 ];
 
 export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: SidebarProps) {
@@ -33,14 +39,14 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
     <>
       <div
         className={cn(
-          'fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm transition-opacity lg:hidden',
+          'fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm transition-opacity duration-300 lg:hidden',
           isMobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         )}
         onClick={onCloseMobile}
       />
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-white/95 px-4 py-5 shadow-soft backdrop-blur-xl transition-all duration-300 lg:sticky lg:z-30 lg:shadow-none',
+          'fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-white/95 px-4 py-5 shadow-soft backdrop-blur-xl transition-all duration-300 ease-out lg:sticky lg:z-30 lg:shadow-none',
           collapsed ? 'lg:w-[5.75rem]' : 'lg:w-72',
           isMobileOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full lg:translate-x-0'
         )}
@@ -64,7 +70,7 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
           </button>
         </div>
 
-        <nav className="mt-8 flex-1 space-y-1">
+        <nav className="mt-8 flex-1 space-y-1 overflow-y-auto pr-1">
           {navigation.map((item) => {
             const Icon = item.icon;
 
@@ -72,10 +78,10 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
               <NavLink
                 className={({ isActive }) =>
                   cn(
-                    'group relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all focus:outline-none focus:ring-4 focus:ring-blue-100',
+                    'group relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-100',
                     isActive
-                      ? 'bg-blue-50 text-brand-blue'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-brand-navy',
+                      ? 'bg-blue-50 text-brand-blue shadow-sm'
+                      : 'text-slate-600 hover:-translate-y-0.5 hover:bg-slate-50 hover:text-brand-navy',
                     collapsed && 'lg:justify-center lg:px-3'
                   )
                 }
@@ -83,8 +89,18 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
                 onClick={onCloseMobile}
                 to={item.href}
               >
-                <Icon className="h-5 w-5 shrink-0" />
-                <span className={cn('transition-opacity', collapsed && 'lg:hidden')}>{item.label}</span>
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={cn(
+                        'absolute left-1 h-6 w-1 rounded-full bg-brand-blue transition-all duration-300',
+                        isActive ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    <Icon className="h-5 w-5 shrink-0" />
+                    <span className={cn('truncate transition-opacity duration-300', collapsed && 'lg:hidden')}>{item.label}</span>
+                  </>
+                )}
               </NavLink>
             );
           })}

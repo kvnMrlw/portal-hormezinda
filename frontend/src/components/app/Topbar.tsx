@@ -1,4 +1,4 @@
-import { ChevronsLeft, ChevronsRight, GraduationCap, LogOut, Menu, UserRound } from 'lucide-react';
+import { Bell, ChevronsLeft, ChevronsRight, GraduationCap, LogOut, Menu, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -16,6 +16,7 @@ type TopbarProps = {
 export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: TopbarProps) {
   const { user } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/85 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
@@ -46,14 +47,34 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
         </div>
 
         <div className="hidden w-full max-w-md md:block">
-          <SearchInput placeholder="Pesquisar usuarios" />
+          <SearchInput aria-label="Pesquisar no portal" placeholder="Pesquisar no portal" />
         </div>
 
         <div className="flex items-center gap-2">
           <div className="relative">
             <button
+              aria-expanded={isNotificationOpen}
+              aria-haspopup="menu"
+              aria-label="Abrir notificacoes"
+              className="relative rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-500 transition hover:bg-slate-50 hover:text-brand-navy focus:outline-none focus:ring-4 focus:ring-blue-100"
+              onClick={() => setIsNotificationOpen((current) => !current)}
+              type="button"
+            >
+              <Bell className="h-5 w-5" />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-blue ring-2 ring-white" />
+            </button>
+            {isNotificationOpen ? (
+              <div className="absolute right-0 mt-3 w-72 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
+                <p className="text-sm font-semibold text-brand-navy">Notificacoes</p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">Nenhuma notificacao disponivel no momento.</p>
+              </div>
+            ) : null}
+          </div>
+          <div className="relative">
+            <button
               aria-expanded={isUserMenuOpen}
               aria-haspopup="menu"
+              aria-label="Abrir menu do usuario"
               className="rounded-full focus:outline-none focus:ring-4 focus:ring-blue-100"
               onClick={() => setIsUserMenuOpen((current) => !current)}
               type="button"
@@ -86,6 +107,9 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
             ) : null}
           </div>
         </div>
+      </div>
+      <div className="mt-3 md:hidden">
+        <SearchInput aria-label="Pesquisar no portal" placeholder="Pesquisar no portal" />
       </div>
     </header>
   );
