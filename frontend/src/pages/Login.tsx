@@ -7,6 +7,7 @@ import { AuthLayout } from '../components/layout/AuthLayout';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
+import { PasswordInput } from '../components/ui/PasswordInput';
 import { useAuth } from '../contexts/useAuth';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
 
@@ -73,14 +74,13 @@ export function Login() {
             value={formData.usuario}
           />
 
-          <Input
+          <PasswordInput
             autoComplete="current-password"
             error={errors.senha}
             label="Senha"
             name="senha"
             onChange={(event) => setFormData((current) => ({ ...current, senha: event.target.value }))}
             placeholder="Sua senha"
-            type="password"
             value={formData.senha}
           />
 

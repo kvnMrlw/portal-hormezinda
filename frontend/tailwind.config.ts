@@ -10,7 +10,9 @@ export default {
           lightGray: '#F3F6FA',
           white: '#FFFFFF',
           navy: '#0F2447',
-          green: '#2FA36B'
+          darkGray: '#27364A',
+          green: '#2FA36B',
+          red: '#DC2626'
         }
       },
       borderRadius: {

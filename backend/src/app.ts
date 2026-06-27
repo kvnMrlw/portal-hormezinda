@@ -6,7 +6,7 @@ import morgan from 'morgan';
 
 import { env } from './config/env';
 import { errorMiddleware, notFoundMiddleware } from './middlewares/error.middleware';
-import authRoutes from './routes/auth.routes';
+import authRoutes from './modules/auth/routes/auth.routes';
 import healthRoutes from './routes/health.routes';
 
 const app = express();

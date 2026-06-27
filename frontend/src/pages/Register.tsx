@@ -6,9 +6,12 @@ import { ZodError } from 'zod';
 import { AuthLayout } from '../components/layout/AuthLayout';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { DatePicker } from '../components/ui/DatePicker';
 import { Input } from '../components/ui/Input';
+import { PasswordInput } from '../components/ui/PasswordInput';
 import { useAuth } from '../contexts/useAuth';
 import {
+  normalizeDateInput,
   registerSchema,
   registerStepFourSchema,
   registerStepOneSchema,
@@ -91,7 +94,7 @@ export function Register() {
         nomeCompleto: parsedData.data.nomeCompleto,
         usuario: parsedData.data.usuario,
         senha: parsedData.data.senha,
-        dataNascimento: parsedData.data.dataNascimento,
+        dataNascimento: normalizeDateInput(parsedData.data.dataNascimento),
         turno: parsedData.data.turno,
         turma: parsedData.data.turma
       });
@@ -120,7 +123,13 @@ export function Register() {
           {step === 1 ? (
             <div className="space-y-4">
               <Input label="Nome Completo" name="nomeCompleto" error={errors.nomeCompleto} value={formData.nomeCompleto} onChange={(event) => updateField('nomeCompleto', event.target.value)} />
-              <Input label="Data de Nascimento" name="dataNascimento" error={errors.dataNascimento} type="date" value={formData.dataNascimento} onChange={(event) => updateField('dataNascimento', event.target.value)} />
+              <DatePicker
+                error={errors.dataNascimento}
+                label="Data de Nascimento"
+                name="dataNascimento"
+                onChange={(value) => updateField('dataNascimento', value)}
+                value={formData.dataNascimento}
+              />
             </div>
           ) : null}
 
@@ -162,8 +171,8 @@ export function Register() {
           {step === 4 ? (
             <div className="space-y-4">
               <Input label="Usuario" name="usuario" error={errors.usuario} placeholder="seu.usuario" value={formData.usuario} onChange={(event) => updateField('usuario', event.target.value)} />
-              <Input label="Senha" name="senha" error={errors.senha} type="password" value={formData.senha} onChange={(event) => updateField('senha', event.target.value)} />
-              <Input label="Confirmar Senha" name="confirmarSenha" error={errors.confirmarSenha} type="password" value={formData.confirmarSenha} onChange={(event) => updateField('confirmarSenha', event.target.value)} />
+              <PasswordInput label="Senha" name="senha" error={errors.senha} value={formData.senha} onChange={(event) => updateField('senha', event.target.value)} />
+              <PasswordInput label="Confirmar Senha" name="confirmarSenha" error={errors.confirmarSenha} value={formData.confirmarSenha} onChange={(event) => updateField('confirmarSenha', event.target.value)} />
             </div>
           ) : null}
 

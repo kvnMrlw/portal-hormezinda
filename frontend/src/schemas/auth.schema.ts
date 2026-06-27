@@ -4,6 +4,38 @@ import { Turno, Turma, turmasPorTurno } from '../types/auth';
 
 const usuarioRegex = /^[a-z0-9.]{8,}$/;
 const senhaRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+const brazilianDateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+
+export function normalizeDateInput(value: string): string {
+  if (brazilianDateRegex.test(value)) {
+    const [day, month, year] = value.split('/');
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return value;
+}
+
+function isValidBirthDate(value: string): boolean {
+  const normalizedValue = normalizeDateInput(value);
+
+  if (!isoDateRegex.test(normalizedValue)) {
+    return false;
+  }
+
+  const [year, month, day] = normalizedValue.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day &&
+    date <= today
+  );
+}
 
 // Schemas Zod utilizados pelos formularios de autenticacao.
 export const loginSchema = z.object({
@@ -13,7 +45,10 @@ export const loginSchema = z.object({
 
 const registerBaseSchema = z.object({
   nomeCompleto: z.string().trim().min(3, 'Informe seu nome completo'),
-  dataNascimento: z.string().min(1, 'Informe sua data de nascimento'),
+  dataNascimento: z
+    .string()
+    .min(1, 'Informe sua data de nascimento')
+    .refine(isValidBirthDate, 'Informe uma data valida, sem datas futuras'),
   turno: z.nativeEnum(Turno, { required_error: 'Selecione seu turno' }),
   turma: z.nativeEnum(Turma, { required_error: 'Selecione sua turma' }),
   usuario: z

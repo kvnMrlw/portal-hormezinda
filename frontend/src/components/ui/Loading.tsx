@@ -1,6 +1,5 @@
-import { LoaderCircle } from 'lucide-react';
-
 import { cn } from '../../lib/utils';
+import { Spinner } from './Spinner';
 
 type LoadingProps = {
   className?: string;
@@ -11,7 +10,7 @@ type LoadingProps = {
 export function Loading({ className, label = 'Carregando' }: LoadingProps) {
   return (
     <div className={cn('flex items-center justify-center gap-2 text-sm text-slate-600', className)}>
-      <LoaderCircle className="h-4 w-4 animate-spin" />
+      <Spinner className="h-4 w-4" />
       <span>{label}</span>
     </div>
   );
