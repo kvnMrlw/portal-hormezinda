@@ -1,4 +1,4 @@
-import { Bell, ChevronsLeft, ChevronsRight, GraduationCap, LogOut, Menu, UserRound } from 'lucide-react';
+import { Bell, ChevronsLeft, ChevronsRight, LogOut, Menu, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/useAuth';
 import { getAssetUrl } from '../../lib/assets';
 import { Avatar } from '../ui/Avatar';
 import { SearchInput } from '../ui/SearchInput';
+import { SchoolLogo } from '../ui/SchoolLogo';
 
 type TopbarProps = {
   collapsed: boolean;
@@ -41,8 +42,8 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
             {collapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
           </button>
           <Link className="flex min-w-0 items-center gap-3" to="/home">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-blue text-white">
-              <GraduationCap className="h-5 w-5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-slate-100">
+              <SchoolLogo />
             </div>
             <span className="truncate font-semibold text-brand-navy">Portal Hormezinda</span>
           </Link>

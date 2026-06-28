@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { GraduationCap } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+import { SchoolLogo } from '../ui/SchoolLogo';
 
 type AuthLayoutProps = {
   children: ReactNode;
@@ -14,8 +15,8 @@ export function AuthLayout({ children, subtitle, title }: AuthLayoutProps) {
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_32%),linear-gradient(135deg,#f8fbff_0%,#ffffff_46%,#eff6ff_100%)] px-5 py-6 text-brand-navy">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col">
         <header className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-blue text-white shadow-soft">
-            <GraduationCap className="h-6 w-6" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white p-1.5 shadow-soft ring-1 ring-blue-100">
+            <SchoolLogo />
           </div>
           <span className="text-lg font-semibold">Portal Hormezinda</span>
         </header>

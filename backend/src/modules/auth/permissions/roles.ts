@@ -31,7 +31,7 @@ export const rolePermissions: Record<Cargo, Permission[]> = {
   [Cargo.DIRETOR]: [],
   [Cargo.COORDENADOR]: [],
   [Cargo.PROFESSOR]: [],
-  [Cargo.GREMIO]: [],
+  [Cargo.GREMIO]: [Permission.EDIT_COURSES, Permission.EDIT_IDEAS, Permission.EDIT_POSTS, Permission.EDIT_STORIES],
   [Cargo.ALUNO]: []
 };
 

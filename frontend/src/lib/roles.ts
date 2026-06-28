@@ -1,4 +1,4 @@
-import { Cargo } from '../types/auth';
+import { Cargo, Sexo, type User } from '../types/auth';
 
 export { Cargo as Role };
 
@@ -40,7 +40,7 @@ export const rolePermissions: Record<Cargo, Permission[]> = {
   [Cargo.DIRETOR]: [],
   [Cargo.COORDENADOR]: [],
   [Cargo.PROFESSOR]: [],
-  [Cargo.GREMIO]: [],
+  [Cargo.GREMIO]: [Permission.EDIT_COURSES, Permission.EDIT_IDEAS, Permission.EDIT_POSTS, Permission.EDIT_STORIES],
   [Cargo.ALUNO]: []
 };
 
@@ -54,4 +54,24 @@ export function canViewRole(viewerRole: Cargo | undefined, targetRole: Cargo): b
 
 export function getRoleLabel(role?: Cargo): string {
   return role ? roleLabels[role] : 'Membro';
+}
+
+export function getDisplayRoleLabel(user?: Pick<User, 'cargo' | 'sexo'> | null): string {
+  if (!user) {
+    return 'Membro';
+  }
+
+  if (user.cargo === Cargo.PROFESSOR) {
+    return user.sexo === Sexo.FEMININO ? 'Professora' : 'Professor';
+  }
+
+  if (user.cargo === Cargo.DIRETOR) {
+    return user.sexo === Sexo.FEMININO ? 'Diretora' : 'Diretor';
+  }
+
+  if (user.cargo === Cargo.COORDENADOR) {
+    return user.sexo === Sexo.FEMININO ? 'Coordenadora' : 'Coordenador';
+  }
+
+  return getRoleLabel(user.cargo);
 }

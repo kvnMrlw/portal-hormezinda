@@ -31,6 +31,11 @@ export enum Cargo {
   ALUNO = 'ALUNO'
 }
 
+export enum Sexo {
+  MASCULINO = 'MASCULINO',
+  FEMININO = 'FEMININO'
+}
+
 export const turmasPorTurno: Record<Turno, Turma[]> = {
   [Turno.MATUTINO]: [
     Turma.PRIMEIRO_A,
@@ -62,6 +67,8 @@ export type User = {
   turno?: Turno;
   turma?: Turma;
   cargo: Cargo;
+  sexo?: Sexo;
+  materia?: string;
   fotoPerfil: string;
   bannerPerfil: string;
   bio: string;
@@ -76,5 +83,24 @@ export type PublicUser = Omit<User, 'senha'> & {
 };
 
 export type CreateUserData = Omit<User, 'criadoEm' | 'atualizadoEm'>;
+
+export type AdminCreateUserData = Omit<User, 'criadoEm' | 'atualizadoEm'>;
+
+export type AdminUpdateUserData = Partial<
+  Pick<
+    User,
+    | 'ativo'
+    | 'bannerPerfil'
+    | 'cargo'
+    | 'dataNascimento'
+    | 'fotoPerfil'
+    | 'materia'
+    | 'senha'
+    | 'sexo'
+    | 'turma'
+    | 'turno'
+    | 'usuario'
+  >
+>;
 
 export type UpdateProfileData = Partial<Pick<User, 'fotoPerfil' | 'bannerPerfil' | 'bio' | 'redeSocial' | 'senha'>>;

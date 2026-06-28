@@ -1,5 +1,5 @@
 import { UserModel, type UserDocument } from '../models/user.model';
-import { Cargo, type CreateUserData, type UpdateProfileData } from '../types/user.types';
+import { Cargo, type AdminUpdateUserData, type CreateUserData, type UpdateProfileData } from '../types/user.types';
 
 export class UserRepository {
   async create(data: CreateUserData): Promise<UserDocument> {
@@ -29,11 +29,23 @@ export class UserRepository {
     }).sort({ nomeCompleto: 1 });
   }
 
+  async listAll(): Promise<UserDocument[]> {
+    return UserModel.find().sort({ criadoEm: -1 });
+  }
+
+  async adminUpdate(id: string, data: AdminUpdateUserData): Promise<UserDocument | null> {
+    return UserModel.findByIdAndUpdate(id, data, { new: true });
+  }
+
   async updateProfile(id: string, data: UpdateProfileData): Promise<UserDocument | null> {
     return UserModel.findByIdAndUpdate(id, data, { new: true });
   }
 
   async updatePassword(id: string, senha: string): Promise<void> {
     await UserModel.findByIdAndUpdate(id, { senha });
+  }
+
+  async delete(id: string): Promise<void> {
+    await UserModel.findByIdAndDelete(id);
   }
 }

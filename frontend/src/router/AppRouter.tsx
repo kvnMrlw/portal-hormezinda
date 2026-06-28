@@ -7,8 +7,10 @@ import { Notices } from '../pages/Notices';
 import { PlatformHome } from '../pages/PlatformHome';
 import { Profile } from '../pages/Profile';
 import { Register } from '../pages/Register';
+import { Users } from '../pages/Users';
 import { ProtectedRoute } from '../routes/ProtectedRoute';
 import { schoolModules } from '../data/schoolModules';
+import { Cargo } from '../types/auth';
 
 const router = createBrowserRouter([
   {
@@ -44,6 +46,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Notices />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/usuarios',
+    element: (
+      <ProtectedRoute allowedRoles={[Cargo.ADMIN]}>
+        <Users />
       </ProtectedRoute>
     )
   },

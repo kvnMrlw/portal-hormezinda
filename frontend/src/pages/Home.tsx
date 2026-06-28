@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, GraduationCap, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+import { SchoolLogo } from '../components/ui/SchoolLogo';
 
 const highlights = [
   {
@@ -26,8 +28,8 @@ export function Home() {
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-8 sm:px-10 lg:px-12">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-blue text-white shadow-soft">
-              <GraduationCap aria-hidden="true" className="h-6 w-6" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white p-1.5 shadow-soft ring-1 ring-blue-100">
+              <SchoolLogo />
             </div>
             <span className="text-lg font-semibold">Portal Hormezinda</span>
           </div>
@@ -82,8 +84,8 @@ export function Home() {
                     <p className="text-sm text-blue-100">Hoje no portal</p>
                     <h2 className="mt-1 text-2xl font-semibold">Visao inicial</h2>
                   </div>
-                  <div className="rounded-2xl bg-white/12 p-3">
-                    <GraduationCap aria-hidden="true" className="h-7 w-7 text-blue-100" />
+                  <div className="flex h-14 w-14 rounded-2xl bg-white p-2">
+                    <SchoolLogo />
                   </div>
                 </div>
 

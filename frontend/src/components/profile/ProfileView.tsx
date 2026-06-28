@@ -2,7 +2,7 @@ import {
   CalendarDays,
   Camera,
   ExternalLink,
-  GraduationCap,
+  BookOpen,
   ImagePlus,
   KeyRound,
   Link as LinkIcon,
@@ -293,7 +293,7 @@ export function ProfileView({ editable = false, user }: ProfileViewProps) {
             <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
               <InfoCard icon={ShieldCheck} label="Cargo" value={getRoleLabel(user.cargo)} />
               {age && !admin ? <InfoCard icon={CalendarDays} label="Idade" value={age} /> : null}
-              {details[0] ? <InfoCard icon={GraduationCap} label="Turma" value={details[0]} /> : null}
+              {details[0] ? <InfoCard icon={BookOpen} label="Turma" value={details[0]} /> : null}
               {details[1] ? <InfoCard icon={MapPin} label="Turno" value={details[1]} /> : null}
               {!admin && !details.length ? <InfoCard icon={LinkIcon} label="Perfil" value="Informacoes em breve" /> : null}
             </aside>

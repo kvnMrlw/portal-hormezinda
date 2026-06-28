@@ -1,8 +1,14 @@
 import { api } from './api';
-import type { ApiResponse, ProfileUpdatePayload, User } from '../types/auth';
+import type { AdminUserPayload, ApiResponse, ProfileUpdatePayload, User } from '../types/auth';
 
 export async function listUsers(): Promise<User[]> {
   const response = await api.get<ApiResponse<{ usuarios: User[] }>>('/users');
+
+  return response.data.data.usuarios;
+}
+
+export async function listAdminUsers(): Promise<User[]> {
+  const response = await api.get<ApiResponse<{ usuarios: User[] }>>('/users/admin');
 
   return response.data.data.usuarios;
 }
@@ -25,12 +31,54 @@ function toFormData(payload: ProfileUpdatePayload): FormData {
   return formData;
 }
 
+function adminUserToFormData(payload: AdminUserPayload): FormData {
+  const formData = new FormData();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') {
+      formData.append(key, value instanceof File ? value : String(value));
+    }
+  });
+
+  return formData;
+}
+
 export async function updateMyProfile(payload: ProfileUpdatePayload): Promise<User> {
   const response = await api.patch<ApiResponse<{ usuario: User }>>('/users/me/profile', toFormData(payload), {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   });
+
+  return response.data.data.usuario;
+}
+
+export async function createAdminUser(payload: AdminUserPayload): Promise<User> {
+  const response = await api.post<ApiResponse<{ usuario: User }>>('/users/admin', adminUserToFormData(payload), {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+
+  return response.data.data.usuario;
+}
+
+export async function updateAdminUser(id: string, payload: AdminUserPayload): Promise<User> {
+  const response = await api.patch<ApiResponse<{ usuario: User }>>(`/users/admin/${id}`, adminUserToFormData(payload), {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+
+  return response.data.data.usuario;
+}
+
+export async function deleteAdminUser(id: string): Promise<void> {
+  await api.delete(`/users/admin/${id}`);
+}
+
+export async function promoteUserToGremio(id: string): Promise<User> {
+  const response = await api.patch<ApiResponse<{ usuario: User }>>(`/users/admin/${id}/promote-gremio`);
 
   return response.data.data.usuario;
 }

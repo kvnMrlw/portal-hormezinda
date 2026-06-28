@@ -31,6 +31,11 @@ export enum Cargo {
   ALUNO = 'ALUNO'
 }
 
+export enum Sexo {
+  MASCULINO = 'MASCULINO',
+  FEMININO = 'FEMININO'
+}
+
 export type User = {
   id: string;
   nomeCompleto: string;
@@ -39,6 +44,8 @@ export type User = {
   turno?: Turno;
   turma?: Turma;
   cargo: Cargo;
+  sexo?: Sexo;
+  materia?: string;
   fotoPerfil: string;
   bannerPerfil: string;
   bio: string;
@@ -65,6 +72,21 @@ export type ProfileUpdatePayload = Partial<Pick<User, 'bio' | 'redeSocial'>> & {
   senhaAtual?: string;
   novaSenha?: string;
   confirmarSenha?: string;
+};
+
+export type AdminUserPayload = {
+  nomeCompleto?: string;
+  dataNascimento?: string;
+  usuario?: string;
+  senha?: string;
+  cargo?: Cargo;
+  sexo?: Sexo;
+  materia?: string;
+  turno?: Turno;
+  turma?: Turma;
+  ativo?: boolean;
+  fotoPerfil?: File;
+  bannerPerfil?: File;
 };
 
 export const turmasPorTurno: Record<Turno, Turma[]> = {

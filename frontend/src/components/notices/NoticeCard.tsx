@@ -1,9 +1,7 @@
 import {
   CalendarClock,
-  Download,
   Edit3,
   EyeOff,
-  FileText,
   Pin,
   PinOff,
   Power,
@@ -13,7 +11,7 @@ import {
 
 import { Button } from '../ui/Button';
 import { resolveUploadUrl } from '../../services/notices';
-import type { Notice } from '../../types/notices';
+import type { Notice, NoticeAttachment } from '../../types/notices';
 import { cn } from '../../lib/utils';
 import { categoryIcons, categoryLabels, priorityLabels, priorityStyles } from './noticeOptions';
 
@@ -38,21 +36,18 @@ function formatDate(value?: string): string {
   }).format(new Date(value));
 }
 
-function formatFileSize(size: number): string {
-  if (size < 1024 * 1024) {
-    return `${Math.max(1, Math.round(size / 1024))} KB`;
-  }
-
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function isExpired(notice: Notice): boolean {
   return Boolean(notice.dataFim && new Date(notice.dataFim).getTime() < Date.now());
+}
+
+function isImageAttachment(attachment: NoticeAttachment): boolean {
+  return attachment.tipo.startsWith('image/');
 }
 
 export function NoticeCard({ isAdmin, notice, onDelete, onEdit, onToggleActive, onTogglePin }: NoticeCardProps) {
   const Icon = categoryIcons[notice.categoria];
   const expired = isExpired(notice);
+  const imageAttachments = notice.anexos.filter(isImageAttachment);
 
   return (
     <article
@@ -95,6 +90,19 @@ export function NoticeCard({ isAdmin, notice, onDelete, onEdit, onToggleActive, 
           <h2 className="mt-4 text-2xl font-semibold tracking-normal text-brand-navy">{notice.titulo}</h2>
           <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">{notice.descricao}</p>
 
+          {imageAttachments.length ? (
+            <div className="mt-5 grid gap-3">
+              {imageAttachments.map((attachment) => (
+                <img
+                  alt={notice.titulo}
+                  className="max-h-[34rem] w-full rounded-3xl object-cover shadow-sm ring-1 ring-slate-100"
+                  key={attachment.url}
+                  src={resolveUploadUrl(attachment.url)}
+                />
+              ))}
+            </div>
+          ) : null}
+
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
             <span className="inline-flex items-center gap-2">
               <UserRound className="h-4 w-4" />
@@ -107,24 +115,6 @@ export function NoticeCard({ isAdmin, notice, onDelete, onEdit, onToggleActive, 
             </span>
           </div>
 
-          {notice.anexos.length ? (
-            <div className="mt-5 flex flex-wrap gap-2">
-              {notice.anexos.map((attachment) => (
-                <a
-                  className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-brand-navy transition hover:border-brand-blue hover:text-brand-blue"
-                  href={resolveUploadUrl(attachment.url)}
-                  key={attachment.url}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <FileText className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{attachment.nome}</span>
-                  <span className="shrink-0 text-xs text-slate-400">{formatFileSize(attachment.tamanho)}</span>
-                  <Download className="h-4 w-4 shrink-0" />
-                </a>
-              ))}
-            </div>
-          ) : null}
         </div>
 
         {isAdmin ? (

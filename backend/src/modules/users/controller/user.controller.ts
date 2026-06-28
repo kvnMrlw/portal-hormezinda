@@ -2,9 +2,10 @@ import type { NextFunction, Response } from 'express';
 
 import { AppError } from '../../../middlewares/error.middleware';
 import { apiResponse } from '../../../utils/apiResponse';
+import { Cargo } from '../types/user.types';
 import type { AuthenticatedRequest } from '../../auth/types/auth.types';
 import { UserService } from '../service/user.service';
-import { updateProfileSchema, userIdParamSchema } from '../validation/user.validation';
+import { adminCreateUserSchema, adminUpdateUserSchema, updateProfileSchema, userIdParamSchema } from '../validation/user.validation';
 
 const userService = new UserService();
 
@@ -26,6 +27,116 @@ export async function listUsers(request: AuthenticatedRequest, response: Respons
     const users = await userService.listActiveUsers(request.user);
 
     return response.status(200).json(apiResponse({ usuarios: users }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function adminListUsers(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    if (!request.user || request.user.cargo !== Cargo.ADMIN) {
+      throw new AppError('Acesso nao autorizado', 403);
+    }
+
+    const users = await userService.adminListUsers();
+
+    return response.status(200).json(apiResponse({ usuarios: users }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function adminCreateUser(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    const parsedBody = adminCreateUserSchema.safeParse(request.body);
+
+    if (!parsedBody.success) {
+      throw new AppError('Nao foi possivel criar o usuario', 400);
+    }
+
+    const files = request.files as ProfileFiles | undefined;
+    const fotoPerfil = profileFileToPath(files?.fotoPerfil?.[0]);
+    const bannerPerfil = profileFileToPath(files?.bannerPerfil?.[0]);
+
+    const user = await userService.adminCreateUser({
+      ...parsedBody.data,
+      fotoPerfil: fotoPerfil ?? '',
+      bannerPerfil: bannerPerfil ?? '',
+      bio: '',
+      redeSocial: '',
+      ativo: true
+    });
+
+    return response.status(201).json(apiResponse({ usuario: user }, { message: 'Usuario criado com sucesso' }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function adminUpdateUser(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    const parsedParams = userIdParamSchema.safeParse(request.params);
+    const parsedBody = adminUpdateUserSchema.safeParse(request.body);
+
+    if (!parsedParams.success || !parsedBody.success) {
+      throw new AppError('Nao foi possivel atualizar o usuario', 400);
+    }
+
+    const files = request.files as ProfileFiles | undefined;
+    const fotoPerfil = profileFileToPath(files?.fotoPerfil?.[0]);
+    const bannerPerfil = profileFileToPath(files?.bannerPerfil?.[0]);
+
+    const user = await userService.adminUpdateUser(parsedParams.data.id, {
+      ...parsedBody.data,
+      ...(fotoPerfil ? { fotoPerfil } : {}),
+      ...(bannerPerfil ? { bannerPerfil } : {})
+    });
+
+    if (!user) {
+      throw new AppError('Usuario nao encontrado', 404);
+    }
+
+    return response.status(200).json(apiResponse({ usuario: user }, { message: 'Usuario atualizado com sucesso' }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function adminDeleteUser(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    const parsedParams = userIdParamSchema.safeParse(request.params);
+
+    if (!parsedParams.success) {
+      throw new AppError('Usuario nao encontrado', 404);
+    }
+
+    const deleted = await userService.adminDeleteUser(parsedParams.data.id);
+
+    if (!deleted) {
+      throw new AppError('Usuario nao encontrado', 404);
+    }
+
+    return response.status(200).json(apiResponse({ id: parsedParams.data.id }, { message: 'Usuario excluido com sucesso' }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function adminPromoteUser(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    const parsedParams = userIdParamSchema.safeParse(request.params);
+
+    if (!parsedParams.success) {
+      throw new AppError('Usuario nao encontrado', 404);
+    }
+
+    const user = await userService.promoteStudentToGremio(parsedParams.data.id);
+
+    if (!user) {
+      throw new AppError('Usuario nao encontrado', 404);
+    }
+
+    return response.status(200).json(apiResponse({ usuario: user }, { message: 'Usuario promovido para Gremio' }));
   } catch (error) {
     return next(error);
   }

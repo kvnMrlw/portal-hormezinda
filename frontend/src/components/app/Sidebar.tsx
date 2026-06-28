@@ -1,15 +1,12 @@
-import {
-  GraduationCap,
-  Home,
-  LogOut,
-  UserRound,
-  X
-} from 'lucide-react';
+import { Home, LogOut, UserRound, UsersRound, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
+import { useAuth } from '../../contexts/useAuth';
 import { schoolModules } from '../../data/schoolModules';
+import { isAdminRole } from '../../lib/roles';
 import { cn } from '../../lib/utils';
+import { SchoolLogo } from '../ui/SchoolLogo';
 
 type NavigationItem = {
   href: string;
@@ -35,6 +32,11 @@ const navigation: NavigationItem[] = [
 ];
 
 export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: SidebarProps) {
+  const { user } = useAuth();
+  const visibleNavigation = isAdminRole(user?.cargo)
+    ? [...navigation, { href: '/usuarios', icon: UsersRound, label: 'Usuarios' }]
+    : navigation;
+
   return (
     <>
       <div
@@ -53,8 +55,8 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-blue text-white shadow-soft">
-              <GraduationCap className="h-6 w-6" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white p-1.5 shadow-soft ring-1 ring-slate-100">
+              <SchoolLogo />
             </div>
             <span className={cn('truncate font-semibold text-brand-navy transition-opacity', collapsed && 'lg:hidden')}>
               Portal Hormezinda
@@ -71,7 +73,7 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
         </div>
 
         <nav className="mt-8 flex-1 space-y-1 overflow-y-auto pr-1">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const Icon = item.icon;
 
             return (

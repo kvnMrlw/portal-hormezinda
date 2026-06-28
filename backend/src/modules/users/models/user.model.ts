@@ -1,6 +1,6 @@
 import { Schema, model, type HydratedDocument, type Model } from 'mongoose';
 
-import { Cargo, Turma, Turno, type User } from '../types/user.types';
+import { Cargo, Sexo, Turma, Turno, type User } from '../types/user.types';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -39,6 +39,15 @@ const userSchema = new Schema<User>(
       enum: Object.values(Cargo),
       default: Cargo.ALUNO,
       required: true
+    },
+    sexo: {
+      type: String,
+      enum: Object.values(Sexo)
+    },
+    materia: {
+      type: String,
+      trim: true,
+      default: ''
     },
     fotoPerfil: {
       type: String,

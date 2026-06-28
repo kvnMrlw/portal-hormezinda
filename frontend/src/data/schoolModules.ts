@@ -1,6 +1,6 @@
 import {
   CalendarDays,
-  GraduationCap,
+  BookOpenCheck,
   Lightbulb,
   Megaphone,
   Utensils
@@ -48,7 +48,7 @@ export const schoolModules: SchoolModule[] = [
     title: 'Cursos',
     description: 'Trilhas e oportunidades recomendadas.',
     href: '/cursos',
-    icon: GraduationCap,
+    icon: BookOpenCheck,
     accent: 'bg-rose-50 text-rose-600 ring-rose-100'
   }
 ];

@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 
 import { AppError } from '../../../middlewares/error.middleware';
 import { UserRepository } from '../repository/user.repository';
-import { Cargo, type PublicUser, type UpdateProfileData } from '../types/user.types';
+import { Cargo, type AdminCreateUserData, type AdminUpdateUserData, type PublicUser, type UpdateProfileData } from '../types/user.types';
 import type { UserDocument } from '../models/user.model';
 import { canViewRole } from '../../auth/permissions/roles';
 
@@ -30,6 +30,8 @@ export function toPublicUser(user: UserDocument): PublicUser {
     turno: isAdmin ? undefined : user.turno,
     turma: isAdmin ? undefined : user.turma,
     cargo: user.cargo,
+    sexo: user.sexo,
+    materia: user.materia,
     fotoPerfil: user.fotoPerfil,
     bannerPerfil: user.bannerPerfil,
     bio: user.bio,
@@ -42,6 +44,98 @@ export function toPublicUser(user: UserDocument): PublicUser {
 
 export class UserService {
   constructor(private readonly userRepository = new UserRepository()) {}
+
+  async adminListUsers(): Promise<PublicUser[]> {
+    const users = await this.userRepository.listAll();
+
+    return users.map(toPublicUser);
+  }
+
+  async adminCreateUser(data: AdminCreateUserData): Promise<PublicUser> {
+    const usuario = data.usuario.trim().toLowerCase();
+    const existingUser = await this.userRepository.findByUsuario(usuario);
+
+    if (existingUser) {
+      throw new AppError('Usuario ja cadastrado', 409);
+    }
+
+    const user = await this.userRepository.create({
+      ...data,
+      usuario,
+      senha: await bcrypt.hash(data.senha, PASSWORD_SALT_ROUNDS),
+      materia: data.cargo === Cargo.PROFESSOR ? data.materia ?? '' : '',
+      turma: data.cargo === Cargo.ALUNO || data.cargo === Cargo.GREMIO ? data.turma : undefined,
+      turno: data.cargo === Cargo.ALUNO || data.cargo === Cargo.GREMIO ? data.turno : undefined
+    });
+
+    return toPublicUser(user);
+  }
+
+  async adminUpdateUser(id: string, data: AdminUpdateUserData): Promise<PublicUser | null> {
+    const currentUser = await this.userRepository.findById(id);
+
+    if (!currentUser) {
+      return null;
+    }
+
+    const nextData: AdminUpdateUserData = { ...data };
+
+    if (nextData.usuario) {
+      nextData.usuario = nextData.usuario.trim().toLowerCase();
+      const existingUser = await this.userRepository.findByUsuario(nextData.usuario);
+
+      if (existingUser && existingUser.id !== id) {
+        throw new AppError('Usuario ja cadastrado', 409);
+      }
+    }
+
+    if (nextData.senha) {
+      nextData.senha = await bcrypt.hash(nextData.senha, PASSWORD_SALT_ROUNDS);
+    }
+
+    const nextRole = nextData.cargo ?? currentUser.cargo;
+
+    if (nextRole !== Cargo.PROFESSOR) {
+      nextData.materia = '';
+    }
+
+    if (nextRole !== Cargo.ALUNO && nextRole !== Cargo.GREMIO) {
+      nextData.turma = undefined;
+      nextData.turno = undefined;
+    }
+
+    const user = await this.userRepository.adminUpdate(id, nextData);
+
+    return user ? toPublicUser(user) : null;
+  }
+
+  async adminDeleteUser(id: string): Promise<boolean> {
+    const user = await this.userRepository.findById(id);
+
+    if (!user) {
+      return false;
+    }
+
+    await this.userRepository.delete(id);
+
+    return true;
+  }
+
+  async promoteStudentToGremio(id: string): Promise<PublicUser | null> {
+    const user = await this.userRepository.findById(id);
+
+    if (!user) {
+      return null;
+    }
+
+    if (user.cargo !== Cargo.ALUNO) {
+      throw new AppError('Somente alunos podem ser promovidos para o Gremio', 400);
+    }
+
+    const updatedUser = await this.userRepository.adminUpdate(id, { cargo: Cargo.GREMIO });
+
+    return updatedUser ? toPublicUser(updatedUser) : null;
+  }
 
   async findPublicById(id: string, viewer: PublicUser): Promise<PublicUser | null> {
     const user = await this.userRepository.findById(id);
