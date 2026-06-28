@@ -40,6 +40,11 @@ const userSchema = new Schema<User>(
       default: Cargo.ALUNO,
       required: true
     },
+    pertenceGremio: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
     sexo: {
       type: String,
       enum: Object.values(Sexo)

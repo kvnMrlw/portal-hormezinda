@@ -34,6 +34,7 @@ export function toPublicUser(user: UserDocument): PublicUser {
     turno: isAdmin ? undefined : user.turno,
     turma: isAdmin ? undefined : user.turma,
     cargo: user.cargo,
+    pertenceGremio: Boolean(user.pertenceGremio || user.cargo === Cargo.GREMIO),
     sexo: user.sexo,
     materia: user.materia,
     fotoPerfil: user.fotoPerfil,
@@ -110,6 +111,7 @@ export class UserService {
     if (nextRole !== Cargo.ALUNO && nextRole !== Cargo.GREMIO) {
       nextData.turma = undefined;
       nextData.turno = undefined;
+      nextData.pertenceGremio = false;
     }
 
     const user = await this.userRepository.adminUpdate(id, nextData);
@@ -158,7 +160,7 @@ export class UserService {
       throw new AppError('Somente alunos podem ser promovidos para o Gremio', 400);
     }
 
-    const updatedUser = await this.userRepository.adminUpdate(id, { cargo: Cargo.GREMIO });
+    const updatedUser = await this.userRepository.adminUpdate(id, { pertenceGremio: true });
 
     return updatedUser ? toPublicUser(updatedUser) : null;
   }

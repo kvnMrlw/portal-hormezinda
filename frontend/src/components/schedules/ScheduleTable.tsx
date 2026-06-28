@@ -40,8 +40,8 @@ export function ScheduleTable({ canManage, onDelete, onDuplicate, onEdit, schedu
                 );
 
                 return (
-                  <div className="min-h-[12rem] border-l border-slate-100 p-3" key={`${weekday}-${slot}`}>
-                    <div className="space-y-3">
+                  <div className="min-h-[7.5rem] border-l border-slate-100 p-2" key={`${weekday}-${slot}`}>
+                    <div className="space-y-2">
                       {daySchedules.map((schedule) => (
                         <ScheduleLessonCard
                           canManage={canManage}

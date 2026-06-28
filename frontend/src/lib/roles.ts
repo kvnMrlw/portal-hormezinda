@@ -75,3 +75,7 @@ export function getDisplayRoleLabel(user?: Pick<User, 'cargo' | 'sexo'> | null):
 
   return getRoleLabel(user.cargo);
 }
+
+export function hasGremioAccess(user?: Pick<User, 'cargo' | 'pertenceGremio'> | null): boolean {
+  return Boolean(user && (user.cargo === Cargo.GREMIO || user.pertenceGremio));
+}

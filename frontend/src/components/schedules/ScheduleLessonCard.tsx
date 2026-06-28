@@ -27,21 +27,21 @@ export function ScheduleLessonCard({ canManage, compact = false, onDelete, onDup
   const Icon = getSubjectIcon(schedule.disciplina, schedule.tipo);
   const happening = isScheduleHappening(schedule);
   const isInterval = schedule.tipo === ScheduleEntryKind.INTERVAL;
-  const textColor = isInterval ? '#475569' : getReadableTextColor(schedule.cor);
+  const textColor = isInterval ? '#475569' : getReadableTextColor(schedule.disciplina.cor);
 
   return (
     <article
       className={cn(
         'group relative overflow-hidden rounded-2xl p-4 shadow-sm ring-1 transition duration-200',
-        compact ? 'min-h-[9.5rem]' : 'min-h-[10.5rem]',
+        compact ? 'min-h-[6.25rem]' : 'min-h-[6.75rem]',
         happening ? 'ring-2 ring-brand-blue shadow-[0_0_0_4px_rgba(37,99,235,0.12)]' : 'ring-black/5',
         isInterval && 'border border-dashed border-slate-200 bg-slate-50'
       )}
-      style={isInterval ? undefined : { backgroundColor: schedule.cor, color: textColor }}
+      style={isInterval ? undefined : { backgroundColor: schedule.disciplina.cor, color: textColor }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em]" style={{ color: isInterval ? '#64748b' : textColor }}>
+          <div className="flex items-center gap-1.5 text-[0.68rem] font-bold uppercase tracking-[0.12em]" style={{ color: isInterval ? '#64748b' : textColor }}>
             <Icon className="h-4 w-4 shrink-0" />
             <span>{formatTimeRange(schedule)}</span>
           </div>
@@ -82,23 +82,18 @@ export function ScheduleLessonCard({ canManage, compact = false, onDelete, onDup
         ) : null}
       </div>
 
-      <h3 className={cn('mt-4 break-words font-semibold leading-tight', compact ? 'text-base' : 'text-lg')} style={{ color: textColor }}>
-        {schedule.disciplina}
+      <h3 className={cn('mt-2 truncate font-semibold leading-tight', compact ? 'text-sm' : 'text-base')} style={{ color: textColor }}>
+        {schedule.disciplina.nome}
       </h3>
       {schedule.professor ? (
-        <p className="mt-2 truncate text-sm font-semibold opacity-90" style={{ color: textColor }}>
+        <p className="mt-1 truncate text-xs font-semibold opacity-90" style={{ color: textColor }}>
           Prof. {schedule.professor.nomeCompleto}
         </p>
       ) : null}
-      <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold" style={{ color: textColor }}>
-        {schedule.sala ? <span className="rounded-full bg-white/20 px-2.5 py-1">{schedule.sala}</span> : null}
-        {schedule.turma ? <span className="rounded-full bg-white/20 px-2.5 py-1">{schedule.turma}</span> : null}
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[0.68rem] font-bold" style={{ color: textColor }}>
+        {schedule.sala ? <span className="rounded-full bg-white/20 px-2 py-0.5">{schedule.sala.nome}</span> : null}
+        {schedule.turma ? <span className="rounded-full bg-white/20 px-2 py-0.5">{schedule.turma.nome}</span> : null}
       </div>
-      {schedule.observacao ? (
-        <p className="mt-3 line-clamp-2 text-xs font-medium leading-5 opacity-85" style={{ color: textColor }}>
-          {schedule.observacao}
-        </p>
-      ) : null}
     </article>
   );
 }

@@ -1,5 +1,5 @@
 import type { User } from './auth';
-import { Turma } from './auth';
+import type { ClassGroup, Room, Subject } from './catalogs';
 
 export enum Weekday {
   MONDAY = 'MONDAY',
@@ -17,38 +17,37 @@ export enum ScheduleEntryKind {
 export type ScheduleEntry = {
   id: string;
   tipo: ScheduleEntryKind;
-  disciplina: string;
+  disciplina: Subject;
   professor?: User;
-  sala?: string;
-  turma?: Turma;
+  sala?: Room;
+  turma?: ClassGroup;
   diaSemana: Weekday;
   horarioInicio: string;
   horarioFim: string;
   observacao?: string;
-  cor: string;
   criadoEm: string;
   atualizadoEm: string;
 };
 
 export type ScheduleFilters = {
   diaSemana?: Weekday | '';
-  disciplina?: string;
+  disciplinaId?: string;
   professorId?: string;
+  salaId?: string;
   search?: string;
-  turma?: Turma | '';
+  turmaId?: string;
 };
 
 export type SchedulePayload = {
   tipo: ScheduleEntryKind;
-  disciplina: string;
+  disciplinaId: string;
   professorId?: string;
-  sala?: string;
-  turma?: Turma | '';
+  salaId?: string;
+  turmaId?: string;
   diaSemana: Weekday;
   horarioInicio: string;
   horarioFim: string;
   observacao?: string;
-  cor: string;
 };
 
 export const weekdays = [

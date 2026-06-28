@@ -1,8 +1,11 @@
 import type { Types } from 'mongoose';
 
+import type { ClassGroupDocument } from '../../catalogs/models/class-group.model';
+import type { RoomDocument } from '../../catalogs/models/room.model';
+import type { SubjectDocument } from '../../catalogs/models/subject.model';
+import type { PublicClassGroup, PublicRoom, PublicSubject } from '../../catalogs/types/catalog.types';
 import type { UserDocument } from '../../users/models/user.model';
 import type { PublicUser } from '../../users/types/user.types';
-import type { Turma } from '../../users/types/user.types';
 
 export enum Weekday {
   MONDAY = 'MONDAY',
@@ -19,41 +22,43 @@ export enum ScheduleEntryKind {
 
 export type ScheduleEntry = {
   tipo: ScheduleEntryKind;
-  disciplina: string;
+  disciplina: Types.ObjectId | SubjectDocument;
   professor?: Types.ObjectId | UserDocument;
-  sala?: string;
-  turma?: Turma;
+  sala?: Types.ObjectId | RoomDocument;
+  turma?: Types.ObjectId | ClassGroupDocument;
   diaSemana: Weekday;
   horarioInicio: string;
   horarioFim: string;
   observacao?: string;
-  cor: string;
   criadoEm: Date;
   atualizadoEm: Date;
 };
 
-export type PublicScheduleEntry = Omit<ScheduleEntry, 'professor'> & {
+export type PublicScheduleEntry = Omit<ScheduleEntry, 'disciplina' | 'professor' | 'sala' | 'turma'> & {
   id: string;
+  disciplina: PublicSubject;
   professor?: PublicUser;
+  sala?: PublicRoom;
+  turma?: PublicClassGroup;
 };
 
 export type ScheduleFilters = {
   diaSemana?: Weekday;
-  disciplina?: string;
+  disciplinaId?: string;
   professorId?: string;
+  salaId?: string;
   search?: string;
-  turma?: Turma;
+  turmaId?: string;
 };
 
 export type ScheduleEntryPayload = {
-  cor: string;
   diaSemana: Weekday;
-  disciplina: string;
+  disciplinaId: string;
   horarioFim: string;
   horarioInicio: string;
   observacao?: string;
   professorId?: string;
-  sala?: string;
+  salaId?: string;
   tipo: ScheduleEntryKind;
-  turma?: Turma;
+  turmaId?: string;
 };

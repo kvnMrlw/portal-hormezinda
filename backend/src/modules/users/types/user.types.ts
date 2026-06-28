@@ -67,6 +67,7 @@ export type User = {
   turno?: Turno;
   turma?: Turma;
   cargo: Cargo;
+  pertenceGremio: boolean;
   sexo?: Sexo;
   materia?: string;
   fotoPerfil: string;
@@ -95,6 +96,7 @@ export type AdminUpdateUserData = Partial<
     | 'dataNascimento'
     | 'fotoPerfil'
     | 'materia'
+    | 'pertenceGremio'
     | 'senha'
     | 'sexo'
     | 'turma'

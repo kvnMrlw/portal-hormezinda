@@ -98,6 +98,7 @@ export const adminCreateUserSchema = z
     cargo: adminAssignableCargoSchema,
     sexo: z.nativeEnum(Sexo),
     materia: z.string().trim().max(80).optional(),
+    pertenceGremio: z.preprocess(parseBoolean, z.boolean().optional()),
     turno: z.nativeEnum(Turno).optional(),
     turma: z.nativeEnum(Turma).optional()
   })
@@ -139,6 +140,7 @@ export const adminUpdateUserSchema = z
     cargo: adminAssignableCargoSchema.optional(),
     sexo: z.nativeEnum(Sexo).optional(),
     materia: z.string().trim().max(80).optional(),
+    pertenceGremio: z.preprocess(parseBoolean, z.boolean().optional()),
     ativo: z.preprocess(parseBoolean, z.boolean().optional()),
     dataNascimento: birthDateSchema,
     turno: z.nativeEnum(Turno).optional(),

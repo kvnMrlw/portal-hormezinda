@@ -11,7 +11,9 @@ export function authorizeRoles(...allowedCargos: Cargo[]) {
       return next(new AppError('Usuario nao autenticado', 401));
     }
 
-    if (!hasRole(request.user.cargo, allowedCargos)) {
+    const hasSecondaryGremioAccess = Boolean(request.user.pertenceGremio && allowedCargos.includes(Cargo.GREMIO));
+
+    if (!hasRole(request.user.cargo, allowedCargos) && !hasSecondaryGremioAccess) {
       return next(new AppError('Acesso nao autorizado', 403));
     }
 

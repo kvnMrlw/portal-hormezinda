@@ -136,9 +136,10 @@ export async function adminCreateUser(request: AuthenticatedRequest, response: R
         ...parsedBody.data,
         fotoPerfil: fotoPerfil ?? '',
         bannerPerfil: bannerPerfil ?? '',
-        bio: '',
-        redeSocial: '',
-        ativo: true
+      bio: '',
+      redeSocial: '',
+      pertenceGremio: Boolean(parsedBody.data.pertenceGremio),
+      ativo: true
       });
 
       return response.status(201).json(apiResponse({ usuario: user }, { message: 'Usuario criado com sucesso' }));

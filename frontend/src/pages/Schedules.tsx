@@ -7,15 +7,18 @@ import { ScheduleFilters } from '../components/schedules/ScheduleFilters';
 import { ScheduleModal } from '../components/schedules/ScheduleModal';
 import { ScheduleTable } from '../components/schedules/ScheduleTable';
 import { ScheduleTopSummary } from '../components/schedules/ScheduleTopSummary';
+import { TeacherAgenda } from '../components/schedules/TeacherAgenda';
 import { getPrintTitle } from '../components/schedules/scheduleUtils';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Loading } from '../components/ui/Loading';
 import { useAuth } from '../contexts/useAuth';
 import { getDisplayRoleLabel, isAdminRole } from '../lib/roles';
+import { listCatalogs } from '../services/catalogs';
 import { createSchedule, deleteSchedule, listSchedules, updateSchedule } from '../services/schedules';
 import { listUsers } from '../services/users';
 import { Cargo, type User } from '../types/auth';
+import type { ClassGroup, Room, Subject } from '../types/catalogs';
 import type { ScheduleEntry, ScheduleFilters as ScheduleFilterValues, SchedulePayload } from '../types/schedules';
 
 type ModalState = {
@@ -39,6 +42,9 @@ export function Schedules() {
   const { user } = useAuth();
   const [filters, setFilters] = useState<ScheduleFilterValues>({});
   const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
+  const [classes, setClasses] = useState<ClassGroup[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,7 +59,9 @@ export function Schedules() {
     () => teachers.find((teacher) => teacher.id === filters.professorId)?.nomeCompleto,
     [filters.professorId, teachers]
   );
-  const printTitle = getPrintTitle({ professor: selectedTeacher, turma: filters.turma || user?.turma });
+  const selectedClass = classes.find((classGroup) => classGroup.id === filters.turmaId)?.nome;
+  const printTitle = getPrintTitle({ professor: selectedTeacher, turma: selectedClass || user?.turma });
+  const isTeacherView = user?.cargo === Cargo.PROFESSOR;
 
   const loadSchedules = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
@@ -83,15 +91,19 @@ export function Schedules() {
   }, [loadSchedules]);
 
   useEffect(() => {
-    async function loadUsers() {
+    async function loadBaseData() {
       try {
-        setUsers(await listUsers());
+        const [loadedUsers, catalogs] = await Promise.all([listUsers(), listCatalogs()]);
+        setUsers(loadedUsers);
+        setClasses(catalogs.turmas);
+        setRooms(catalogs.salas);
+        setSubjects(catalogs.disciplinas);
       } catch {
         setUsers([]);
       }
     }
 
-    void loadUsers();
+    void loadBaseData();
   }, []);
 
   useEffect(() => {
@@ -138,7 +150,7 @@ export function Schedules() {
   }
 
   async function handleDelete(schedule: ScheduleEntry): Promise<void> {
-    const confirmed = window.confirm(`Excluir "${schedule.disciplina}" deste horario?`);
+    const confirmed = window.confirm(`Excluir "${schedule.disciplina.nome}" deste horario?`);
 
     if (!confirmed) {
       return;
@@ -207,11 +219,19 @@ export function Schedules() {
         </div>
 
         <div className="schedule-no-print">
-          <ScheduleTopSummary schedules={schedules} />
+          {!isTeacherView ? <ScheduleTopSummary schedules={schedules} /> : null}
         </div>
 
         <div className="schedule-no-print">
-          <ScheduleFilters currentUser={user} filters={filters} onChange={setFilters} teachers={teachers} />
+          <ScheduleFilters
+            classes={classes}
+            currentUser={user}
+            filters={filters}
+            onChange={setFilters}
+            rooms={rooms}
+            subjects={subjects}
+            teachers={teachers}
+          />
         </div>
 
         {formError && !modalState ? (
@@ -239,7 +259,11 @@ export function Schedules() {
           <EmptyState description="Ajuste os filtros ou cadastre um novo horario." icon={CalendarDays} title="Nenhum horario encontrado." />
         ) : null}
 
-        {!isLoading && !hasError && schedules.length ? (
+        {!isLoading && !hasError && schedules.length && isTeacherView ? (
+          <TeacherAgenda schedules={schedules} />
+        ) : null}
+
+        {!isLoading && !hasError && schedules.length && !isTeacherView ? (
           <div className="schedule-print-surface">
             <ScheduleTable
               canManage={isAdmin}
@@ -264,6 +288,7 @@ export function Schedules() {
         isOpen={Boolean(modalState)}
         isSaving={isSaving}
         mode={modalState?.mode ?? 'create'}
+        classes={classes}
         onClose={() => {
           if (!isSaving) {
             setModalState(null);
@@ -271,7 +296,9 @@ export function Schedules() {
           }
         }}
         onSubmit={handleSubmit}
+        rooms={rooms}
         schedule={modalState?.schedule}
+        subjects={subjects}
         teachers={teachers}
       />
     </AppShell>

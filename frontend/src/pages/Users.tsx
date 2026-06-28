@@ -43,6 +43,7 @@ type UserFormState = {
   usuario: string;
   senha: string;
   cargo: Cargo;
+  pertenceGremio: boolean;
   sexo: Sexo | '';
   materia: string;
   turno: Turno | '';
@@ -58,6 +59,7 @@ const emptyForm: UserFormState = {
   usuario: '',
   senha: '',
   cargo: Cargo.ALUNO,
+  pertenceGremio: false,
   sexo: '',
   materia: '',
   turno: '',
@@ -109,6 +111,7 @@ function userToForm(user: User): UserFormState {
     usuario: user.usuario,
     senha: '',
     cargo: user.cargo,
+    pertenceGremio: user.pertenceGremio,
     sexo: user.sexo ?? '',
     materia: user.materia ?? '',
     turno: user.turno ?? '',
@@ -124,6 +127,7 @@ function buildPayload(form: UserFormState, editingUser?: User): AdminUserPayload
     ativo: form.ativo,
     dataNascimento: form.dataNascimento || undefined,
     materia: form.cargo === Cargo.PROFESSOR ? form.materia : undefined,
+    pertenceGremio: (form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO) && form.pertenceGremio,
     turno: form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO ? form.turno || undefined : undefined,
     turma: form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO ? form.turma || undefined : undefined,
     fotoPerfil: form.fotoPerfil,
@@ -266,7 +270,7 @@ export function Users() {
   }, [query, roleFilter, sortMode, users]);
 
   const totalActive = users.filter((user) => user.ativo).length;
-  const totalGremio = users.filter((user) => user.cargo === Cargo.GREMIO).length;
+  const totalGremio = users.filter((user) => user.cargo === Cargo.GREMIO || user.pertenceGremio).length;
 
   function openCreateModal() {
     setEditingUser(undefined);
@@ -304,6 +308,7 @@ export function Users() {
       if (key === 'cargo' && value !== Cargo.ALUNO && value !== Cargo.GREMIO) {
         next.turno = '';
         next.turma = '';
+        next.pertenceGremio = false;
       }
 
       if (key === 'turno') {
@@ -481,7 +486,7 @@ export function Users() {
                   <div className="mt-4 min-w-0">
                     <div className="flex min-w-0 items-center gap-2">
                       <h2 className="truncate text-lg font-semibold text-brand-navy">{user.nomeCompleto}</h2>
-                      {user.cargo === Cargo.GREMIO ? (
+                      {user.cargo === Cargo.GREMIO || user.pertenceGremio ? (
                         <span aria-label="Selo do Gremio" className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-blue text-white">
                           <CheckCircle2 className="h-4 w-4" />
                         </span>
@@ -492,6 +497,7 @@ export function Users() {
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Badge variant="info">{getDisplayRoleLabel(user)}</Badge>
+                    {user.pertenceGremio ? <Badge variant="info">Gremio Estudantil</Badge> : null}
                     {user.materia ? <Badge>{user.materia}</Badge> : null}
                     {isStudent(user) && user.turma ? <Badge>{user.turma}</Badge> : null}
                   </div>
@@ -514,7 +520,7 @@ export function Users() {
                       <Trash2 className="h-4 w-4" />
                       Excluir
                     </button>
-                    {user.cargo === Cargo.ALUNO ? (
+                    {user.cargo === Cargo.ALUNO && !user.pertenceGremio ? (
                       <button
                         className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-50 px-3 py-2 text-sm font-semibold text-brand-blue transition hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:opacity-60"
                         disabled={actionUserId === user.id}
@@ -629,6 +635,32 @@ export function Users() {
               <option value="false">Inativo</option>
             </Select>
           </div>
+
+          {form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO ? (
+            <fieldset className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <legend className="px-1 text-sm font-semibold text-brand-navy">Gremio Estudantil</legend>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-100">
+                  <input
+                    checked={!form.pertenceGremio}
+                    className="h-4 w-4 accent-brand-blue"
+                    onChange={() => updateForm('pertenceGremio', false)}
+                    type="radio"
+                  />
+                  Nao pertence
+                </label>
+                <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-brand-blue ring-1 ring-blue-100">
+                  <input
+                    checked={form.pertenceGremio}
+                    className="h-4 w-4 accent-brand-blue"
+                    onChange={() => updateForm('pertenceGremio', true)}
+                    type="radio"
+                  />
+                  Pertence ao Gremio
+                </label>
+              </div>
+            </fieldset>
+          ) : null}
 
           <div className="grid gap-3 md:grid-cols-2">
             <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm font-semibold text-brand-navy transition hover:border-blue-200 hover:bg-blue-50">

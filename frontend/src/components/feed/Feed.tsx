@@ -53,7 +53,7 @@ export function Feed() {
   const [postToDeleteId, setPostToDeleteId] = useState<string>();
   const [deletingStoryId, setDeletingStoryId] = useState<string>();
   const [viewerGroupIndex, setViewerGroupIndex] = useState<number>();
-  const canCreate = canCreateFeedPost(user?.cargo);
+  const canCreate = canCreateFeedPost(user?.cargo, user ?? undefined);
   const canPin = canPinFeedPost(user?.cargo);
 
   const feedQuery = useQuery({

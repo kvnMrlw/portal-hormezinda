@@ -27,12 +27,12 @@ const subjectIcons: Array<[string, LucideIcon]> = [
   ['fisica', FlaskConical]
 ];
 
-export function getSubjectIcon(subject: string, kind: ScheduleEntryKind): LucideIcon {
+export function getSubjectIcon(subject: string | { nome: string }, kind: ScheduleEntryKind): LucideIcon {
   if (kind === ScheduleEntryKind.INTERVAL) {
     return Coffee;
   }
 
-  const normalizedSubject = normalizeText(subject);
+  const normalizedSubject = normalizeText(typeof subject === 'string' ? subject : subject.nome);
   const match = subjectIcons.find(([name]) => normalizedSubject.includes(name));
 
   return match?.[1] ?? BookOpen;

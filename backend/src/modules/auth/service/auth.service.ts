@@ -61,6 +61,7 @@ export class AuthService {
       turno: input.turno,
       turma: input.turma,
       cargo: Cargo.ALUNO,
+      pertenceGremio: false,
       fotoPerfil: '',
       bannerPerfil: '',
       bio: '',

@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 
 import { Home } from '../pages/Home';
+import { Catalogs } from '../pages/Catalogs';
 import { Login } from '../pages/Login';
 import { ModulePlaceholder } from '../pages/ModulePlaceholder';
 import { Notices } from '../pages/Notices';
@@ -81,6 +82,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={[Cargo.ADMIN]}>
         <Users />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/cadastros',
+    element: (
+      <ProtectedRoute allowedRoles={[Cargo.ADMIN]}>
+        <Catalogs />
       </ProtectedRoute>
     )
   },

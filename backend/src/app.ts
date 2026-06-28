@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import { env } from './config/env';
 import { errorMiddleware, notFoundMiddleware } from './middlewares/error.middleware';
 import authRoutes from './modules/auth/routes/auth.routes';
+import catalogRoutes from './modules/catalogs/routes/catalog.routes';
 import feedRoutes from './modules/feed/routes/feed.routes';
 import noticeRoutes from './modules/notices/routes/notice.routes';
 import scheduleRoutes from './modules/schedules/routes/schedule.routes';
@@ -45,6 +46,7 @@ app.use('/uploads', express.static(path.resolve(process.cwd(), 'src/uploads'), g
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/catalogs', catalogRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/schedules', scheduleRoutes);

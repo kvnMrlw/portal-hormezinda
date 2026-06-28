@@ -1,4 +1,4 @@
-import { Home, LogOut, UserRound, UsersRound, X } from 'lucide-react';
+import { Database, Home, LogOut, UserRound, UsersRound, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -34,7 +34,7 @@ const navigation: NavigationItem[] = [
 export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: SidebarProps) {
   const { user } = useAuth();
   const visibleNavigation = isAdminRole(user?.cargo)
-    ? [...navigation, { href: '/usuarios', icon: UsersRound, label: 'Usuarios' }]
+    ? [...navigation, { href: '/cadastros', icon: Database, label: 'Cadastros' }, { href: '/usuarios', icon: UsersRound, label: 'Usuarios' }]
     : [...navigation, { href: '/pessoas', icon: UsersRound, label: 'Pessoas' }];
 
   return (

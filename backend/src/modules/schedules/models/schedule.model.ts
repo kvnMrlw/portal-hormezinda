@@ -1,6 +1,5 @@
 import { Schema, model, type HydratedDocument, type Model } from 'mongoose';
 
-import { Turma } from '../../users/types/user.types';
 import { ScheduleEntryKind, Weekday, type ScheduleEntry } from '../types/schedule.types';
 
 export type ScheduleDocument = HydratedDocument<ScheduleEntry>;
@@ -15,10 +14,9 @@ const scheduleSchema = new Schema<ScheduleEntry>(
       index: true
     },
     disciplina: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'Subject',
       required: true,
-      trim: true,
-      maxlength: 80,
       index: true
     },
     professor: {
@@ -27,14 +25,13 @@ const scheduleSchema = new Schema<ScheduleEntry>(
       index: true
     },
     sala: {
-      type: String,
-      trim: true,
-      maxlength: 40,
+      type: Schema.Types.ObjectId,
+      ref: 'Room',
       index: true
     },
     turma: {
-      type: String,
-      enum: Object.values(Turma),
+      type: Schema.Types.ObjectId,
+      ref: 'ClassGroup',
       index: true
     },
     diaSemana: {
@@ -59,12 +56,6 @@ const scheduleSchema = new Schema<ScheduleEntry>(
       trim: true,
       maxlength: 240,
       default: ''
-    },
-    cor: {
-      type: String,
-      required: true,
-      trim: true,
-      match: /^#[0-9a-fA-F]{6}$/
     }
   },
   {
@@ -86,6 +77,7 @@ const scheduleSchema = new Schema<ScheduleEntry>(
 
 scheduleSchema.index({ diaSemana: 1, horarioInicio: 1, turma: 1 });
 scheduleSchema.index({ diaSemana: 1, horarioInicio: 1, professor: 1 });
-scheduleSchema.index({ disciplina: 'text', observacao: 'text', sala: 'text' });
+scheduleSchema.index({ diaSemana: 1, horarioInicio: 1, sala: 1 });
+scheduleSchema.index({ diaSemana: 1, horarioInicio: 1, disciplina: 1 });
 
 export const ScheduleModel: Model<ScheduleEntry> = model<ScheduleEntry>('Schedule', scheduleSchema);

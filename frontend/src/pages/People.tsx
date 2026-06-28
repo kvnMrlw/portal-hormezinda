@@ -17,7 +17,7 @@ const pageSize = 18;
 const verifiedRoles = new Set([Cargo.PROFESSOR, Cargo.COORDENADOR, Cargo.DIRETOR]);
 
 function isVerified(user: User): boolean {
-  return verifiedRoles.has(user.cargo);
+  return verifiedRoles.has(user.cargo) || user.pertenceGremio;
 }
 
 export function People() {
@@ -154,7 +154,7 @@ export function People() {
                       <div className="min-w-0">
                         <div className="flex min-w-0 items-center gap-2">
                           <h2 className="truncate text-base font-semibold text-brand-navy sm:text-lg">{user.nomeCompleto}</h2>
-                          {user.cargo === Cargo.GREMIO ? <CheckCircle2 className="h-5 w-5 shrink-0 fill-brand-blue text-white" /> : null}
+                          {user.cargo === Cargo.GREMIO || user.pertenceGremio ? <CheckCircle2 className="h-5 w-5 shrink-0 fill-brand-blue text-white" /> : null}
                         </div>
                         <p className="mt-0.5 truncate text-sm font-medium text-slate-500">@{user.usuario}</p>
                       </div>
@@ -162,7 +162,7 @@ export function People() {
 
                     <div className="flex min-w-0 flex-wrap items-center gap-2 pl-20 sm:pl-0">
                       <span className="truncate text-sm font-semibold text-slate-600">{getDisplayRoleLabel(user)}</span>
-                      {user.cargo === Cargo.GREMIO ? (
+                      {user.cargo === Cargo.GREMIO || user.pertenceGremio ? (
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-blue text-white" title="Gremio">
                           <Crown className="h-4 w-4" />
                         </span>

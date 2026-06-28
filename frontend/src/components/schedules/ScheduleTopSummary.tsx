@@ -20,7 +20,7 @@ export function ScheduleTopSummary({ schedules }: ScheduleTopSummaryProps) {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Proxima aula</p>
             <h2 className="mt-1 text-2xl font-semibold tracking-normal text-brand-navy">
-              {nextSchedule?.disciplina ?? 'Sem aulas programadas'}
+              {nextSchedule?.disciplina.nome ?? 'Sem aulas programadas'}
             </h2>
           </div>
         </div>
@@ -34,7 +34,7 @@ export function ScheduleTopSummary({ schedules }: ScheduleTopSummaryProps) {
                 <ArrowRight className="h-4 w-4 text-slate-300" />
                 <span className="inline-flex items-center gap-2">
                   <DoorOpen className="h-4 w-4 text-brand-blue" />
-                  {nextSchedule.sala}
+                  {nextSchedule.sala.nome}
                 </span>
               </>
             ) : null}

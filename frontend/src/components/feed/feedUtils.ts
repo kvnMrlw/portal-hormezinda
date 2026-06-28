@@ -1,4 +1,4 @@
-import { Cargo } from '../../types/auth';
+import { Cargo, type User } from '../../types/auth';
 import type { FeedStory } from '../../types/feed';
 import { getAssetUrl } from '../../lib/assets';
 
@@ -20,8 +20,8 @@ const postAuthorRoles = new Set<Cargo>([
   Cargo.GREMIO
 ]);
 
-export function canCreateFeedPost(role?: Cargo): boolean {
-  return Boolean(role && postAuthorRoles.has(role));
+export function canCreateFeedPost(role?: Cargo, user?: Pick<User, 'pertenceGremio'>): boolean {
+  return Boolean((role && postAuthorRoles.has(role)) || user?.pertenceGremio);
 }
 
 export function canPinFeedPost(role?: Cargo): boolean {
