@@ -10,6 +10,7 @@ import { errorMiddleware, notFoundMiddleware } from './middlewares/error.middlew
 import authRoutes from './modules/auth/routes/auth.routes';
 import feedRoutes from './modules/feed/routes/feed.routes';
 import noticeRoutes from './modules/notices/routes/notice.routes';
+import scheduleRoutes from './modules/schedules/routes/schedule.routes';
 import userRoutes from './modules/users/routes/user.routes';
 import healthRoutes from './routes/health.routes';
 import { getStaticUploadOptions } from './utils/imageUpload';
@@ -46,6 +47,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/notices', noticeRoutes);
+app.use('/api/schedules', scheduleRoutes);
 app.use('/api/users', userRoutes);
 
 app.use(notFoundMiddleware);

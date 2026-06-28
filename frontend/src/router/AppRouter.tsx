@@ -9,6 +9,7 @@ import { PlatformHome } from '../pages/PlatformHome';
 import { Profile } from '../pages/Profile';
 import { PublicProfile } from '../pages/PublicProfile';
 import { Register } from '../pages/Register';
+import { Schedules } from '../pages/Schedules';
 import { Users } from '../pages/Users';
 import { ProtectedRoute } from '../routes/ProtectedRoute';
 import { schoolModules } from '../data/schoolModules';
@@ -68,6 +69,14 @@ const router = createBrowserRouter([
     )
   },
   {
+    path: '/horarios',
+    element: (
+      <ProtectedRoute>
+        <Schedules />
+      </ProtectedRoute>
+    )
+  },
+  {
     path: '/usuarios',
     element: (
       <ProtectedRoute allowedRoles={[Cargo.ADMIN]}>
@@ -75,7 +84,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
-  ...schoolModules.filter((module) => module.href !== '/avisos').map((module) => ({
+  ...schoolModules.filter((module) => module.href !== '/avisos' && module.href !== '/horarios').map((module) => ({
     path: module.href,
     element: (
       <ProtectedRoute>
