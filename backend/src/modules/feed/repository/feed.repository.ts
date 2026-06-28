@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 
 import { PostModel, type PostDocument } from '../models/post.model';
 import { StoryModel, type StoryDocument } from '../models/story.model';
-import type { CreatePostData, CreateStoryData, ListPostsOptions, ReactionEmoji } from '../types/feed.types';
+import type { CreatePostData, CreateStoryData, ListPostsOptions, ReactionEmoji, UpdatePostData } from '../types/feed.types';
 
 export class FeedRepository {
   async create(data: CreatePostData): Promise<PostDocument> {
@@ -55,6 +55,20 @@ export class FeedRepository {
 
   async findById(postId: string): Promise<PostDocument | null> {
     return PostModel.findById(postId).populate('autor');
+  }
+
+  async updatePost(postId: string, data: UpdatePostData): Promise<PostDocument | null> {
+    const updateData: Record<string, unknown> = {};
+
+    if (data.texto !== undefined) {
+      updateData.texto = data.texto;
+    }
+
+    if (data.imagem !== undefined) {
+      updateData.imagens = [data.imagem];
+    }
+
+    return PostModel.findByIdAndUpdate(postId, updateData, { new: true }).populate('autor');
   }
 
   async react(postId: string, userId: string, emoji: ReactionEmoji): Promise<PostDocument | null> {

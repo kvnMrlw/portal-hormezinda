@@ -1,6 +1,6 @@
 import { Schema, model, type HydratedDocument, type Model } from 'mongoose';
 
-import { CourseContentType, CourseStatus, type Course } from '../types/course.types';
+import { CourseContentType, CourseStatus, CourseType, type Course } from '../types/course.types';
 
 export type CourseDocument = HydratedDocument<Course>;
 
@@ -43,7 +43,8 @@ const courseSchema = new Schema<Course>(
     descricao: { type: String, required: true, trim: true, maxlength: 1400 },
     capa: courseCoverSchema,
     categoria: { type: String, required: true, trim: true, maxlength: 80, index: true },
-    professor: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    professor: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    tipo: { type: String, enum: Object.values(CourseType), default: CourseType.COURSE, required: true, index: true },
     arquivos: { type: [courseAssetSchema], default: [] },
     link: { type: String, trim: true, maxlength: 500, default: '' },
     conteudos: { type: [courseContentSchema], default: [] },
@@ -67,6 +68,6 @@ const courseSchema = new Schema<Course>(
 );
 
 courseSchema.index({ titulo: 'text', descricao: 'text', categoria: 'text' });
-courseSchema.index({ status: 1, categoria: 1, criadoEm: -1 });
+courseSchema.index({ status: 1, tipo: 1, categoria: 1, criadoEm: -1 });
 
 export const CourseModel: Model<Course> = model<Course>('Course', courseSchema);

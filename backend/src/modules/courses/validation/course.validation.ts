@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { CourseContentType, CourseStatus } from '../types/course.types';
+import { CourseContentType, CourseStatus, CourseType } from '../types/course.types';
 
 const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'Id invalido');
 
@@ -12,7 +12,8 @@ export const courseFiltersSchema = z.object({
   categoria: z.string().trim().max(80).optional(),
   professorId: objectIdSchema.optional(),
   search: z.string().trim().max(80).optional(),
-  status: z.nativeEnum(CourseStatus).optional()
+  status: z.nativeEnum(CourseStatus).optional(),
+  tipo: z.nativeEnum(CourseType).optional()
 });
 
 const contentSchema = z
@@ -52,5 +53,6 @@ export const coursePayloadSchema = z.object({
   link: z.string().trim().url().or(z.literal('')).optional(),
   professorId: objectIdSchema,
   status: z.nativeEnum(CourseStatus).default(CourseStatus.DRAFT),
+  tipo: z.nativeEnum(CourseType).default(CourseType.COURSE),
   titulo: z.string().trim().min(3).max(140)
 });

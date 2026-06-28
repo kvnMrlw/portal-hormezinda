@@ -17,6 +17,11 @@ export enum CourseContentType {
   LINK = 'LINK'
 }
 
+export enum CourseType {
+  COURSE = 'COURSE',
+  PLATFORM = 'PLATFORM'
+}
+
 export type CourseAsset = {
   nome: string;
   tipo: string;
@@ -42,7 +47,8 @@ export type Course = {
   descricao: string;
   capa?: CourseCover;
   categoria: string;
-  professor: Types.ObjectId | UserDocument;
+  professor?: Types.ObjectId | UserDocument;
+  tipo: CourseType;
   arquivos: CourseAsset[];
   link?: string;
   conteudos: CourseContent[];
@@ -55,14 +61,14 @@ export type PublicCourseContent = CourseContent & {
   id?: string;
 };
 
-export type PublicCourse = Omit<Course, 'professor' | 'conteudos'> & {
+export type PublicCourse = Omit<Course, 'conteudos' | 'professor'> & {
   id: string;
-  professor: PublicUser;
   conteudos: PublicCourseContent[];
+  professor: PublicUser;
   quantidadeConteudos: number;
 };
 
-export type CoursePayload = Pick<Course, 'categoria' | 'descricao' | 'link' | 'status' | 'titulo'> & {
+export type CoursePayload = Pick<Course, 'categoria' | 'descricao' | 'link' | 'status' | 'tipo' | 'titulo'> & {
   conteudos?: Array<Omit<CourseContent, 'arquivo'>>;
   professorId: string;
 };
@@ -70,7 +76,9 @@ export type CoursePayload = Pick<Course, 'categoria' | 'descricao' | 'link' | 's
 export type CourseFilters = {
   categoria?: string;
   includeHidden?: boolean;
+  ownerId?: string;
   professorId?: string;
   search?: string;
   status?: CourseStatus;
+  tipo?: CourseType;
 };

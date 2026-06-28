@@ -5,7 +5,7 @@ import { removeUploadedFiles } from '../../../utils/imageUpload';
 import type { UserDocument } from '../../users/models/user.model';
 import { UserRepository } from '../../users/repository/user.repository';
 import { toPublicUser } from '../../users/service/user.service';
-import { Cargo } from '../../users/types/user.types';
+import { Cargo, type PublicUser } from '../../users/types/user.types';
 import type { CourseDocument } from '../models/course.model';
 import { CourseRepository } from '../repository/course.repository';
 import {
@@ -23,10 +23,46 @@ function isUserDocument(user: Course['professor']): user is UserDocument {
   return Boolean(user && typeof user === 'object' && !(user instanceof Types.ObjectId) && 'nomeCompleto' in user);
 }
 
-function toPublicCourse(course: CourseDocument): PublicCourse {
-  if (!isUserDocument(course.professor)) {
-    throw new AppError('Professor do curso nao carregado', 500);
+function getCourseOwnerId(course: CourseDocument): string | undefined {
+  if (!course.professor) {
+    return undefined;
   }
+
+  return course.professor instanceof Types.ObjectId ? course.professor.toString() : course.professor.id;
+}
+
+function isInstitutionalUser(user: Pick<PublicUser, 'cargo' | 'pertenceGremio'>): boolean {
+  return (
+    user.cargo === Cargo.ADMIN ||
+    user.cargo === Cargo.DIRETOR ||
+    user.cargo === Cargo.COORDENADOR ||
+    user.cargo === Cargo.PROFESSOR ||
+    user.cargo === Cargo.GREMIO ||
+    Boolean(user.pertenceGremio)
+  );
+}
+
+function createSystemOwner(): PublicUser {
+  const now = new Date();
+
+  return {
+    id: '',
+    nomeCompleto: 'Portal Hormezinda',
+    usuario: 'sistema',
+    cargo: Cargo.ADMIN,
+    pertenceGremio: false,
+    fotoPerfil: '',
+    bannerPerfil: '',
+    bio: '',
+    redeSocial: '',
+    ativo: true,
+    criadoEm: now,
+    atualizadoEm: now
+  };
+}
+
+function toPublicCourse(course: CourseDocument): PublicCourse {
+  const professor = isUserDocument(course.professor) ? toPublicUser(course.professor) : createSystemOwner();
 
   return {
     id: course.id,
@@ -48,9 +84,10 @@ function toPublicCourse(course: CourseDocument): PublicCourse {
     criadoEm: course.criadoEm,
     descricao: course.descricao,
     link: course.link ?? '',
-    professor: toPublicUser(course.professor),
+    professor,
     quantidadeConteudos: (course.conteudos ?? []).length + (course.link ? 1 : 0),
     status: course.status,
+    tipo: course.tipo,
     titulo: course.titulo
   };
 }
@@ -83,23 +120,37 @@ export class CourseService {
     return courses.map(toPublicCourse);
   }
 
-  async create(data: CoursePayload, cover?: CourseCover, assets: CourseAsset[] = []): Promise<PublicCourse> {
-    await this.validatePayload(data);
-    const course = await this.courseRepository.create(data);
+  async create(viewer: PublicUser, data: CoursePayload, cover?: CourseCover, assets: CourseAsset[] = []): Promise<PublicCourse> {
+    if (!isInstitutionalUser(viewer)) {
+      throw new AppError('Acesso nao autorizado', 403);
+    }
+
+    const ownerId = viewer.cargo === Cargo.ADMIN ? data.professorId || viewer.id : viewer.id;
+    await this.validatePayload({ ...data, professorId: ownerId });
+    const course = await this.courseRepository.create({ ...data, professorId: ownerId });
     const hydratedCourse = await this.courseRepository.updateAssets(course.id, this.mergeAssets(course, cover, assets));
 
     return toPublicCourse(hydratedCourse ?? course);
   }
 
-  async update(id: string, data: CoursePayload, cover?: CourseCover, assets: CourseAsset[] = []): Promise<PublicCourse | null> {
+  async update(
+    id: string,
+    viewer: PublicUser,
+    data: CoursePayload,
+    cover?: CourseCover,
+    assets: CourseAsset[] = []
+  ): Promise<PublicCourse | null> {
     const currentCourse = await this.courseRepository.findById(id);
 
     if (!currentCourse) {
       return null;
     }
 
-    await this.validatePayload(data);
-    const course = await this.courseRepository.update(id, data);
+    this.assertCanManageCourse(currentCourse, viewer);
+
+    const ownerId = viewer.cargo === Cargo.ADMIN ? data.professorId || getCourseOwnerId(currentCourse) || viewer.id : getCourseOwnerId(currentCourse) || viewer.id;
+    await this.validatePayload({ ...data, professorId: ownerId });
+    const course = await this.courseRepository.update(id, { ...data, professorId: ownerId });
 
     if (!course) {
       return null;
@@ -121,12 +172,14 @@ export class CourseService {
     return hydratedCourse ? toPublicCourse(hydratedCourse) : null;
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, viewer: PublicUser): Promise<boolean> {
     const course = await this.courseRepository.findById(id);
 
     if (!course) {
       return false;
     }
+
+    this.assertCanManageCourse(course, viewer);
 
     await this.courseRepository.delete(id);
     await removeUploadedFiles(collectUploadUrls(course));
@@ -149,11 +202,20 @@ export class CourseService {
     };
   }
 
+  private assertCanManageCourse(course: CourseDocument, viewer: PublicUser): void {
+    const isAuthor = getCourseOwnerId(course) === viewer.id;
+    const isAdmin = viewer.cargo === Cargo.ADMIN;
+
+    if (!isAuthor && !isAdmin) {
+      throw new AppError('Acesso nao autorizado', 403);
+    }
+  }
+
   private async validatePayload(data: CoursePayload): Promise<void> {
     const professor = await this.userRepository.findById(data.professorId);
 
-    if (!professor || !professor.ativo || professor.cargo !== Cargo.PROFESSOR) {
-      throw new AppError('Professor invalido para este curso', 400);
+    if (!professor || !professor.ativo || !isInstitutionalUser(toPublicUser(professor))) {
+      throw new AppError('Responsavel invalido para este curso', 400);
     }
 
     if (data.status === CourseStatus.PUBLISHED && !data.titulo.trim()) {

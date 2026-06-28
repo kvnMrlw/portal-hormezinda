@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 import { CourseModel, type CourseDocument } from '../models/course.model';
 import { CourseStatus, type CourseFilters, type CoursePayload } from '../types/course.types';
 
@@ -27,27 +25,35 @@ function buildPayload(data: CoursePayload) {
     conteudos: data.conteudos ?? [],
     descricao: data.descricao,
     link: data.link ?? '',
-    professor: new Types.ObjectId(data.professorId),
+    professor: data.professorId,
     status: data.status,
+    tipo: data.tipo,
     titulo: data.titulo
   };
 }
 
 export class CourseRepository {
   async list(filters: CourseFilters = {}): Promise<CourseDocument[]> {
+    const visibilityFilter = filters.includeHidden
+      ? {}
+      : filters.ownerId
+        ? { $or: [{ status: CourseStatus.PUBLISHED }, { professor: filters.ownerId }] }
+        : { status: CourseStatus.PUBLISHED };
+
     return CourseModel.find({
       ...buildTextFilter(filters.search),
       ...(filters.categoria ? { categoria: filters.categoria } : {}),
       ...(filters.professorId ? { professor: filters.professorId } : {}),
       ...(filters.status ? { status: filters.status } : {}),
-      ...(!filters.includeHidden ? { status: CourseStatus.PUBLISHED } : {})
+      ...(filters.tipo ? { tipo: filters.tipo } : {}),
+      ...visibilityFilter
     })
       .populate('professor')
       .sort({ criadoEm: -1 });
   }
 
   async findById(id: string): Promise<CourseDocument | null> {
-    return CourseModel.findById(id).populate('professor');
+    return CourseModel.findById(id);
   }
 
   async create(data: CoursePayload): Promise<CourseDocument> {

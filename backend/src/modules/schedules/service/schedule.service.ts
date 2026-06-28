@@ -169,7 +169,7 @@ export class ScheduleService {
       return [];
     }
 
-    const classGroup = await this.catalogRepository.findClassByName(viewer.turma);
+    const classGroup = await this.catalogRepository.findClassForStudent(viewer.turma);
 
     if (!classGroup) {
       return [];

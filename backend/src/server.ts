@@ -5,13 +5,11 @@ import { Server } from 'socket.io';
 import app from './app';
 import { connectDatabase } from './config/database';
 import { env } from './config/env';
+import { ensureDefaultAdmin } from './seeds/ensureAdmin';
 
 async function bootstrap(): Promise<void> {
-  const databaseConnection = connectDatabase();
-
-  if (env.NODE_ENV === 'production') {
-    await databaseConnection;
-  }
+  await connectDatabase();
+  await ensureDefaultAdmin();
 
   const httpServer = http.createServer(app);
 

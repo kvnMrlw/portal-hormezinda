@@ -7,12 +7,13 @@ import { createCourse, deleteCourse, listCourses, updateCourse } from '../contro
 import { courseUpload } from '../middlewares/course-upload.middleware';
 
 const router = Router();
+const courseManagerRoles = [Cargo.ADMIN, Cargo.DIRETOR, Cargo.COORDENADOR, Cargo.PROFESSOR, Cargo.GREMIO];
 
 router.get('/', authenticate, listCourses);
 router.post(
   '/',
   authenticate,
-  authorizeRoles(Cargo.ADMIN),
+  authorizeRoles(...courseManagerRoles),
   courseUpload.fields([
     { maxCount: 1, name: 'capa' },
     { maxCount: 12, name: 'arquivos' }
@@ -22,13 +23,13 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
-  authorizeRoles(Cargo.ADMIN),
+  authorizeRoles(...courseManagerRoles),
   courseUpload.fields([
     { maxCount: 1, name: 'capa' },
     { maxCount: 12, name: 'arquivos' }
   ]),
   updateCourse
 );
-router.delete('/:id', authenticate, authorizeRoles(Cargo.ADMIN), deleteCourse);
+router.delete('/:id', authenticate, authorizeRoles(...courseManagerRoles), deleteCourse);
 
 export default router;

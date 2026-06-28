@@ -12,7 +12,7 @@ import { Select } from '../components/ui/Select';
 import { Textarea } from '../components/ui/Textarea';
 import { useAuth } from '../contexts/useAuth';
 import { getAssetUrl } from '../lib/assets';
-import { isAdminRole } from '../lib/roles';
+import { canManageInstitutionalContent, isAdminRole } from '../lib/roles';
 import { createCourse, deleteCourse, listCourses, updateCourse } from '../services/courses';
 import { listUsers } from '../services/users';
 import { Cargo, type User } from '../types/auth';
@@ -82,6 +82,7 @@ function contentFromCourse(course: Course): ContentDraft[] {
 export function Courses() {
   const { user } = useAuth();
   const isAdmin = isAdminRole(user?.cargo);
+  const canManageCourses = canManageInstitutionalContent(user);
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<User[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -128,7 +129,7 @@ export function Courses() {
 
   function openCreate(): void {
     setEditingCourse(null);
-    setPayload({ ...emptyPayload, professorId: teachers[0]?.id ?? '' });
+    setPayload({ ...emptyPayload, professorId: isAdmin ? teachers[0]?.id ?? user?.id ?? '' : user?.id ?? '' });
     setContents([]);
     setIsModalOpen(true);
   }
@@ -204,7 +205,7 @@ export function Courses() {
                 <h1 className="mt-1 text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">Cursos</h1>
               </div>
             </div>
-            {isAdmin ? (
+            {canManageCourses ? (
               <Button onClick={openCreate} type="button">
                 <Plus className="h-4 w-4" />
                 Novo curso
@@ -237,7 +238,7 @@ export function Courses() {
         {!isLoading && courses.length ? (
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {courses.map((course) => (
-              <CourseCard canManage={isAdmin} course={course} key={course.id} onDelete={(item) => void handleDelete(item)} onEdit={openEdit} onOpen={setSelectedCourse} />
+              <CourseCard canManage={isAdmin || course.professor.id === user?.id} course={course} key={course.id} onDelete={(item) => void handleDelete(item)} onEdit={openEdit} onOpen={setSelectedCourse} />
             ))}
           </section>
         ) : null}
@@ -250,12 +251,14 @@ export function Courses() {
           <div className="grid gap-4 md:grid-cols-2">
             <Input label="Titulo" name="titulo" onChange={(event) => setPayload((current) => ({ ...current, titulo: event.target.value }))} required value={payload.titulo} />
             <Input label="Categoria" name="categoria" onChange={(event) => setPayload((current) => ({ ...current, categoria: event.target.value }))} required value={payload.categoria} />
-            <Select label="Professor responsavel" name="professorId" onChange={(event) => setPayload((current) => ({ ...current, professorId: event.target.value }))} required value={payload.professorId}>
-              <option value="">Selecione</option>
-              {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>{teacher.nomeCompleto}</option>
-              ))}
-            </Select>
+            {isAdmin ? (
+              <Select label="Responsavel" name="professorId" onChange={(event) => setPayload((current) => ({ ...current, professorId: event.target.value }))} required value={payload.professorId}>
+                <option value="">Selecione</option>
+                {teachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>{teacher.nomeCompleto}</option>
+                ))}
+              </Select>
+            ) : null}
             <Select label="Status" name="status" onChange={(event) => setPayload((current) => ({ ...current, status: event.target.value as CourseStatus }))} value={payload.status}>
               {Object.values(CourseStatus).map((status) => (
                 <option key={status} value={status}>{courseStatusLabels[status]}</option>
@@ -327,7 +330,7 @@ function CourseDetail({ course, onClose }: { course: Course | null; onClose: () 
       <div className="space-y-5 pt-5">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-brand-blue">{course.categoria}</p>
-          <p className="mt-2 text-sm font-semibold text-slate-500">Prof. {course.professor.nomeCompleto}</p>
+          <p className="mt-2 text-sm font-semibold text-slate-500">Responsavel: {course.professor.nomeCompleto}</p>
           <p className="mt-4 leading-7 text-slate-600">{course.descricao}</p>
           {course.link ? <a className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-brand-blue" href={course.link} rel="noreferrer" target="_blank"><LinkIcon className="h-4 w-4" />Abrir link do curso</a> : null}
         </div>

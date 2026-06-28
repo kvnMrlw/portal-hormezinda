@@ -84,7 +84,7 @@ const sortOptions: { label: string; value: SortMode }[] = [
   { label: 'Nome Z-A', value: 'nome-za' }
 ];
 
-const roleOptions = [Cargo.ALUNO, Cargo.PROFESSOR, Cargo.COORDENADOR, Cargo.DIRETOR, Cargo.ADMIN];
+const roleOptions = [Cargo.ALUNO, Cargo.PROFESSOR, Cargo.COORDENADOR, Cargo.DIRETOR, Cargo.GREMIO, Cargo.ADMIN];
 
 const subjects = [
   'Matematica',
@@ -584,7 +584,7 @@ export function Users() {
               value={form.senha}
             />
             <Select label="Cargo" name="cargo" onChange={(event) => updateForm('cargo', event.target.value as Cargo)} value={form.cargo}>
-              {[...roleOptions, ...(editingUser?.cargo === Cargo.GREMIO ? [Cargo.GREMIO] : [])].map((role) => (
+              {roleOptions.map((role) => (
                 <option key={role} value={role}>
                   {getRoleLabel(role)}
                 </option>

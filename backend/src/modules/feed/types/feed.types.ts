@@ -50,6 +50,11 @@ export type CreatePostData = {
   imagem?: PostImage;
 };
 
+export type UpdatePostData = {
+  texto?: string;
+  imagem?: PostImage;
+};
+
 export type ListPostsOptions = {
   page: number;
   limit: number;

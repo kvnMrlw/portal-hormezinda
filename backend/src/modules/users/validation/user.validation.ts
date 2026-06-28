@@ -5,9 +5,7 @@ import { Cargo, Sexo, Turma, Turno, turmasPorTurno } from '../types/user.types';
 const usuarioRegex = /^(?=.*[a-z])(?=.*\.)[a-z0-9.]{8,}$/;
 const senhaRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-const adminAssignableCargoSchema = z
-  .nativeEnum(Cargo)
-  .refine((cargo) => cargo !== Cargo.GREMIO, 'Use a promocao para adicionar aluno ao Gremio');
+const adminAssignableCargoSchema = z.nativeEnum(Cargo);
 
 function parseBirthDate(value?: string): Date | undefined {
   if (!value) {

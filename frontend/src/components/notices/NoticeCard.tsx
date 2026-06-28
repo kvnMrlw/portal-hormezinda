@@ -17,6 +17,7 @@ import { categoryIcons, categoryLabels, priorityLabels, priorityStyles } from '.
 
 type NoticeCardProps = {
   notice: Notice;
+  canManage: boolean;
   isAdmin: boolean;
   onDelete: (notice: Notice) => void;
   onEdit: (notice: Notice) => void;
@@ -44,7 +45,7 @@ function isImageAttachment(attachment: NoticeAttachment): boolean {
   return attachment.tipo.startsWith('image/');
 }
 
-export function NoticeCard({ isAdmin, notice, onDelete, onEdit, onToggleActive, onTogglePin }: NoticeCardProps) {
+export function NoticeCard({ canManage, isAdmin, notice, onDelete, onEdit, onToggleActive, onTogglePin }: NoticeCardProps) {
   const Icon = categoryIcons[notice.categoria];
   const expired = isExpired(notice);
   const imageAttachments = notice.anexos.filter(isImageAttachment);
@@ -119,26 +120,30 @@ export function NoticeCard({ isAdmin, notice, onDelete, onEdit, onToggleActive, 
 
         </div>
 
-        {isAdmin ? (
+        {canManage ? (
           <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
-            <Button
-              className="h-11 w-11 rounded-2xl p-0"
-              onClick={() => onTogglePin(notice)}
-              title={notice.fixado ? 'Desfixar' : 'Fixar'}
-              type="button"
-              variant="secondary"
-            >
-              {notice.fixado ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-            </Button>
-            <Button
-              className="h-11 w-11 rounded-2xl p-0"
-              onClick={() => onToggleActive(notice)}
-              title={notice.ativo ? 'Desativar' : 'Ativar'}
-              type="button"
-              variant="secondary"
-            >
-              <Power className={cn('h-4 w-4', notice.ativo ? 'text-emerald-600' : 'text-slate-400')} />
-            </Button>
+            {isAdmin ? (
+              <>
+                <Button
+                  className="h-11 w-11 rounded-2xl p-0"
+                  onClick={() => onTogglePin(notice)}
+                  title={notice.fixado ? 'Desfixar' : 'Fixar'}
+                  type="button"
+                  variant="secondary"
+                >
+                  {notice.fixado ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                </Button>
+                <Button
+                  className="h-11 w-11 rounded-2xl p-0"
+                  onClick={() => onToggleActive(notice)}
+                  title={notice.ativo ? 'Desativar' : 'Ativar'}
+                  type="button"
+                  variant="secondary"
+                >
+                  <Power className={cn('h-4 w-4', notice.ativo ? 'text-emerald-600' : 'text-slate-400')} />
+                </Button>
+              </>
+            ) : null}
             <Button
               className="h-11 w-11 rounded-2xl p-0"
               onClick={() => onEdit(notice)}

@@ -5,11 +5,13 @@ import { apiResponse } from '../../../utils/apiResponse';
 import { removeUploadedFiles, saveUploadedFile } from '../../../utils/imageUpload';
 import type { AuthenticatedRequest } from '../../auth/types/auth.types';
 import { Cargo } from '../../users/types/user.types';
+import { hasRole } from '../../auth/permissions/roles';
 import { CourseService } from '../service/course.service';
 import type { CourseAsset, CourseCover } from '../types/course.types';
 import { courseFiltersSchema, courseIdParamSchema, coursePayloadSchema } from '../validation/course.validation';
 
 const courseService = new CourseService();
+const institutionalRoles = [Cargo.ADMIN, Cargo.DIRETOR, Cargo.COORDENADOR, Cargo.PROFESSOR, Cargo.GREMIO];
 
 type CourseFiles = {
   capa?: Express.Multer.File[];
@@ -61,7 +63,8 @@ export async function listCourses(request: AuthenticatedRequest, response: Respo
 
     const cursos = await courseService.list({
       ...parsedQuery.data,
-      includeHidden: request.user.cargo === Cargo.ADMIN
+      includeHidden: request.user.cargo === Cargo.ADMIN,
+      ownerId: hasRole(request.user.cargo, institutionalRoles) || request.user.pertenceGremio ? request.user.id : undefined
     });
 
     return response.status(200).json(apiResponse({ cursos }));
@@ -82,7 +85,11 @@ export async function createCourse(request: AuthenticatedRequest, response: Resp
       throw new AppError('Nao foi possivel criar o curso', 400);
     }
 
-    const curso = await courseService.create(parsedBody.data, cover, assets);
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
+    const curso = await courseService.create(request.user, parsedBody.data, cover, assets);
 
     return response.status(201).json(apiResponse({ curso }, { message: 'Curso criado com sucesso' }));
   } catch (error) {
@@ -104,7 +111,11 @@ export async function updateCourse(request: AuthenticatedRequest, response: Resp
       throw new AppError('Nao foi possivel atualizar o curso', 400);
     }
 
-    const curso = await courseService.update(parsedParams.data.id, parsedBody.data, cover, assets);
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
+    const curso = await courseService.update(parsedParams.data.id, request.user, parsedBody.data, cover, assets);
 
     if (!curso) {
       throw new AppError('Curso nao encontrado', 404);
@@ -125,7 +136,11 @@ export async function deleteCourse(request: AuthenticatedRequest, response: Resp
       throw new AppError('Curso nao encontrado', 404);
     }
 
-    const deleted = await courseService.delete(parsedParams.data.id);
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
+    const deleted = await courseService.delete(parsedParams.data.id, request.user);
 
     if (!deleted) {
       throw new AppError('Curso nao encontrado', 404);

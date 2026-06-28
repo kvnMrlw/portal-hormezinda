@@ -4,6 +4,7 @@ import { AppError } from '../../../middlewares/error.middleware';
 import { removeUploadedFiles } from '../../../utils/imageUpload';
 import type { UserDocument } from '../../users/models/user.model';
 import { toPublicUser } from '../../users/service/user.service';
+import { Cargo, type PublicUser } from '../../users/types/user.types';
 import { NoticeRepository } from '../repository/notice.repository';
 import type {
   CreateNoticeData,
@@ -59,12 +60,14 @@ export class NoticeService {
     return toPublicNotice(notice);
   }
 
-  async update(id: string, data: UpdateNoticeData): Promise<PublicNotice | null> {
+  async update(id: string, viewer: PublicUser, data: UpdateNoticeData): Promise<PublicNotice | null> {
     const currentNotice = await this.noticeRepository.findById(id);
 
     if (!currentNotice) {
       return null;
     }
+
+    this.assertCanManageNotice(currentNotice, viewer);
 
     const nextStartDate = data.dataInicio ?? currentNotice.dataInicio;
     const nextEndDate = data.dataFim === undefined ? currentNotice.dataFim : data.dataFim;
@@ -92,12 +95,14 @@ export class NoticeService {
     return notice ? toPublicNotice(notice) : null;
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, viewer: PublicUser): Promise<boolean> {
     const notice = await this.noticeRepository.findById(id);
 
     if (!notice) {
       return false;
     }
+
+    this.assertCanManageNotice(notice, viewer);
 
     await this.noticeRepository.delete(id);
     await removeUploadedFiles((notice.anexos ?? []).map((attachment) => attachment.url));
@@ -110,6 +115,19 @@ export class NoticeService {
     const attachmentUrls = notices.flatMap((notice) => (notice.anexos ?? []).map((attachment) => attachment.url));
 
     await removeUploadedFiles(attachmentUrls);
+  }
+
+  private assertCanManageNotice(notice: NoticeDocument, viewer: PublicUser): void {
+    if (!isUserDocument(notice.autor)) {
+      throw new AppError('Autor do aviso nao carregado', 500);
+    }
+
+    const isAuthor = notice.autor.id === viewer.id;
+    const isAdmin = viewer.cargo === Cargo.ADMIN;
+
+    if (!isAuthor && !isAdmin) {
+      throw new AppError('Acesso nao autorizado', 403);
+    }
   }
 }
 

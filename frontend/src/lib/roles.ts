@@ -37,9 +37,9 @@ export const rolePermissions: Record<Cargo, Permission[]> = {
     Permission.EDIT_POSTS,
     Permission.EDIT_STORIES
   ],
-  [Cargo.DIRETOR]: [],
-  [Cargo.COORDENADOR]: [],
-  [Cargo.PROFESSOR]: [],
+  [Cargo.DIRETOR]: [Permission.EDIT_NOTICES, Permission.EDIT_COURSES, Permission.EDIT_POSTS, Permission.EDIT_STORIES],
+  [Cargo.COORDENADOR]: [Permission.EDIT_NOTICES, Permission.EDIT_COURSES, Permission.EDIT_POSTS, Permission.EDIT_STORIES],
+  [Cargo.PROFESSOR]: [Permission.EDIT_NOTICES, Permission.EDIT_COURSES, Permission.EDIT_POSTS, Permission.EDIT_STORIES],
   [Cargo.GREMIO]: [Permission.EDIT_COURSES, Permission.EDIT_IDEAS, Permission.EDIT_POSTS, Permission.EDIT_STORIES],
   [Cargo.ALUNO]: []
 };
@@ -78,4 +78,16 @@ export function getDisplayRoleLabel(user?: Pick<User, 'cargo' | 'sexo'> | null):
 
 export function hasGremioAccess(user?: Pick<User, 'cargo' | 'pertenceGremio'> | null): boolean {
   return Boolean(user && (user.cargo === Cargo.GREMIO || user.pertenceGremio));
+}
+
+export function canManageInstitutionalContent(user?: Pick<User, 'cargo' | 'pertenceGremio'> | null): boolean {
+  return Boolean(
+    user &&
+      (user.cargo === Cargo.ADMIN ||
+        user.cargo === Cargo.DIRETOR ||
+        user.cargo === Cargo.COORDENADOR ||
+        user.cargo === Cargo.PROFESSOR ||
+        user.cargo === Cargo.GREMIO ||
+        user.pertenceGremio)
+  );
 }

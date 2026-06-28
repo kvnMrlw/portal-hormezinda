@@ -25,6 +25,27 @@ export class CatalogRepository {
     return ClassGroupModel.findOne({ nome });
   }
 
+  async findClassForStudent(turma: string): Promise<ClassGroupDocument | null> {
+    const normalized = turma.trim();
+    const compactMatch = normalized.match(/^([123])\s*([A-Z])$/i);
+
+    if (!compactMatch) {
+      return ClassGroupModel.findOne({ nome: normalized });
+    }
+
+    const [, year, letter] = compactMatch;
+    const fullYearRegex = new RegExp(`^${year}(º|o)?\\s*Ano`, 'i');
+
+    return ClassGroupModel.findOne({
+      $or: [
+        { nome: normalized.toUpperCase() },
+        { nome: `${year}º Ano ${letter.toUpperCase()}` },
+        { nome: letter.toUpperCase(), ano: fullYearRegex },
+        { nome: letter.toUpperCase(), ano: year }
+      ]
+    });
+  }
+
   async createClass(data: ClassGroupPayload): Promise<ClassGroupDocument> {
     return ClassGroupModel.create(data);
   }

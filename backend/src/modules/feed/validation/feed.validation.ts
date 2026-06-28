@@ -18,6 +18,14 @@ export const createPostSchema = z.object({
     .optional()
 });
 
+export const updatePostSchema = z.object({
+  texto: z
+    .string()
+    .max(1000, 'A publicacao deve ter no maximo 1000 caracteres')
+    .transform(sanitizePostText)
+    .optional()
+});
+
 export const postIdParamSchema = z.object({
   id: z.string().regex(/^[a-f\d]{24}$/i, 'Id da publicacao e obrigatorio')
 });

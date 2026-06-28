@@ -11,7 +11,8 @@ import {
   listPostsQuerySchema,
   pinPostSchema,
   postIdParamSchema,
-  reactPostSchema
+  reactPostSchema,
+  updatePostSchema
 } from '../validation/feed.validation';
 
 const feedService = new FeedService();
@@ -138,6 +139,46 @@ export async function pinPost(request: AuthenticatedRequest, response: Response,
     }
 
     return response.status(200).json(apiResponse({ publicacao: post }, { message: 'Publicacao atualizada com sucesso' }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updatePost(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
+    const parsedParams = postIdParamSchema.safeParse(request.params);
+
+    if (!parsedParams.success) {
+      throw new AppError('Publicacao nao encontrada', 404);
+    }
+
+    const parsedBody = updatePostSchema.safeParse(request.body);
+
+    if (!parsedBody.success) {
+      throw new AppError('Nao foi possivel atualizar a publicacao', 400);
+    }
+
+    const image = await fileToImage(request.file);
+
+    try {
+      const post = await feedService.updatePost(parsedParams.data.id, request.user, {
+        texto: parsedBody.data.texto,
+        imagem: image
+      });
+
+      if (!post) {
+        throw new AppError('Publicacao nao encontrada', 404);
+      }
+
+      return response.status(200).json(apiResponse({ publicacao: post }, { message: 'Publicacao atualizada com sucesso' }));
+    } catch (error) {
+      await removeUploadedFiles([image?.url]);
+      throw error;
+    }
   } catch (error) {
     return next(error);
   }

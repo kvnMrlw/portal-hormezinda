@@ -86,6 +86,10 @@ export async function createNotice(request: AuthenticatedRequest, response: Resp
 
 export async function updateNotice(request: AuthenticatedRequest, response: Response, next: NextFunction) {
   try {
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
     const parsedParams = noticeIdParamSchema.safeParse(request.params);
     const parsedBody = updateNoticeSchema.safeParse(request.body);
 
@@ -96,7 +100,7 @@ export async function updateNotice(request: AuthenticatedRequest, response: Resp
     const anexos = await filesToAttachments(request.files as Express.Multer.File[] | undefined);
 
     try {
-      const notice = await noticeService.update(parsedParams.data.id, {
+      const notice = await noticeService.update(parsedParams.data.id, request.user, {
         ...parsedBody.data,
         anexos
       });
@@ -117,13 +121,17 @@ export async function updateNotice(request: AuthenticatedRequest, response: Resp
 
 export async function deleteNotice(request: AuthenticatedRequest, response: Response, next: NextFunction) {
   try {
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
     const parsedParams = noticeIdParamSchema.safeParse(request.params);
 
     if (!parsedParams.success) {
       throw new AppError('Aviso nao encontrado', 404);
     }
 
-    const deleted = await noticeService.delete(parsedParams.data.id);
+    const deleted = await noticeService.delete(parsedParams.data.id, request.user);
 
     if (!deleted) {
       throw new AppError('Aviso nao encontrado', 404);

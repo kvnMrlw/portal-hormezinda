@@ -17,7 +17,8 @@ import {
   type Post,
   type ReactionEmoji,
   type ReactionSummary,
-  type Story
+  type Story,
+  type UpdatePostData
 } from '../types/feed.types';
 import type { PostDocument } from '../models/post.model';
 import type { StoryDocument } from '../models/story.model';
@@ -154,6 +155,40 @@ export class FeedService {
     const post = await this.feedRepository.setPinned(postId, pinned);
 
     return post ? toFeedPost(post, viewerId) : null;
+  }
+
+  async updatePost(postId: string, viewer: PublicUser, data: UpdatePostData): Promise<FeedPost | null> {
+    const currentPost = await this.feedRepository.findById(postId);
+
+    if (!currentPost) {
+      return null;
+    }
+
+    if (!isUserDocument(currentPost.autor)) {
+      throw new AppError('Autor da publicacao nao carregado', 500);
+    }
+
+    const isAuthor = currentPost.autor.id === viewer.id;
+    const isAdmin = viewer.cargo === Cargo.ADMIN;
+
+    if (!isAuthor && !isAdmin) {
+      throw new AppError('Acesso nao autorizado', 403);
+    }
+
+    const nextText = data.texto ?? currentPost.texto ?? '';
+    const nextImages = data.imagem ? [data.imagem] : currentPost.imagens ?? [];
+
+    if (!nextText && !nextImages.length) {
+      throw new AppError('Informe texto ou imagem para publicar', 400);
+    }
+
+    const post = await this.feedRepository.updatePost(postId, data);
+
+    if (post && data.imagem) {
+      await removeUploadedFiles((currentPost.imagens ?? []).map((image) => image.url));
+    }
+
+    return post ? toFeedPost(post, viewer.id) : null;
   }
 
   async deletePost(postId: string, viewer: PublicUser): Promise<boolean> {

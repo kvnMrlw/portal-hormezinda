@@ -12,6 +12,7 @@ import { categoryLabels, categoryOptions, priorityLabels, priorityOptions } from
 
 type NoticeModalProps = {
   isOpen: boolean;
+  isAdmin: boolean;
   isSaving: boolean;
   notice?: Notice | null;
   onClose: () => void;
@@ -50,7 +51,7 @@ function getInitialState(notice?: Notice | null): NoticeFormState {
   };
 }
 
-export function NoticeModal({ isOpen, isSaving, notice, onClose, onSubmit }: NoticeModalProps) {
+export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubmit }: NoticeModalProps) {
   const [formState, setFormState] = useState<NoticeFormState>(() => getInitialState(notice));
   const [files, setFiles] = useState<File[]>([]);
   const [removedAttachments, setRemovedAttachments] = useState<string[]>([]);
@@ -163,26 +164,28 @@ export function NoticeModal({ isOpen, isSaving, notice, onClose, onSubmit }: Not
           />
         </div>
 
-        <div className="grid gap-3 rounded-3xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2">
-          <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-brand-navy">
-            <input
-              checked={formState.fixado}
-              className="h-4 w-4 accent-brand-blue"
-              onChange={(event) => setFormState((current) => ({ ...current, fixado: event.target.checked }))}
-              type="checkbox"
-            />
-            Fixado
-          </label>
-          <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-brand-navy">
-            <input
-              checked={formState.ativo}
-              className="h-4 w-4 accent-brand-blue"
-              onChange={(event) => setFormState((current) => ({ ...current, ativo: event.target.checked }))}
-              type="checkbox"
-            />
-            Ativo
-          </label>
-        </div>
+        {isAdmin ? (
+          <div className="grid gap-3 rounded-3xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2">
+            <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-brand-navy">
+              <input
+                checked={formState.fixado}
+                className="h-4 w-4 accent-brand-blue"
+                onChange={(event) => setFormState((current) => ({ ...current, fixado: event.target.checked }))}
+                type="checkbox"
+              />
+              Fixado
+            </label>
+            <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-brand-navy">
+              <input
+                checked={formState.ativo}
+                className="h-4 w-4 accent-brand-blue"
+                onChange={(event) => setFormState((current) => ({ ...current, ativo: event.target.checked }))}
+                type="checkbox"
+              />
+              Ativo
+            </label>
+          </div>
+        ) : null}
 
         <label className="block rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center transition hover:border-brand-blue hover:bg-blue-50/40">
           <UploadCloud className="mx-auto h-7 w-7 text-brand-blue" />

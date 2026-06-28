@@ -12,6 +12,7 @@ import {
   listStories,
   pinPost,
   reactToPost,
+  updatePost,
   viewStory
 } from '../controller/feed.controller';
 import { feedUpload } from '../middlewares/upload.middleware';
@@ -29,6 +30,7 @@ router.post('/stories/:id/view', authenticate, viewStory);
 router.delete('/stories/:id', authenticate, deleteStory);
 router.post('/:id/reactions', authenticate, reactToPost);
 router.patch('/:id/pin', authenticate, authorizeRoles(...pinPostRoles), pinPost);
+router.patch('/:id', authenticate, authorizeRoles(...postAuthorRoles), feedUpload.single('imagem'), updatePost);
 router.delete('/:id', authenticate, deletePost);
 
 export default router;

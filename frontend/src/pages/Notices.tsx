@@ -9,7 +9,7 @@ import { NoticeModal } from '../components/notices/NoticeModal';
 import { Button } from '../components/ui/Button';
 import { Spinner } from '../components/ui/Spinner';
 import { useAuth } from '../contexts/useAuth';
-import { isAdminRole } from '../lib/roles';
+import { canManageInstitutionalContent, isAdminRole } from '../lib/roles';
 import { createNotice, deleteNotice, listNotices, updateNotice } from '../services/notices';
 import type { Notice, NoticeFilters as NoticeFilterValues, NoticePayload } from '../types/notices';
 
@@ -23,6 +23,7 @@ const initialFilters: NoticeFilterValues = {
 export function Notices() {
   const { user } = useAuth();
   const isAdmin = isAdminRole(user?.cargo);
+  const canManageNotices = canManageInstitutionalContent(user);
   const [filters, setFilters] = useState<NoticeFilterValues>(initialFilters);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
@@ -152,7 +153,7 @@ export function Notices() {
               </div>
             </div>
 
-            {isAdmin ? (
+            {canManageNotices ? (
               <Button className="w-full sm:w-auto" onClick={openCreateModal} type="button">
                 <Plus className="h-4 w-4" />
                 Novo aviso
@@ -182,6 +183,7 @@ export function Notices() {
             {notices.map((notice) => (
               <NoticeCard
                 isAdmin={isAdmin}
+                canManage={isAdmin || notice.autor.id === user?.id}
                 key={notice.id}
                 notice={notice}
                 onDelete={(selectedNotice) => void handleDelete(selectedNotice)}
@@ -206,6 +208,7 @@ export function Notices() {
 
       <NoticeModal
         isOpen={isModalOpen}
+        isAdmin={isAdmin}
         isSaving={isSaving}
         notice={editingNotice}
         onClose={closeModal}
