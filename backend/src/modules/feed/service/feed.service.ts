@@ -1,6 +1,9 @@
 import { Types } from 'mongoose';
 
+import { AppError } from '../../../middlewares/error.middleware';
 import { toPublicUser } from '../../users/service/user.service';
+import { Cargo } from '../../users/types/user.types';
+import type { PublicUser } from '../../users/types/user.types';
 import type { UserDocument } from '../../users/models/user.model';
 import { FeedRepository } from '../repository/feed.repository';
 import {
@@ -27,10 +30,12 @@ function isStoryUserDocument(author: Story['autor']): author is UserDocument {
 }
 
 function summarizeReactions(post: PostDocument): ReactionSummary[] {
+  const reactions = post.reacoes ?? [];
+
   return reactionEmojis
     .map((emoji) => ({
       emoji,
-      quantidade: post.reacoes.filter((reaction) => reaction.emoji === emoji).length
+      quantidade: reactions.filter((reaction) => reaction.emoji === emoji).length
     }))
     .filter((reaction) => reaction.quantidade > 0);
 }
@@ -40,17 +45,18 @@ function toFeedPost(post: PostDocument, viewerId: string): FeedPost {
     throw new Error('Autor da publicacao nao carregado');
   }
 
-  const myReaction = post.reacoes.find((reaction) => reaction.usuario.toString() === viewerId)?.emoji;
+  const reactions = post.reacoes ?? [];
+  const myReaction = reactions.find((reaction) => reaction.usuario.toString() === viewerId)?.emoji;
 
   return {
     id: post.id,
     autor: toPublicUser(post.autor),
     texto: post.texto ?? '',
-    imagens: post.imagens,
+    imagens: post.imagens ?? [],
     data: post.data,
     reacoes: summarizeReactions(post),
     minhaReacao: myReaction,
-    fixado: post.fixado
+    fixado: Boolean(post.fixado)
   };
 }
 
@@ -107,6 +113,29 @@ export class FeedService {
     const post = await this.feedRepository.setPinned(postId, pinned);
 
     return post ? toFeedPost(post, viewerId) : null;
+  }
+
+  async deletePost(postId: string, viewer: PublicUser): Promise<boolean> {
+    const post = await this.feedRepository.findById(postId);
+
+    if (!post) {
+      return false;
+    }
+
+    if (!isUserDocument(post.autor)) {
+      throw new AppError('Autor da publicacao nao carregado', 500);
+    }
+
+    const isAuthor = post.autor.id === viewer.id;
+    const isAdmin = viewer.cargo === Cargo.ADMIN;
+
+    if (!isAuthor && !isAdmin) {
+      throw new AppError('Acesso nao autorizado', 403);
+    }
+
+    await this.feedRepository.delete(postId);
+
+    return true;
   }
 
   async listStories(viewerId: string): Promise<FeedStory[]> {

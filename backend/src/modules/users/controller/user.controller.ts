@@ -8,6 +8,15 @@ import { updateProfileSchema, userIdParamSchema } from '../validation/user.valid
 
 const userService = new UserService();
 
+type ProfileFiles = {
+  bannerPerfil?: Express.Multer.File[];
+  fotoPerfil?: Express.Multer.File[];
+};
+
+function profileFileToPath(file?: Express.Multer.File): string | undefined {
+  return file ? `/uploads/profile/${file.filename}` : undefined;
+}
+
 export async function listUsers(request: AuthenticatedRequest, response: Response, next: NextFunction) {
   try {
     if (!request.user) {
@@ -58,7 +67,15 @@ export async function updateCurrentUserProfile(request: AuthenticatedRequest, re
       throw new AppError('Nao foi possivel atualizar o perfil', 400);
     }
 
-    const user = await userService.updateProfile(request.user.id, parsedBody.data);
+    const files = request.files as ProfileFiles | undefined;
+    const fotoPerfil = profileFileToPath(files?.fotoPerfil?.[0]);
+    const bannerPerfil = profileFileToPath(files?.bannerPerfil?.[0]);
+
+    const user = await userService.updateProfile(request.user.id, {
+      ...parsedBody.data,
+      ...(fotoPerfil ? { fotoPerfil } : {}),
+      ...(bannerPerfil ? { bannerPerfil } : {})
+    });
 
     if (!user) {
       throw new AppError('Usuario nao encontrado', 404);

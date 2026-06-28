@@ -10,6 +10,10 @@ export class UserRepository {
     return UserModel.findById(id);
   }
 
+  async findByIdWithPassword(id: string): Promise<UserDocument | null> {
+    return UserModel.findById(id).select('+senha');
+  }
+
   async findByUsuario(usuario: string): Promise<UserDocument | null> {
     return UserModel.findOne({ usuario });
   }
@@ -27,5 +31,9 @@ export class UserRepository {
 
   async updateProfile(id: string, data: UpdateProfileData): Promise<UserDocument | null> {
     return UserModel.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  async updatePassword(id: string, senha: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(id, { senha });
   }
 }

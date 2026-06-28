@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { Home } from '../pages/Home';
 import { Login } from '../pages/Login';
 import { ModulePlaceholder } from '../pages/ModulePlaceholder';
+import { Notices } from '../pages/Notices';
 import { PlatformHome } from '../pages/PlatformHome';
 import { Profile } from '../pages/Profile';
 import { Register } from '../pages/Register';
@@ -38,7 +39,15 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
-  ...schoolModules.map((module) => ({
+  {
+    path: '/avisos',
+    element: (
+      <ProtectedRoute>
+        <Notices />
+      </ProtectedRoute>
+    )
+  },
+  ...schoolModules.filter((module) => module.href !== '/avisos').map((module) => ({
     path: module.href,
     element: (
       <ProtectedRoute>

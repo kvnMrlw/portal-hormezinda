@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { authenticate } from '../../auth/middlewares/auth.middleware';
 import { authorizeRoles } from '../../auth/middlewares/rbac.middleware';
 import { Cargo } from '../../users/types/user.types';
-import { createPost, createStory, listPosts, listStories, pinPost, reactToPost, viewStory } from '../controller/feed.controller';
+import { createPost, createStory, deletePost, listPosts, listStories, pinPost, reactToPost, viewStory } from '../controller/feed.controller';
 import { feedUpload } from '../middlewares/upload.middleware';
 
 const router = Router();
@@ -18,5 +18,6 @@ router.post('/stories', authenticate, authorizeRoles(...postAuthorRoles), feedUp
 router.post('/stories/:id/view', authenticate, viewStory);
 router.post('/:id/reactions', authenticate, reactToPost);
 router.patch('/:id/pin', authenticate, authorizeRoles(...pinPostRoles), pinPost);
+router.delete('/:id', authenticate, deletePost);
 
 export default router;

@@ -52,6 +52,12 @@ export async function setFeedPostPinned(postId: string, fixado: boolean): Promis
   return response.data.data.publicacao;
 }
 
+export async function deleteFeedPost(postId: string): Promise<string> {
+  const response = await api.delete<ApiResponse<{ id: string }>>(`/feed/${postId}`);
+
+  return response.data.data.id;
+}
+
 export async function listFeedStories(): Promise<FeedStory[]> {
   const response = await api.get<ApiResponse<{ stories: FeedStory[] }>>('/feed/stories');
 

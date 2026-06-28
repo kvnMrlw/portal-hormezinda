@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { StoryKind } from '../../types/feed';
 import { getAssetUrl, type StoryGroup } from './feedUtils';
@@ -15,8 +16,11 @@ export function StoryViewer({ groups, initialGroupIndex, onClose, onView }: Stor
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const viewedStoriesRef = useRef(new Set<string>());
   const group = groups[groupIndex];
   const story = group?.stories[storyIndex];
+  const storyId = story?.id;
+  const storyViewed = story?.vistoPeloUsuario;
 
   const totalStories = useMemo(() => group?.stories.length ?? 0, [group]);
 
@@ -59,12 +63,23 @@ export function StoryViewer({ groups, initialGroupIndex, onClose, onView }: Stor
   }, [initialGroupIndex]);
 
   useEffect(() => {
-    if (story) {
-      onView(story.id);
+    if (storyId && !storyViewed && !viewedStoriesRef.current.has(storyId)) {
+      viewedStoriesRef.current.add(storyId);
+      onView(storyId);
     }
-  }, [onView, story]);
+  }, [onView, storyId, storyViewed]);
 
   useEffect(() => {
+    if (groups.length === 0 || groupIndex >= groups.length) {
+      onClose();
+    }
+  }, [groupIndex, groups.length, onClose]);
+
+  useEffect(() => {
+    if (!storyId) {
+      return undefined;
+    }
+
     const interval = window.setInterval(() => {
       setProgress((current) => {
         if (current >= 100) {
@@ -78,7 +93,7 @@ export function StoryViewer({ groups, initialGroupIndex, onClose, onView }: Stor
     }, 100);
 
     return () => window.clearInterval(interval);
-  }, [goNext, story?.id]);
+  }, [goNext, storyId]);
 
   if (!story || !group) {
     return null;
@@ -86,7 +101,12 @@ export function StoryViewer({ groups, initialGroupIndex, onClose, onView }: Stor
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950 px-0 py-0 sm:px-6 sm:py-6">
-      <div className="relative h-full w-full overflow-hidden bg-slate-900 sm:h-[min(760px,100%)] sm:max-w-md sm:rounded-[2rem]">
+      <motion.div
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative h-full w-full overflow-hidden bg-slate-900 shadow-2xl sm:h-[min(820px,100%)] sm:max-w-[32rem] sm:rounded-[2rem]"
+        initial={{ opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
         <div className="absolute left-0 right-0 top-0 z-20 space-y-4 p-4">
           <div className="flex gap-1">
             {group.stories.map((item, index) => (
@@ -117,7 +137,7 @@ export function StoryViewer({ groups, initialGroupIndex, onClose, onView }: Stor
         )}
         <button aria-label="Story anterior" className="absolute bottom-0 left-0 top-24 z-10 w-1/2" onClick={goPrevious} type="button" />
         <button aria-label="Proximo story" className="absolute bottom-0 right-0 top-24 z-10 w-1/2" onClick={goNext} type="button" />
-      </div>
+      </motion.div>
     </div>
   );
 }

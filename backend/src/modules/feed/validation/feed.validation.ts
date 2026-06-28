@@ -19,7 +19,7 @@ export const createPostSchema = z.object({
 });
 
 export const postIdParamSchema = z.object({
-  id: z.string().min(1, 'Id da publicacao e obrigatorio')
+  id: z.string().regex(/^[a-f\d]{24}$/i, 'Id da publicacao e obrigatorio')
 });
 
 export const listPostsQuerySchema = z.object({

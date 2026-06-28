@@ -59,7 +59,13 @@ export type AuthResponse = {
   usuario: User;
 };
 
-export type ProfileUpdatePayload = Partial<Pick<User, 'fotoPerfil' | 'bannerPerfil' | 'bio' | 'redeSocial'>>;
+export type ProfileUpdatePayload = Partial<Pick<User, 'bio' | 'redeSocial'>> & {
+  bannerPerfil?: File;
+  fotoPerfil?: File;
+  senhaAtual?: string;
+  novaSenha?: string;
+  confirmarSenha?: string;
+};
 
 export const turmasPorTurno: Record<Turno, Turma[]> = {
   [Turno.MATUTINO]: [

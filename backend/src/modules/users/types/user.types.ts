@@ -77,4 +77,4 @@ export type PublicUser = Omit<User, 'senha'> & {
 
 export type CreateUserData = Omit<User, 'criadoEm' | 'atualizadoEm'>;
 
-export type UpdateProfileData = Partial<Pick<User, 'fotoPerfil' | 'bannerPerfil' | 'bio' | 'redeSocial'>>;
+export type UpdateProfileData = Partial<Pick<User, 'fotoPerfil' | 'bannerPerfil' | 'bio' | 'redeSocial' | 'senha'>>;

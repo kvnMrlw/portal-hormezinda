@@ -11,6 +11,7 @@ import { Input } from '../components/ui/Input';
 import { Loading } from '../components/ui/Loading';
 import { Select } from '../components/ui/Select';
 import { useAuth } from '../contexts/useAuth';
+import { getAssetUrl } from '../lib/assets';
 import { getRoleLabel, canViewRole } from '../lib/roles';
 import { cn } from '../lib/utils';
 import { listUsers } from '../services/users';
@@ -137,7 +138,7 @@ export function Users() {
             {visibleUsers.map((user) => (
               <Card className="group p-0 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-soft" key={user.id}>
                 <Link className="flex h-full gap-4 p-4 outline-none focus-visible:ring-4 focus-visible:ring-blue-100" to={`/usuarios/${user.id}`}>
-                  <Avatar className="h-14 w-14 shrink-0" name={user.nomeCompleto} src={user.fotoPerfil} />
+                  <Avatar className="h-14 w-14 shrink-0" name={user.nomeCompleto} src={getAssetUrl(user.fotoPerfil)} />
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate font-semibold text-brand-navy">{user.nomeCompleto}</h2>
                     <p className="mt-1 truncate text-sm text-slate-500">@{user.usuario}</p>

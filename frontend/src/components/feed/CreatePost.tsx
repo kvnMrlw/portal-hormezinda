@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { memo, useState } from 'react';
 
 import { useAuth } from '../../contexts/useAuth';
+import { getAssetUrl } from '../../lib/assets';
 import { cn } from '../../lib/utils';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -36,7 +37,7 @@ export const CreatePost = memo(function CreatePost({ error, isSubmitting, onCrea
       onSubmit={handleSubmit}
     >
       <div className="flex gap-3">
-        <Avatar className="h-11 w-11 shrink-0 ring-4 ring-blue-50" name={user?.nomeCompleto} src={user?.fotoPerfil} />
+        <Avatar className="h-11 w-11 shrink-0 ring-4 ring-blue-50" name={user?.nomeCompleto} src={getAssetUrl(user?.fotoPerfil)} />
         <div className="min-w-0 flex-1">
           <label className="sr-only" htmlFor="create-feed-post">
             No que voce esta pensando hoje?

@@ -27,12 +27,18 @@ export class FeedRepository {
     return PostModel.countDocuments();
   }
 
+  async findById(postId: string): Promise<PostDocument | null> {
+    return PostModel.findById(postId).populate('autor');
+  }
+
   async react(postId: string, userId: string, emoji: ReactionEmoji): Promise<PostDocument | null> {
     const post = await PostModel.findById(postId);
 
     if (!post) {
       return null;
     }
+
+    post.reacoes = post.reacoes ?? [];
 
     const existingReaction = post.reacoes.find((reaction) => reaction.usuario.toString() === userId);
 
@@ -49,6 +55,10 @@ export class FeedRepository {
 
   async setPinned(postId: string, pinned: boolean): Promise<PostDocument | null> {
     return PostModel.findByIdAndUpdate(postId, { fixado: pinned }, { new: true }).populate('autor');
+  }
+
+  async delete(postId: string): Promise<void> {
+    await PostModel.findByIdAndDelete(postId);
   }
 
   async createStory(data: CreateStoryData): Promise<StoryDocument> {

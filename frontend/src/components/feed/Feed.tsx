@@ -3,10 +3,11 @@ import { AlertCircle } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { useAuth } from '../../contexts/useAuth';
-import { canCreateFeedPost, canPinFeedPost, groupStories } from './feedUtils';
+import { canCreateFeedPost, canDeleteFeedPost, canPinFeedPost, groupStories } from './feedUtils';
 import {
   createFeedPost,
   createFeedStory,
+  deleteFeedPost,
   listFeedPosts,
   listFeedStories,
   markFeedStoryAsViewed,
@@ -15,6 +16,7 @@ import {
 } from '../../services/feed';
 import type { CreatePostPayload, CreateStoryPayload, FeedResponse, FeedStory, ReactionEmoji } from '../../types/feed';
 import { CreateContentButton, CreateContentModal } from './CreateContentModal';
+import { DeletePostDialog } from './DeletePostDialog';
 import { EmptyFeed } from './EmptyFeed';
 import { LoadingFeed } from './LoadingFeed';
 import { PostCard } from './PostCard';
@@ -47,6 +49,7 @@ export function Feed() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [reactingPostId, setReactingPostId] = useState<string>();
   const [pinningPostId, setPinningPostId] = useState<string>();
+  const [postToDeleteId, setPostToDeleteId] = useState<string>();
   const [viewerGroupIndex, setViewerGroupIndex] = useState<number>();
   const canCreate = canCreateFeedPost(user?.cargo);
   const canPin = canPinFeedPost(user?.cargo);
@@ -106,6 +109,41 @@ export function Feed() {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteFeedPost,
+    onMutate: async (postId) => {
+      await queryClient.cancelQueries({ queryKey: feedQueryKey });
+      const previousFeed = queryClient.getQueryData<FeedResponse>(feedQueryKey);
+
+      queryClient.setQueryData<FeedResponse>(feedQueryKey, (current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          publicacoes: current.publicacoes.filter((post) => post.id !== postId),
+          paginacao: {
+            ...current.paginacao,
+            total: Math.max(current.paginacao.total - 1, 0)
+          }
+        };
+      });
+
+      setPostToDeleteId(undefined);
+
+      return { previousFeed };
+    },
+    onError: (_error, _postId, context) => {
+      if (context?.previousFeed) {
+        queryClient.setQueryData(feedQueryKey, context.previousFeed);
+      }
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: feedQueryKey });
+    }
+  });
+
   const viewStoryMutation = useMutation({
     mutationFn: markFeedStoryAsViewed,
     onSuccess: (updatedStory) => {
@@ -152,23 +190,29 @@ export function Feed() {
 
   const handleViewStory = useCallback(
     (storyId: string) => {
-      if (!viewStoryMutation.isPending) {
-        viewStoryMutation.mutate(storyId);
-      }
+      viewStoryMutation.mutate(storyId);
     },
     [viewStoryMutation]
   );
 
+  const handleConfirmDelete = useCallback(() => {
+    if (postToDeleteId && !deleteMutation.isPending) {
+      deleteMutation.mutate(postToDeleteId);
+    }
+  }, [deleteMutation, postToDeleteId]);
+
   return (
-    <section aria-label="Feed social" className="mx-auto w-full max-w-2xl space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-brand-navy">Feed</h2>
-          <p className="text-sm text-slate-500">Novidades da comunidade escolar.</p>
-        </div>
-        {canCreate ? <CreateContentButton onClick={() => setIsCreateOpen(true)} /> : null}
-      </div>
+    <section aria-label="Feed social" className="mx-auto w-full max-w-5xl space-y-5">
       <StoriesBar groups={storyGroups} isLoading={storiesQuery.isLoading} onOpen={setViewerGroupIndex} />
+      {canCreate ? (
+        <div className="flex justify-end">
+          <CreateContentButton onClick={() => setIsCreateOpen(true)} />
+        </div>
+      ) : null}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-normal text-brand-navy sm:text-3xl">Feed</h1>
+        <p className="mt-1 text-sm text-slate-500">Novidades, avisos e momentos da comunidade escolar.</p>
+      </div>
       {feedQuery.isLoading ? <LoadingFeed /> : null}
       {feedQuery.isError ? <FeedError /> : null}
       {!feedQuery.isLoading && !feedQuery.isError && posts.length === 0 ? <EmptyFeed /> : null}
@@ -176,10 +220,13 @@ export function Feed() {
         <div className="space-y-4">
           {posts.map((post) => (
             <PostCard
+              canDelete={canDeleteFeedPost(user?.id, user?.cargo, post.autor.id)}
               canPin={canPin}
+              isDeleting={deleteMutation.isPending && postToDeleteId === post.id}
               isPinning={pinningPostId === post.id}
               isReacting={reactingPostId === post.id}
               key={post.id}
+              onDelete={setPostToDeleteId}
               onPin={handlePin}
               onReact={handleReact}
               post={post}
@@ -203,6 +250,12 @@ export function Feed() {
           onView={handleViewStory}
         />
       ) : null}
+      <DeletePostDialog
+        isDeleting={deleteMutation.isPending}
+        isOpen={Boolean(postToDeleteId)}
+        onClose={() => setPostToDeleteId(undefined)}
+        onConfirm={handleConfirmDelete}
+      />
     </section>
   );
 }

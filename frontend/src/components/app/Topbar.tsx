@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/useAuth';
+import { getAssetUrl } from '../../lib/assets';
 import { Avatar } from '../ui/Avatar';
 import { SearchInput } from '../ui/SearchInput';
 
@@ -17,6 +18,7 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
   const { user } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const unreadNotifications = 0;
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/85 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
@@ -61,7 +63,9 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
               type="button"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-blue ring-2 ring-white" />
+              {unreadNotifications > 0 ? (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-blue ring-2 ring-white" />
+              ) : null}
             </button>
             {isNotificationOpen ? (
               <div className="absolute right-0 mt-3 w-72 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
@@ -79,7 +83,7 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
               onClick={() => setIsUserMenuOpen((current) => !current)}
               type="button"
             >
-              <Avatar name={user?.nomeCompleto ?? 'Portal Hormezinda'} src={user?.fotoPerfil} />
+              <Avatar name={user?.nomeCompleto ?? 'Portal Hormezinda'} src={getAssetUrl(user?.fotoPerfil)} />
             </button>
             {isUserMenuOpen ? (
               <div className="absolute right-0 mt-3 w-64 rounded-3xl border border-slate-200 bg-white p-3 shadow-soft">

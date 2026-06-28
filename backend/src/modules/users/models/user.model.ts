@@ -15,7 +15,8 @@ const userSchema = new Schema<User>(
       type: String,
       required: true,
       unique: true,
-      trim: true
+      trim: true,
+      lowercase: true
     },
     senha: {
       type: String,
@@ -78,5 +79,7 @@ const userSchema = new Schema<User>(
     }
   }
 );
+
+userSchema.index({ cargo: 1, ativo: 1, nomeCompleto: 1 });
 
 export const UserModel: Model<User> = model<User>('User', userSchema);

@@ -1,3 +1,3 @@
 import { createImageUpload } from '../../../utils/imageUpload';
 
-export const feedUpload = createImageUpload('feed');
+export const profileUpload = createImageUpload('profile');

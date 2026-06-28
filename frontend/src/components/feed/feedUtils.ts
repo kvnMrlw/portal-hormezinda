@@ -1,6 +1,8 @@
 import { Cargo } from '../../types/auth';
-import { api } from '../../services/api';
 import type { FeedStory } from '../../types/feed';
+import { getAssetUrl } from '../../lib/assets';
+
+export { getAssetUrl };
 
 export type StoryGroup = {
   authorId: string;
@@ -26,6 +28,10 @@ export function canPinFeedPost(role?: Cargo): boolean {
   return role === Cargo.ADMIN || role === Cargo.DIRETOR || role === Cargo.COORDENADOR;
 }
 
+export function canDeleteFeedPost(currentUserId: string | undefined, currentUserRole: Cargo | undefined, authorId: string): boolean {
+  return currentUserRole === Cargo.ADMIN || currentUserId === authorId;
+}
+
 export function getFeedRoleLabel(role?: Cargo): string {
   if (role === Cargo.GREMIO) {
     return 'Gremio Estudantil';
@@ -48,16 +54,6 @@ export function getFeedRoleLabel(role?: Cargo): string {
   }
 
   return 'Aluno';
-}
-
-export function getAssetUrl(url?: string): string | undefined {
-  if (!url || url.startsWith('http')) {
-    return url;
-  }
-
-  const baseUrl = String(api.defaults.baseURL ?? '').replace(/\/api\/?$/, '');
-
-  return `${baseUrl}${url}`;
 }
 
 export function groupStories(stories: FeedStory[]): StoryGroup[] {

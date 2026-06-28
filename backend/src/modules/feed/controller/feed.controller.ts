@@ -132,6 +132,30 @@ export async function pinPost(request: AuthenticatedRequest, response: Response,
   }
 }
 
+export async function deletePost(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
+    const parsedParams = postIdParamSchema.safeParse(request.params);
+
+    if (!parsedParams.success) {
+      throw new AppError('Publicacao nao encontrada', 404);
+    }
+
+    const deleted = await feedService.deletePost(parsedParams.data.id, request.user);
+
+    if (!deleted) {
+      throw new AppError('Publicacao nao encontrada', 404);
+    }
+
+    return response.status(200).json(apiResponse({ id: parsedParams.data.id }, { message: 'Publicacao excluida com sucesso' }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function listStories(request: AuthenticatedRequest, response: Response, next: NextFunction) {
   try {
     if (!request.user) {

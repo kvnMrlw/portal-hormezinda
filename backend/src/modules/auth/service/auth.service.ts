@@ -13,6 +13,15 @@ import { toPublicUser } from '../../users/service/user.service';
 
 const PASSWORD_SALT_ROUNDS = 10;
 const JWT_EXPIRES_IN = '1d';
+const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$.{53}$/;
+
+function normalizeUsuario(usuario: string): string {
+  return usuario.trim().toLowerCase();
+}
+
+function isBcryptHash(value: string): boolean {
+  return BCRYPT_HASH_REGEX.test(value);
+}
 
 function createToken(user: UserDocument): string {
   return jwt.sign(
@@ -36,7 +45,8 @@ export class AuthService {
   constructor(private readonly authRepository = new AuthRepository()) {}
 
   async register(input: RegisterInput): Promise<AuthResult> {
-    const existingUser = await this.authRepository.findByUsuario(input.usuario);
+    const usuario = normalizeUsuario(input.usuario);
+    const existingUser = await this.authRepository.findByUsuario(usuario);
 
     if (existingUser) {
       throw new AppError('Usuario ja cadastrado', 409);
@@ -45,7 +55,7 @@ export class AuthService {
     const senha = await bcrypt.hash(input.senha, PASSWORD_SALT_ROUNDS);
     const user = await this.authRepository.create({
       nomeCompleto: input.nomeCompleto,
-      usuario: input.usuario,
+      usuario,
       senha,
       dataNascimento: input.dataNascimento,
       turno: input.turno,
@@ -65,16 +75,22 @@ export class AuthService {
   }
 
   async login(input: LoginInput): Promise<AuthResult> {
-    const user = await this.authRepository.findByUsuarioWithPassword(input.usuario);
+    const user = await this.authRepository.findByUsuarioWithPassword(normalizeUsuario(input.usuario));
 
     if (!user || !user.ativo) {
       throw new AppError('Credenciais invalidas', 401);
     }
 
-    const passwordMatches = await bcrypt.compare(input.senha, user.senha);
+    const passwordMatches = isBcryptHash(user.senha)
+      ? await bcrypt.compare(input.senha, user.senha)
+      : input.senha === user.senha;
 
     if (!passwordMatches) {
       throw new AppError('Credenciais invalidas', 401);
+    }
+
+    if (!isBcryptHash(user.senha)) {
+      await this.authRepository.updatePassword(user.id, await bcrypt.hash(input.senha, PASSWORD_SALT_ROUNDS));
     }
 
     return {
