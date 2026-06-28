@@ -12,14 +12,23 @@ import { toPublicUser } from '../../users/service/user.service';
 import { Cargo, type PublicUser } from '../../users/types/user.types';
 import type { ScheduleDocument } from '../models/schedule.model';
 import { ScheduleRepository } from '../repository/schedule.repository';
-import { ScheduleEntryKind, Weekday, type PublicScheduleEntry, type ScheduleEntry, type ScheduleEntryPayload, type ScheduleFilters } from '../types/schedule.types';
+import {
+  ScheduleEntryKind,
+  Weekday,
+  type CopyWeekPayload,
+  type PublicScheduleEntry,
+  type ReorderSchedulePayload,
+  type ScheduleEntry,
+  type ScheduleEntryPayload,
+  type ScheduleFilters
+} from '../types/schedule.types';
 
 function isUserDocument(user: ScheduleEntry['professor'] | Subject['professores'][number] | Subject['professorPadrao']): user is UserDocument {
   return Boolean(user && typeof user === 'object' && !(user instanceof Types.ObjectId) && 'nomeCompleto' in user);
 }
 
 function isSubjectDocument(subject: ScheduleEntry['disciplina']): subject is SubjectDocument {
-  return typeof subject === 'object' && !(subject instanceof Types.ObjectId) && 'nome' in subject;
+  return Boolean(subject && typeof subject === 'object' && !(subject instanceof Types.ObjectId) && 'nome' in subject);
 }
 
 function isRoomDocument(room: ScheduleEntry['sala']): room is RoomDocument {
@@ -64,9 +73,7 @@ function toPublicSubject(subject: SubjectDocument) {
 }
 
 function toPublicScheduleEntry(schedule: ScheduleDocument): PublicScheduleEntry {
-  if (!isSubjectDocument(schedule.disciplina)) {
-    throw new AppError('Disciplina do horario nao carregada', 500);
-  }
+  const disciplina = isSubjectDocument(schedule.disciplina) ? toPublicSubject(schedule.disciplina) : undefined;
 
   const professor = isUserDocument(schedule.professor) ? toPublicUser(schedule.professor) : undefined;
   const sala = isRoomDocument(schedule.sala)
@@ -80,26 +87,29 @@ function toPublicScheduleEntry(schedule: ScheduleDocument): PublicScheduleEntry 
         atualizadoEm: schedule.sala.atualizadoEm
       }
     : undefined;
-  const turma = isClassGroupDocument(schedule.turma)
-    ? {
-        id: schedule.turma.id,
-        ano: schedule.turma.ano,
-        criadoEm: schedule.turma.criadoEm,
-        nome: schedule.turma.nome,
-        observacoes: schedule.turma.observacoes ?? '',
-        turno: schedule.turma.turno,
-        atualizadoEm: schedule.turma.atualizadoEm
-      }
-    : undefined;
+  if (!isClassGroupDocument(schedule.turma)) {
+    throw new AppError('Turma do horario nao carregada', 500);
+  }
+
+  const turma = {
+    id: schedule.turma.id,
+    ano: schedule.turma.ano,
+    criadoEm: schedule.turma.criadoEm,
+    nome: schedule.turma.nome,
+    observacoes: schedule.turma.observacoes ?? '',
+    turno: schedule.turma.turno,
+    atualizadoEm: schedule.turma.atualizadoEm
+  };
 
   return {
     id: schedule.id,
     criadoEm: schedule.criadoEm,
     diaSemana: schedule.diaSemana,
-    disciplina: toPublicSubject(schedule.disciplina),
+    disciplina,
     horarioFim: schedule.horarioFim,
     horarioInicio: schedule.horarioInicio,
     observacao: schedule.observacao ?? '',
+    ordem: schedule.ordem ?? 0,
     professor,
     sala,
     tipo: schedule.tipo,
@@ -112,7 +122,6 @@ function getConflictMessage(conflicts: ScheduleDocument[], data: ScheduleEntryPa
   const professorConflict = conflicts.find((schedule) => getObjectId(schedule.professor) === data.professorId);
   const turmaConflict = conflicts.find((schedule) => getObjectId(schedule.turma) === data.turmaId);
   const roomConflict = conflicts.find((schedule) => getObjectId(schedule.sala) === data.salaId);
-  const subjectConflict = conflicts.find((schedule) => getObjectId(schedule.disciplina) === data.disciplinaId);
 
   if (professorConflict) {
     return 'Este professor ja possui aula neste horario.';
@@ -124,10 +133,6 @@ function getConflictMessage(conflicts: ScheduleDocument[], data: ScheduleEntryPa
 
   if (roomConflict) {
     return 'Esta sala ja esta ocupada neste horario.';
-  }
-
-  if (subjectConflict) {
-    return 'Esta disciplina ja possui aula neste horario.';
   }
 
   return 'Ja existe um conflito neste horario.';
@@ -208,10 +213,11 @@ export class ScheduleService {
       horarioFim: currentSchedule.horarioFim,
       horarioInicio: currentSchedule.horarioInicio,
       observacao: currentSchedule.observacao,
+      ordem: currentSchedule.ordem,
       professorId: getObjectId(currentSchedule.professor),
       salaId: getObjectId(currentSchedule.sala),
       tipo: currentSchedule.tipo,
-      turmaId: getObjectId(currentSchedule.turma)
+      turmaId: getObjectId(currentSchedule.turma) ?? ''
     };
 
     await this.validatePayload(payload);
@@ -233,24 +239,76 @@ export class ScheduleService {
     return true;
   }
 
+  async copyWeek(data: CopyWeekPayload): Promise<PublicScheduleEntry[]> {
+    if (data.origemTurmaId === data.destinoTurmaId) {
+      throw new AppError('Selecione turmas diferentes para copiar os horarios', 400);
+    }
+
+    const [originClass, targetClass] = await Promise.all([
+      this.catalogRepository.findClassById(data.origemTurmaId),
+      this.catalogRepository.findClassById(data.destinoTurmaId)
+    ]);
+
+    if (!originClass || !targetClass) {
+      throw new AppError('Turma invalida para copia de horarios', 400);
+    }
+
+    if (data.sobrescrever) {
+      await this.scheduleRepository.deleteByClass(data.destinoTurmaId);
+    }
+
+    const copiedSchedules = await this.scheduleRepository.copyWeek(data.origemTurmaId, data.destinoTurmaId);
+
+    return copiedSchedules.map(toPublicScheduleEntry);
+  }
+
+  async reorder(data: ReorderSchedulePayload): Promise<PublicScheduleEntry[]> {
+    const classGroup = await this.catalogRepository.findClassById(data.turmaId);
+
+    if (!classGroup) {
+      throw new AppError('Turma invalida para reordenar horarios', 400);
+    }
+
+    const schedules = await this.scheduleRepository.reorder(data.turmaId, data.diaSemana, data.ids);
+
+    return schedules.map(toPublicScheduleEntry);
+  }
+
   private async validatePayload(data: ScheduleEntryPayload, excludeId?: string): Promise<void> {
+    const classGroup = await this.catalogRepository.findClassById(data.turmaId);
+
+    if (!classGroup) {
+      throw new AppError('Turma invalida para este horario', 400);
+    }
+
+    if (data.tipo === ScheduleEntryKind.INTERVAL) {
+      const conflicts = await this.scheduleRepository.findConflicts({
+        diaSemana: data.diaSemana,
+        excludeId,
+        horarioFim: data.horarioFim,
+        horarioInicio: data.horarioInicio,
+        turmaId: data.turmaId
+      });
+
+      if (conflicts.length) {
+        throw new AppError(getConflictMessage(conflicts, data), 409);
+      }
+
+      return;
+    }
+
+    if (!data.disciplinaId || !data.professorId || !data.salaId) {
+      throw new AppError('Preencha todos os dados da aula', 400);
+    }
+
     const subject = await this.catalogRepository.findSubjectById(data.disciplinaId);
 
     if (!subject) {
       throw new AppError('Disciplina invalida para este horario', 400);
     }
 
-    if (data.tipo === ScheduleEntryKind.INTERVAL) {
-      return;
-    }
-
-    if (!data.professorId || !data.turmaId || !data.salaId) {
-      throw new AppError('Preencha todos os dados da aula', 400);
-    }
-
-    const [professor, classGroup, room] = await Promise.all([
+    const [professor, room] = await Promise.all([
       this.userRepository.findById(data.professorId),
-      this.catalogRepository.findClassById(data.turmaId),
       this.catalogRepository.findRoomById(data.salaId)
     ]);
 
@@ -266,17 +324,12 @@ export class ScheduleService {
       throw new AppError('Este professor nao leciona a disciplina selecionada', 400);
     }
 
-    if (!classGroup) {
-      throw new AppError('Turma invalida para este horario', 400);
-    }
-
     if (!room) {
       throw new AppError('Sala invalida para este horario', 400);
     }
 
     const conflicts = await this.scheduleRepository.findConflicts({
       diaSemana: data.diaSemana,
-      disciplinaId: data.disciplinaId,
       excludeId,
       horarioFim: data.horarioFim,
       horarioInicio: data.horarioInicio,

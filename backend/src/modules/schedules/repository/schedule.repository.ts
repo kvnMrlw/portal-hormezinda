@@ -5,7 +5,6 @@ import { ScheduleEntryKind, type ScheduleEntry, type ScheduleEntryPayload, type 
 
 type ConflictFilter = {
   diaSemana: Weekday;
-  disciplinaId?: string;
   excludeId?: string;
   horarioFim: string;
   horarioInicio: string;
@@ -38,14 +37,15 @@ function buildTextFilter(search?: string) {
 function buildPayload(data: ScheduleEntryPayload) {
   return {
     diaSemana: data.diaSemana,
-    disciplina: new Types.ObjectId(data.disciplinaId),
+    disciplina: data.tipo === ScheduleEntryKind.LESSON && data.disciplinaId ? new Types.ObjectId(data.disciplinaId) : undefined,
     horarioFim: data.horarioFim,
     horarioInicio: data.horarioInicio,
     observacao: data.observacao ?? '',
-    professor: data.professorId ? new Types.ObjectId(data.professorId) : undefined,
-    sala: data.salaId ? new Types.ObjectId(data.salaId) : undefined,
+    ordem: data.ordem ?? 0,
+    professor: data.tipo === ScheduleEntryKind.LESSON && data.professorId ? new Types.ObjectId(data.professorId) : undefined,
+    sala: data.tipo === ScheduleEntryKind.LESSON && data.salaId ? new Types.ObjectId(data.salaId) : undefined,
     tipo: data.tipo,
-    turma: data.turmaId ? new Types.ObjectId(data.turmaId) : undefined
+    turma: new Types.ObjectId(data.turmaId)
   };
 }
 
@@ -60,7 +60,7 @@ export class ScheduleRepository {
       ...(filters.turmaId ? { turma: filters.turmaId } : {})
     })
       .populate(populateSchedule)
-      .sort({ diaSemana: 1, horarioInicio: 1, horarioFim: 1 });
+      .sort({ diaSemana: 1, ordem: 1, horarioInicio: 1, horarioFim: 1 });
   }
 
   async listForStudent(classGroupId: string, filters: ScheduleFilters = {}): Promise<ScheduleDocument[]> {
@@ -68,10 +68,10 @@ export class ScheduleRepository {
       ...buildTextFilter(filters.search),
       ...(filters.diaSemana ? { diaSemana: filters.diaSemana } : {}),
       ...(filters.disciplinaId ? { disciplina: filters.disciplinaId } : {}),
-      $or: [{ turma: classGroupId }, { tipo: ScheduleEntryKind.INTERVAL, turma: { $exists: false } }]
+      turma: classGroupId
     })
       .populate(populateSchedule)
-      .sort({ diaSemana: 1, horarioInicio: 1, horarioFim: 1 });
+      .sort({ diaSemana: 1, ordem: 1, horarioInicio: 1, horarioFim: 1 });
   }
 
   async listForProfessor(professorId: string, filters: ScheduleFilters = {}): Promise<ScheduleDocument[]> {
@@ -84,7 +84,7 @@ export class ScheduleRepository {
       tipo: ScheduleEntryKind.LESSON
     })
       .populate(populateSchedule)
-      .sort({ diaSemana: 1, horarioInicio: 1, horarioFim: 1 });
+      .sort({ diaSemana: 1, ordem: 1, horarioInicio: 1, horarioFim: 1 });
   }
 
   async findById(id: string): Promise<ScheduleDocument | null> {
@@ -93,7 +93,6 @@ export class ScheduleRepository {
 
   async findConflicts({
     diaSemana,
-    disciplinaId,
     excludeId,
     horarioFim,
     horarioInicio,
@@ -115,10 +114,6 @@ export class ScheduleRepository {
       conflictTargets.push({ sala: salaId });
     }
 
-    if (disciplinaId) {
-      conflictTargets.push({ disciplina: disciplinaId });
-    }
-
     if (!conflictTargets.length) {
       return [];
     }
@@ -134,7 +129,8 @@ export class ScheduleRepository {
   }
 
   async create(data: ScheduleEntryPayload): Promise<ScheduleDocument> {
-    const schedule = await ScheduleModel.create(buildPayload(data));
+    const nextOrder = data.ordem ?? (await this.getNextOrder(data.turmaId, data.diaSemana));
+    const schedule = await ScheduleModel.create(buildPayload({ ...data, ordem: nextOrder }));
 
     return schedule.populate(populateSchedule);
   }
@@ -145,5 +141,56 @@ export class ScheduleRepository {
 
   async delete(id: string): Promise<void> {
     await ScheduleModel.findByIdAndDelete(id);
+  }
+
+  async deleteByClass(classGroupId: string): Promise<void> {
+    await ScheduleModel.deleteMany({ turma: classGroupId });
+  }
+
+  async getNextOrder(classGroupId: string, diaSemana: Weekday): Promise<number> {
+    const lastSchedule = await ScheduleModel.findOne({ diaSemana, turma: classGroupId }).sort({ ordem: -1, horarioInicio: -1 });
+
+    return (lastSchedule?.ordem ?? -1) + 1;
+  }
+
+  async copyWeek(originClassId: string, targetClassId: string): Promise<ScheduleDocument[]> {
+    const schedules = await ScheduleModel.find({ turma: originClassId }).sort({ diaSemana: 1, ordem: 1, horarioInicio: 1 });
+    const created = await ScheduleModel.insertMany(
+      schedules.map((schedule) => ({
+        diaSemana: schedule.diaSemana,
+        disciplina: schedule.disciplina,
+        horarioFim: schedule.horarioFim,
+        horarioInicio: schedule.horarioInicio,
+        observacao: schedule.observacao ?? '',
+        ordem: schedule.ordem,
+        professor: schedule.professor,
+        sala: schedule.sala,
+        tipo: schedule.tipo,
+        turma: new Types.ObjectId(targetClassId)
+      }))
+    );
+
+    return ScheduleModel.find({ _id: { $in: created.map((schedule) => schedule._id) } })
+      .populate(populateSchedule)
+      .sort({ diaSemana: 1, ordem: 1, horarioInicio: 1 });
+  }
+
+  async reorder(classGroupId: string, diaSemana: Weekday, ids: string[]): Promise<ScheduleDocument[]> {
+    await Promise.all(
+      ids.map((id, index) =>
+        ScheduleModel.updateOne(
+          {
+            _id: id,
+            diaSemana,
+            turma: classGroupId
+          },
+          { ordem: index }
+        )
+      )
+    );
+
+    return ScheduleModel.find({ diaSemana, turma: classGroupId })
+      .populate(populateSchedule)
+      .sort({ ordem: 1, horarioInicio: 1 });
   }
 }

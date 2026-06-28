@@ -2,6 +2,7 @@ import { Copy, Save } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 
 import type { ClassGroup, Room, Subject } from '../../types/catalogs';
+import { formatClassName } from '../../lib/classes';
 import { ScheduleEntryKind, Weekday, weekdayLabels, type ScheduleEntry, type SchedulePayload } from '../../types/schedules';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -20,6 +21,10 @@ type ScheduleModalProps = {
   rooms: Room[];
   schedule?: ScheduleEntry;
   subjects: Subject[];
+  initialClassId?: string;
+  initialEnd?: string;
+  initialStart?: string;
+  initialWeekday?: Weekday;
 };
 
 type ScheduleFormState = {
@@ -34,17 +39,17 @@ type ScheduleFormState = {
   turmaId: string;
 };
 
-function getInitialState(schedule?: ScheduleEntry): ScheduleFormState {
+function getInitialState(schedule?: ScheduleEntry, initialClassId = '', initialWeekday = Weekday.MONDAY, initialStart = '07:00', initialEnd = '07:50'): ScheduleFormState {
   return {
-    diaSemana: schedule?.diaSemana ?? Weekday.MONDAY,
-    disciplinaId: schedule?.disciplina.id ?? '',
-    horarioFim: schedule?.horarioFim ?? '07:50',
-    horarioInicio: schedule?.horarioInicio ?? '07:00',
+    diaSemana: schedule?.diaSemana ?? initialWeekday,
+    disciplinaId: schedule?.disciplina?.id ?? '',
+    horarioFim: schedule?.horarioFim ?? initialEnd,
+    horarioInicio: schedule?.horarioInicio ?? initialStart,
     observacao: schedule?.observacao ?? '',
-    professorId: schedule?.professor?.id ?? schedule?.disciplina.professores[0]?.id ?? '',
+    professorId: schedule?.professor?.id ?? schedule?.disciplina?.professores[0]?.id ?? '',
     salaId: schedule?.sala?.id ?? '',
     tipo: schedule?.tipo ?? ScheduleEntryKind.LESSON,
-    turmaId: schedule?.turma?.id ?? ''
+    turmaId: schedule?.turma?.id ?? initialClassId
   };
 }
 
@@ -58,19 +63,24 @@ export function ScheduleModal({
   onSubmit,
   rooms,
   schedule,
-  subjects
+  subjects,
+  initialClassId,
+  initialEnd,
+  initialStart,
+  initialWeekday
 }: ScheduleModalProps) {
-  const [form, setForm] = useState<ScheduleFormState>(() => getInitialState(schedule));
+  const [form, setForm] = useState<ScheduleFormState>(() => getInitialState(schedule, initialClassId, initialWeekday, initialStart, initialEnd));
   const isLesson = form.tipo === ScheduleEntryKind.LESSON;
+  const isEditing = mode === 'edit';
   const title = mode === 'edit' ? 'Editar horario' : mode === 'duplicate' ? 'Duplicar horario' : 'Novo horario';
   const selectedSubject = subjects.find((subject) => subject.id === form.disciplinaId);
   const availableTeachers = selectedSubject?.professores.length ? selectedSubject.professores : [];
 
   useEffect(() => {
     if (isOpen) {
-      setForm(getInitialState(schedule));
+      setForm(getInitialState(schedule, initialClassId, initialWeekday, initialStart, initialEnd));
     }
-  }, [isOpen, schedule]);
+  }, [initialClassId, initialEnd, initialStart, initialWeekday, isOpen, schedule]);
 
   function updateSubject(subjectId: string): void {
     const subject = subjects.find((item) => item.id === subjectId);
@@ -89,14 +99,14 @@ export function ScheduleModal({
 
     await onSubmit({
       diaSemana: form.diaSemana,
-      disciplinaId: form.disciplinaId,
+      disciplinaId: isLesson ? form.disciplinaId : undefined,
       horarioFim: form.horarioFim,
       horarioInicio: form.horarioInicio,
       observacao: form.observacao.trim(),
       professorId: isLesson ? form.professorId : undefined,
       salaId: isLesson ? form.salaId : undefined,
       tipo: form.tipo,
-      turmaId: isLesson ? form.turmaId : undefined
+      turmaId: form.turmaId
     });
   }
 
@@ -104,28 +114,32 @@ export function ScheduleModal({
     <Modal className="max-h-[92vh] max-w-3xl overflow-y-auto rounded-[2rem]" isOpen={isOpen} onClose={onClose} title={title}>
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select
-            label="Tipo"
-            name="tipo"
-            onChange={(event) => setForm((current) => ({ ...current, tipo: event.target.value as ScheduleEntryKind }))}
-            value={form.tipo}
-          >
-            <option value={ScheduleEntryKind.LESSON}>Aula</option>
-            <option value={ScheduleEntryKind.INTERVAL}>Intervalo</option>
-          </Select>
-
-          <Select label="Disciplina" name="disciplinaId" onChange={(event) => updateSubject(event.target.value)} required value={form.disciplinaId}>
-            <option value="">Selecione</option>
-            {subjects.map((subject) => (
-              <option key={subject.id} value={subject.id}>
-                {subject.nome}
-              </option>
-            ))}
-          </Select>
+          {!isEditing ? (
+            <Select
+              label="Tipo"
+              name="tipo"
+              onChange={(event) => setForm((current) => ({ ...current, tipo: event.target.value as ScheduleEntryKind }))}
+              value={form.tipo}
+            >
+              <option value={ScheduleEntryKind.LESSON}>Aula</option>
+              <option value={ScheduleEntryKind.INTERVAL}>Intervalo</option>
+            </Select>
+          ) : null}
 
           {isLesson ? (
+            <Select label="Disciplina" name="disciplinaId" onChange={(event) => updateSubject(event.target.value)} required value={form.disciplinaId}>
+              <option value="">Selecione</option>
+              {subjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.nome}
+                </option>
+              ))}
+            </Select>
+          ) : null}
+
+          {!isEditing ? (
             <Select
-              label="Turma"
+              label="Sala"
               name="turmaId"
               onChange={(event) => setForm((current) => ({ ...current, turmaId: event.target.value }))}
               required
@@ -134,7 +148,7 @@ export function ScheduleModal({
               <option value="">Selecione</option>
               {classes.map((classGroup) => (
                 <option key={classGroup.id} value={classGroup.id}>
-                  {classGroup.nome}
+                  {formatClassName(classGroup)}
                 </option>
               ))}
             </Select>
@@ -159,7 +173,7 @@ export function ScheduleModal({
 
           {isLesson ? (
             <Select
-              label="Sala"
+              label="Sala da aula"
               name="salaId"
               onChange={(event) => setForm((current) => ({ ...current, salaId: event.target.value }))}
               required
@@ -174,18 +188,20 @@ export function ScheduleModal({
             </Select>
           ) : null}
 
-          <Select
-            label="Dia da semana"
-            name="diaSemana"
-            onChange={(event) => setForm((current) => ({ ...current, diaSemana: event.target.value as Weekday }))}
-            value={form.diaSemana}
-          >
-            {Object.values(Weekday).map((weekday) => (
-              <option key={weekday} value={weekday}>
-                {weekdayLabels[weekday]}
-              </option>
-            ))}
-          </Select>
+          {!isEditing ? (
+            <Select
+              label="Dia da semana"
+              name="diaSemana"
+              onChange={(event) => setForm((current) => ({ ...current, diaSemana: event.target.value as Weekday }))}
+              value={form.diaSemana}
+            >
+              {Object.values(Weekday).map((weekday) => (
+                <option key={weekday} value={weekday}>
+                  {weekdayLabels[weekday]}
+                </option>
+              ))}
+            </Select>
+          ) : null}
 
           <Input
             label="Horario inicial"
@@ -205,15 +221,15 @@ export function ScheduleModal({
             value={form.horarioFim}
           />
 
-          <div>
+          {isLesson ? <div>
             <span className="text-sm font-medium text-brand-navy">Cor da disciplina</span>
             <div className="mt-2 flex h-11 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-600">
               <span className="h-6 w-6 rounded-full ring-1 ring-black/10" style={{ backgroundColor: selectedSubject?.cor ?? '#e2e8f0' }} />
               {selectedSubject?.cor ?? 'Selecione uma disciplina'}
             </div>
-          </div>
+          </div> : null}
 
-          <div className="sm:col-span-2">
+          {isLesson ? <div className="sm:col-span-2">
             <Textarea
               label="Observacoes"
               name="observacao"
@@ -221,7 +237,7 @@ export function ScheduleModal({
               rows={3}
               value={form.observacao}
             />
-          </div>
+          </div> : null}
         </div>
 
         {error ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p> : null}

@@ -1,3 +1,5 @@
+import { Weekday } from './schedules';
+
 export enum MealCategory {
   BREAKFAST = 'BREAKFAST',
   SNACK = 'SNACK',
@@ -24,16 +26,9 @@ export type Meal = {
   nome: string;
   descricao: string;
   imagem?: MealImage;
-  data: string;
+  data?: string;
+  diaSemana: Weekday;
   categoria: MealCategory;
-  observacoes?: string;
-  ingredientes: string[];
-  alergenos: string[];
-  vegetariano: boolean;
-  vegano: boolean;
-  semLactose: boolean;
-  semGluten: boolean;
-  calorias?: number;
   status: MealStatus;
   criadoEm: string;
   atualizadoEm: string;
@@ -43,29 +38,16 @@ export type MealPayload = {
   nome: string;
   descricao: string;
   imagem?: File;
-  data: string;
+  diaSemana: Weekday;
   categoria: MealCategory;
-  observacoes?: string;
-  ingredientes: string[];
-  alergenos: string[];
-  vegetariano: boolean;
-  vegano: boolean;
-  semLactose: boolean;
-  semGluten: boolean;
-  calorias?: number | '';
   status: MealStatus;
 };
 
 export type MealFilters = {
   categoria?: MealCategory | '';
-  dateFrom?: string;
-  dateTo?: string;
+  diaSemana?: Weekday | '';
   search?: string;
-  semGluten?: boolean;
-  semLactose?: boolean;
   status?: MealStatus | '';
-  vegano?: boolean;
-  vegetariano?: boolean;
 };
 
 export const mealCategoryLabels: Record<MealCategory, string> = {

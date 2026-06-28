@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import { Home } from '../pages/Home';
 import { Catalogs } from '../pages/Catalogs';
+import { Courses } from '../pages/Courses';
 import { Login } from '../pages/Login';
 import { ModulePlaceholder } from '../pages/ModulePlaceholder';
 import { Menu } from '../pages/Menu';
@@ -87,6 +88,22 @@ const router = createBrowserRouter([
     )
   },
   {
+    path: '/horarios/turma/:classId',
+    element: (
+      <ProtectedRoute allowedRoles={[Cargo.ADMIN]}>
+        <Schedules />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/cursos',
+    element: (
+      <ProtectedRoute>
+        <Courses />
+      </ProtectedRoute>
+    )
+  },
+  {
     path: '/usuarios',
     element: (
       <ProtectedRoute allowedRoles={[Cargo.ADMIN]}>
@@ -102,7 +119,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
-  ...schoolModules.filter((module) => module.href !== '/avisos' && module.href !== '/horarios' && module.href !== '/cardapio').map((module) => ({
+  ...schoolModules.filter((module) => module.href !== '/avisos' && module.href !== '/horarios' && module.href !== '/cardapio' && module.href !== '/cursos').map((module) => ({
     path: module.href,
     element: (
       <ProtectedRoute>

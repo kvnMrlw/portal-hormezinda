@@ -43,3 +43,15 @@ export async function deleteSchedule(id: string): Promise<string> {
 
   return response.data.data.id;
 }
+
+export async function copyWeekSchedules(payload: { destinoTurmaId: string; origemTurmaId: string; sobrescrever?: boolean }): Promise<ScheduleEntry[]> {
+  const response = await api.post<ApiResponse<{ horarios: ScheduleEntry[] }>>('/schedules/copy-week', payload);
+
+  return response.data.data.horarios;
+}
+
+export async function reorderSchedules(payload: { diaSemana: string; ids: string[]; turmaId: string }): Promise<ScheduleEntry[]> {
+  const response = await api.post<ApiResponse<{ horarios: ScheduleEntry[] }>>('/schedules/reorder', payload);
+
+  return response.data.data.horarios;
+}

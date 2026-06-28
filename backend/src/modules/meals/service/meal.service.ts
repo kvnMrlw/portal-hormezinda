@@ -1,26 +1,31 @@
 import { removeUploadedFiles } from '../../../utils/imageUpload';
+import { Weekday } from '../../schedules/types/schedule.types';
 import { MealRepository } from '../repository/meal.repository';
 import type { MealFilters, MealImage, MealPayload, PublicMeal } from '../types/meal.types';
+
+function getWeekdayFromDate(date?: Date): Weekday {
+  const day = date?.getDay();
+
+  if (day === 2) return Weekday.TUESDAY;
+  if (day === 3) return Weekday.WEDNESDAY;
+  if (day === 4) return Weekday.THURSDAY;
+  if (day === 5) return Weekday.FRIDAY;
+
+  return Weekday.MONDAY;
+}
 
 function toPublicMeal(meal: Awaited<ReturnType<MealRepository['findById']>> extends infer T ? NonNullable<T> : never): PublicMeal {
   return {
     id: meal.id,
-    alergenos: meal.alergenos ?? [],
     atualizadoEm: meal.atualizadoEm,
-    calorias: meal.calorias,
     categoria: meal.categoria,
     criadoEm: meal.criadoEm,
     data: meal.data,
     descricao: meal.descricao,
+    diaSemana: meal.diaSemana ?? getWeekdayFromDate(meal.data),
     imagem: meal.imagem,
-    ingredientes: meal.ingredientes ?? [],
     nome: meal.nome,
-    observacoes: meal.observacoes ?? '',
-    semGluten: meal.semGluten,
-    semLactose: meal.semLactose,
-    status: meal.status,
-    vegano: meal.vegano,
-    vegetariano: meal.vegetariano
+    status: meal.status
   };
 }
 

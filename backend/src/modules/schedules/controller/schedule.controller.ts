@@ -4,7 +4,13 @@ import { AppError } from '../../../middlewares/error.middleware';
 import { apiResponse } from '../../../utils/apiResponse';
 import type { AuthenticatedRequest } from '../../auth/types/auth.types';
 import { ScheduleService } from '../service/schedule.service';
-import { scheduleFiltersSchema, scheduleIdParamSchema, schedulePayloadSchema } from '../validation/schedule.validation';
+import {
+  copyWeekPayloadSchema,
+  reorderSchedulePayloadSchema,
+  scheduleFiltersSchema,
+  scheduleIdParamSchema,
+  schedulePayloadSchema
+} from '../validation/schedule.validation';
 
 const scheduleService = new ScheduleService();
 
@@ -100,6 +106,38 @@ export async function deleteSchedule(request: AuthenticatedRequest, response: Re
     }
 
     return response.status(200).json(apiResponse({ id: parsedParams.data.id }, { message: 'Horario excluido com sucesso' }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function copyWeekSchedules(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    const parsedBody = copyWeekPayloadSchema.safeParse(request.body);
+
+    if (!parsedBody.success) {
+      throw new AppError('Nao foi possivel copiar os horarios', 400);
+    }
+
+    const horarios = await scheduleService.copyWeek(parsedBody.data);
+
+    return response.status(201).json(apiResponse({ horarios }, { message: 'Semana copiada com sucesso' }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function reorderSchedules(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    const parsedBody = reorderSchedulePayloadSchema.safeParse(request.body);
+
+    if (!parsedBody.success) {
+      throw new AppError('Nao foi possivel reordenar os horarios', 400);
+    }
+
+    const horarios = await scheduleService.reorder(parsedBody.data);
+
+    return response.status(200).json(apiResponse({ horarios }, { message: 'Horarios reordenados com sucesso' }));
   } catch (error) {
     return next(error);
   }

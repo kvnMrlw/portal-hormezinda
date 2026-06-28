@@ -7,20 +7,9 @@ function buildMealFormData(payload: MealPayload): FormData {
 
   formData.append('nome', payload.nome);
   formData.append('descricao', payload.descricao);
-  formData.append('data', payload.data);
+  formData.append('diaSemana', payload.diaSemana);
   formData.append('categoria', payload.categoria);
-  formData.append('observacoes', payload.observacoes ?? '');
-  formData.append('ingredientes', JSON.stringify(payload.ingredientes));
-  formData.append('alergenos', JSON.stringify(payload.alergenos));
-  formData.append('vegetariano', String(payload.vegetariano));
-  formData.append('vegano', String(payload.vegano));
-  formData.append('semLactose', String(payload.semLactose));
-  formData.append('semGluten', String(payload.semGluten));
   formData.append('status', payload.status);
-
-  if (payload.calorias !== '' && payload.calorias !== undefined) {
-    formData.append('calorias', String(payload.calorias));
-  }
 
   if (payload.imagem) {
     formData.append('imagem', payload.imagem);

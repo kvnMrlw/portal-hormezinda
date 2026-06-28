@@ -17,13 +17,14 @@ export enum ScheduleEntryKind {
 export type ScheduleEntry = {
   id: string;
   tipo: ScheduleEntryKind;
-  disciplina: Subject;
+  disciplina?: Subject;
   professor?: User;
   sala?: Room;
-  turma?: ClassGroup;
+  turma: ClassGroup;
   diaSemana: Weekday;
   horarioInicio: string;
   horarioFim: string;
+  ordem: number;
   observacao?: string;
   criadoEm: string;
   atualizadoEm: string;
@@ -40,13 +41,14 @@ export type ScheduleFilters = {
 
 export type SchedulePayload = {
   tipo: ScheduleEntryKind;
-  disciplinaId: string;
+  disciplinaId?: string;
   professorId?: string;
   salaId?: string;
-  turmaId?: string;
+  turmaId: string;
   diaSemana: Weekday;
   horarioInicio: string;
   horarioFim: string;
+  ordem?: number;
   observacao?: string;
 };
 

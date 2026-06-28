@@ -1,5 +1,6 @@
 import { Copy, Edit3, Trash2 } from 'lucide-react';
 
+import { formatClassName } from '../../lib/classes';
 import { cn } from '../../lib/utils';
 import { ScheduleEntryKind, type ScheduleEntry } from '../../types/schedules';
 import { formatTimeRange, getSubjectIcon, isScheduleHappening } from './scheduleUtils';
@@ -24,10 +25,10 @@ function getReadableTextColor(color: string): string {
 }
 
 export function ScheduleLessonCard({ canManage, compact = false, onDelete, onDuplicate, onEdit, schedule }: ScheduleLessonCardProps) {
-  const Icon = getSubjectIcon(schedule.disciplina, schedule.tipo);
+  const Icon = getSubjectIcon(schedule.disciplina ?? 'Intervalo', schedule.tipo);
   const happening = isScheduleHappening(schedule);
   const isInterval = schedule.tipo === ScheduleEntryKind.INTERVAL;
-  const textColor = isInterval ? '#475569' : getReadableTextColor(schedule.disciplina.cor);
+  const textColor = isInterval ? '#475569' : getReadableTextColor(schedule.disciplina?.cor ?? '#2563eb');
 
   return (
     <article
@@ -37,7 +38,7 @@ export function ScheduleLessonCard({ canManage, compact = false, onDelete, onDup
         happening ? 'ring-2 ring-brand-blue shadow-[0_0_0_4px_rgba(37,99,235,0.12)]' : 'ring-black/5',
         isInterval && 'border border-dashed border-slate-200 bg-slate-50'
       )}
-      style={isInterval ? undefined : { backgroundColor: schedule.disciplina.cor, color: textColor }}
+      style={isInterval ? undefined : { backgroundColor: schedule.disciplina?.cor ?? '#2563eb', color: textColor }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -83,7 +84,7 @@ export function ScheduleLessonCard({ canManage, compact = false, onDelete, onDup
       </div>
 
       <h3 className={cn('mt-2 truncate font-semibold leading-tight', compact ? 'text-sm' : 'text-base')} style={{ color: textColor }}>
-        {schedule.disciplina.nome}
+        {isInterval ? 'Intervalo' : schedule.disciplina?.nome}
       </h3>
       {schedule.professor ? (
         <p className="mt-1 truncate text-xs font-semibold opacity-90" style={{ color: textColor }}>
@@ -92,7 +93,7 @@ export function ScheduleLessonCard({ canManage, compact = false, onDelete, onDup
       ) : null}
       <div className="mt-2 flex flex-wrap gap-1.5 text-[0.68rem] font-bold" style={{ color: textColor }}>
         {schedule.sala ? <span className="rounded-full bg-white/20 px-2 py-0.5">{schedule.sala.nome}</span> : null}
-        {schedule.turma ? <span className="rounded-full bg-white/20 px-2 py-0.5">{schedule.turma.nome}</span> : null}
+        {schedule.turma ? <span className="rounded-full bg-white/20 px-2 py-0.5">{formatClassName(schedule.turma)}</span> : null}
       </div>
     </article>
   );

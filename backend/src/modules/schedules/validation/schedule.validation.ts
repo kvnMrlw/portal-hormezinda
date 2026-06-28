@@ -27,14 +27,15 @@ export const scheduleFiltersSchema = z.object({
 export const schedulePayloadSchema = z
   .object({
     diaSemana: z.nativeEnum(Weekday),
-    disciplinaId: objectIdSchema,
+    disciplinaId: objectIdSchema.optional(),
     horarioFim: z.string().regex(timeRegex, 'Informe o horario final'),
     horarioInicio: z.string().regex(timeRegex, 'Informe o horario inicial'),
     observacao: z.string().trim().max(240).optional(),
+    ordem: z.coerce.number().int().min(0).optional(),
     professorId: objectIdSchema.optional(),
     salaId: objectIdSchema.optional(),
     tipo: z.nativeEnum(ScheduleEntryKind).default(ScheduleEntryKind.LESSON),
-    turmaId: objectIdSchema.optional()
+    turmaId: objectIdSchema
   })
   .superRefine((data, context) => {
     if (toMinutes(data.horarioFim) <= toMinutes(data.horarioInicio)) {
@@ -46,19 +47,19 @@ export const schedulePayloadSchema = z
     }
 
     if (data.tipo === ScheduleEntryKind.LESSON) {
+      if (!data.disciplinaId) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Informe a disciplina',
+          path: ['disciplinaId']
+        });
+      }
+
       if (!data.professorId) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'Informe o professor',
           path: ['professorId']
-        });
-      }
-
-      if (!data.turmaId) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Informe a turma',
-          path: ['turmaId']
         });
       }
 
@@ -71,3 +72,15 @@ export const schedulePayloadSchema = z
       }
     }
   });
+
+export const copyWeekPayloadSchema = z.object({
+  origemTurmaId: objectIdSchema,
+  sobrescrever: z.coerce.boolean().optional(),
+  destinoTurmaId: objectIdSchema
+});
+
+export const reorderSchedulePayloadSchema = z.object({
+  diaSemana: z.nativeEnum(Weekday),
+  ids: z.array(objectIdSchema),
+  turmaId: objectIdSchema
+});

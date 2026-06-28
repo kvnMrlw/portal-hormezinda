@@ -16,7 +16,6 @@ const scheduleSchema = new Schema<ScheduleEntry>(
     disciplina: {
       type: Schema.Types.ObjectId,
       ref: 'Subject',
-      required: true,
       index: true
     },
     professor: {
@@ -32,6 +31,7 @@ const scheduleSchema = new Schema<ScheduleEntry>(
     turma: {
       type: Schema.Types.ObjectId,
       ref: 'ClassGroup',
+      required: true,
       index: true
     },
     diaSemana: {
@@ -50,6 +50,13 @@ const scheduleSchema = new Schema<ScheduleEntry>(
       type: String,
       required: true,
       match: /^([01]\d|2[0-3]):[0-5]\d$/
+    },
+    ordem: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+      index: true
     },
     observacao: {
       type: String,
@@ -75,9 +82,9 @@ const scheduleSchema = new Schema<ScheduleEntry>(
   }
 );
 
+scheduleSchema.index({ turma: 1, diaSemana: 1, ordem: 1 });
 scheduleSchema.index({ diaSemana: 1, horarioInicio: 1, turma: 1 });
 scheduleSchema.index({ diaSemana: 1, horarioInicio: 1, professor: 1 });
 scheduleSchema.index({ diaSemana: 1, horarioInicio: 1, sala: 1 });
-scheduleSchema.index({ diaSemana: 1, horarioInicio: 1, disciplina: 1 });
 
 export const ScheduleModel: Model<ScheduleEntry> = model<ScheduleEntry>('Schedule', scheduleSchema);

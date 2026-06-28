@@ -32,7 +32,7 @@ export function getSubjectIcon(subject: string | { nome: string }, kind: Schedul
     return Coffee;
   }
 
-  const normalizedSubject = normalizeText(typeof subject === 'string' ? subject : subject.nome);
+  const normalizedSubject = normalizeText(typeof subject === 'string' ? subject : subject?.nome ?? '');
   const match = subjectIcons.find(([name]) => normalizedSubject.includes(name));
 
   return match?.[1] ?? BookOpen;
@@ -101,7 +101,7 @@ export function groupSchedulesByDay(schedules: ScheduleEntry[]): Record<Weekday,
   return weekdays.reduce<Record<Weekday, ScheduleEntry[]>>((groups, weekday) => {
     groups[weekday] = schedules
       .filter((schedule) => schedule.diaSemana === weekday)
-      .sort((first, second) => timeToMinutes(first.horarioInicio) - timeToMinutes(second.horarioInicio));
+      .sort((first, second) => (first.ordem ?? 0) - (second.ordem ?? 0) || timeToMinutes(first.horarioInicio) - timeToMinutes(second.horarioInicio));
 
     return groups;
   }, {} as Record<Weekday, ScheduleEntry[]>);

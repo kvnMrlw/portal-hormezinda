@@ -9,6 +9,7 @@ import { env } from './config/env';
 import { errorMiddleware, notFoundMiddleware } from './middlewares/error.middleware';
 import authRoutes from './modules/auth/routes/auth.routes';
 import catalogRoutes from './modules/catalogs/routes/catalog.routes';
+import courseRoutes from './modules/courses/routes/course.routes';
 import feedRoutes from './modules/feed/routes/feed.routes';
 import mealRoutes from './modules/meals/routes/meal.routes';
 import noticeRoutes from './modules/notices/routes/notice.routes';
@@ -48,6 +49,7 @@ app.use('/uploads', express.static(path.resolve(process.cwd(), 'src/uploads'), g
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/catalogs', catalogRoutes);
+app.use('/api/courses', courseRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/meals', mealRoutes);
 app.use('/api/notices', noticeRoutes);

@@ -22,13 +22,14 @@ export enum ScheduleEntryKind {
 
 export type ScheduleEntry = {
   tipo: ScheduleEntryKind;
-  disciplina: Types.ObjectId | SubjectDocument;
+  disciplina?: Types.ObjectId | SubjectDocument;
   professor?: Types.ObjectId | UserDocument;
   sala?: Types.ObjectId | RoomDocument;
-  turma?: Types.ObjectId | ClassGroupDocument;
+  turma: Types.ObjectId | ClassGroupDocument;
   diaSemana: Weekday;
   horarioInicio: string;
   horarioFim: string;
+  ordem: number;
   observacao?: string;
   criadoEm: Date;
   atualizadoEm: Date;
@@ -36,10 +37,10 @@ export type ScheduleEntry = {
 
 export type PublicScheduleEntry = Omit<ScheduleEntry, 'disciplina' | 'professor' | 'sala' | 'turma'> & {
   id: string;
-  disciplina: PublicSubject;
+  disciplina?: PublicSubject;
   professor?: PublicUser;
   sala?: PublicRoom;
-  turma?: PublicClassGroup;
+  turma: PublicClassGroup;
 };
 
 export type ScheduleFilters = {
@@ -53,12 +54,25 @@ export type ScheduleFilters = {
 
 export type ScheduleEntryPayload = {
   diaSemana: Weekday;
-  disciplinaId: string;
+  disciplinaId?: string;
   horarioFim: string;
   horarioInicio: string;
   observacao?: string;
+  ordem?: number;
   professorId?: string;
   salaId?: string;
   tipo: ScheduleEntryKind;
-  turmaId?: string;
+  turmaId: string;
+};
+
+export type CopyWeekPayload = {
+  origemTurmaId: string;
+  sobrescrever?: boolean;
+  destinoTurmaId: string;
+};
+
+export type ReorderSchedulePayload = {
+  diaSemana: Weekday;
+  ids: string[];
+  turmaId: string;
 };

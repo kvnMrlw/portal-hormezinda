@@ -1,6 +1,7 @@
 import { CalendarClock, DoorOpen } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { formatClassName } from '../../lib/classes';
 import { ScheduleEntryKind, weekdays, weekdayLabels, type ScheduleEntry } from '../../types/schedules';
 import { formatTimeRange, getTodayWeekday, timeToMinutes } from './scheduleUtils';
 
@@ -29,10 +30,6 @@ export function TeacherAgenda({ schedules }: TeacherAgendaProps) {
   const today = getTodayWeekday();
   const nowMinutes = getNowMinutes();
   const todayNext = lessons.find((lesson) => lesson.diaSemana === today && timeToMinutes(lesson.horarioInicio) >= nowMinutes);
-  const weekNext =
-    todayNext ??
-    lessons.find((lesson) => weekdays.indexOf(lesson.diaSemana) > weekdays.indexOf(today)) ??
-    lessons[0];
   const groupedLessons = weekdays
     .map((weekday) => ({
       lessons: lessons.filter((lesson) => lesson.diaSemana === weekday),
@@ -48,25 +45,20 @@ export function TeacherAgenda({ schedules }: TeacherAgendaProps) {
             <CalendarClock className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
-              {todayNext ? 'Sua proxima aula' : 'Voce nao possui mais aulas hoje'}
-            </p>
-            {weekNext ? (
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Sua proxima aula</p>
+            {todayNext ? (
               <>
-                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-brand-navy">{weekNext.horarioInicio}</h2>
-                <p className="mt-1 text-sm font-semibold text-slate-600">
-                  {weekNext.disciplina.nome}
-                  {!todayNext ? ` - ${weekdayLabels[weekNext.diaSemana]}` : ''}
-                </p>
-                {weekNext.sala ? (
+                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-brand-navy">{todayNext.horarioInicio}</h2>
+                <p className="mt-1 text-sm font-semibold text-slate-600">{todayNext.disciplina?.nome}</p>
+                {todayNext.sala ? (
                   <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-600">
                     <DoorOpen className="h-4 w-4 text-brand-blue" />
-                    {weekNext.sala.nome}
+                    Sala {todayNext.sala.nome}
                   </p>
                 ) : null}
               </>
             ) : (
-              <p className="mt-2 text-sm font-semibold text-slate-500">Nenhuma aula cadastrada.</p>
+              <p className="mt-2 text-sm font-semibold text-slate-500">Nenhuma aula restante hoje.</p>
             )}
           </div>
         </div>
@@ -81,10 +73,10 @@ export function TeacherAgenda({ schedules }: TeacherAgendaProps) {
                 <p className="text-sm font-bold text-brand-navy">{formatTimeRange(lesson)}</p>
                 <div className="min-w-0">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: lesson.disciplina.cor }} />
-                    <h3 className="truncate font-semibold text-brand-navy">{lesson.disciplina.nome}</h3>
+                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: lesson.disciplina?.cor ?? '#2563eb' }} />
+                    <h3 className="truncate font-semibold text-brand-navy">{lesson.disciplina?.nome}</h3>
                   </div>
-                  {lesson.turma ? <p className="mt-1 text-sm font-medium text-slate-500">{lesson.turma.nome}</p> : null}
+                  {lesson.turma ? <p className="mt-1 text-sm font-medium text-slate-500">{formatClassName(lesson.turma)}</p> : null}
                 </div>
                 {lesson.sala ? <p className="text-sm font-semibold text-slate-600 sm:text-right">{lesson.sala.nome}</p> : null}
               </article>

@@ -1,3 +1,5 @@
+import { Weekday } from '../../schedules/types/schedule.types';
+
 export enum MealCategory {
   BREAKFAST = 'BREAKFAST',
   SNACK = 'SNACK',
@@ -23,16 +25,9 @@ export type Meal = {
   nome: string;
   descricao: string;
   imagem?: MealImage;
-  data: Date;
+  data?: Date;
+  diaSemana?: Weekday;
   categoria: MealCategory;
-  observacoes?: string;
-  ingredientes: string[];
-  alergenos: string[];
-  vegetariano: boolean;
-  vegano: boolean;
-  semLactose: boolean;
-  semGluten: boolean;
-  calorias?: number;
   status: MealStatus;
   criadoEm: Date;
   atualizadoEm: Date;
@@ -42,19 +37,14 @@ export type PublicMeal = Meal & {
   id: string;
 };
 
-export type MealPayload = Omit<Meal, 'criadoEm' | 'imagem' | 'atualizadoEm'> & {
+export type MealPayload = Pick<Meal, 'categoria' | 'descricao' | 'diaSemana' | 'nome' | 'status'> & {
   imagem?: MealImage;
 };
 
 export type MealFilters = {
   categoria?: MealCategory;
-  dateFrom?: Date;
-  dateTo?: Date;
+  diaSemana?: Weekday;
   includeHidden?: boolean;
   search?: string;
-  semGluten?: boolean;
-  semLactose?: boolean;
   status?: MealStatus;
-  vegano?: boolean;
-  vegetariano?: boolean;
 };
