@@ -299,7 +299,6 @@ export function Schedules() {
         rooms={rooms}
         schedule={modalState?.schedule}
         subjects={subjects}
-        teachers={teachers}
       />
     </AppShell>
   );

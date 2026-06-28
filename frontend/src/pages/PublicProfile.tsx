@@ -45,6 +45,7 @@ export function PublicProfile() {
           editable={currentUser?.id === profile.usuario.id}
           estatisticas={profile.estatisticas}
           publicacoes={profile.publicacoes}
+          professorResumo={profile.professorResumo}
           stories={profile.stories}
           user={profile.usuario}
         />

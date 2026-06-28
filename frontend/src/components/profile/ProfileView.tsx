@@ -22,6 +22,7 @@ import { getDisplayRoleLabel, isAdminRole } from '../../lib/roles';
 import type { ProfileUpdatePayload, User } from '../../types/auth';
 import { Cargo } from '../../types/auth';
 import { StoryKind, type FeedPost, type FeedStory } from '../../types/feed';
+import { weekdayLabels, type Weekday } from '../../types/schedules';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -39,6 +40,25 @@ type ProfileViewProps = {
     stories?: number;
   };
   publicacoes?: FeedPost[];
+  professorResumo?: {
+    cargaHorariaMinutos: number;
+    disciplinas: string[];
+    horarioSemanal: Array<{
+      diaSemana: string;
+      disciplina: string;
+      horarioFim: string;
+      horarioInicio: string;
+      sala: string;
+      turma: string;
+    }>;
+    proximaAula?: {
+      diaSemana: string;
+      disciplina: string;
+      horarioInicio: string;
+      sala: string;
+    };
+    quantidadeTurmas: number;
+  };
   stories?: FeedStory[];
 };
 
@@ -54,7 +74,7 @@ type ProfileFormData = {
 
 const maxImageSize = 5 * 1024 * 1024;
 
-export function ProfileView({ editable = false, estatisticas, publicacoes, stories, user }: ProfileViewProps) {
+export function ProfileView({ editable = false, estatisticas, professorResumo, publicacoes, stories, user }: ProfileViewProps) {
   const { updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -248,6 +268,7 @@ export function ProfileView({ editable = false, estatisticas, publicacoes, stori
           <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <section className="space-y-5">
               {stories ? <StoryStrip stories={stories} /> : null}
+              {professorResumo ? <TeacherProfileSummary professorResumo={professorResumo} /> : null}
 
               <div>
                 <h2 className="text-lg font-semibold text-brand-navy">Sobre</h2>
@@ -335,6 +356,47 @@ export function ProfileView({ editable = false, estatisticas, publicacoes, stori
       </Card>
 
       {publicacoes ? <PostGrid posts={publicacoes} /> : null}
+    </div>
+  );
+}
+
+function TeacherProfileSummary({ professorResumo }: { professorResumo: NonNullable<ProfileViewProps['professorResumo']> }) {
+  const hours = Math.floor(professorResumo.cargaHorariaMinutos / 60);
+  const minutes = professorResumo.cargaHorariaMinutos % 60;
+
+  return (
+    <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <h2 className="text-lg font-semibold text-brand-navy">Agenda docente</h2>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <InfoPill label="Disciplinas" value={professorResumo.disciplinas.length ? professorResumo.disciplinas.join(', ') : 'Nenhuma'} />
+        <InfoPill label="Turmas" value={String(professorResumo.quantidadeTurmas)} />
+        <InfoPill label="Carga horaria" value={`${hours}h${minutes ? ` ${minutes}min` : ''}`} />
+      </div>
+      {professorResumo.proximaAula ? (
+        <div className="mt-4 rounded-2xl bg-blue-50 p-4 text-sm font-semibold text-brand-blue">
+          Proxima aula: {weekdayLabels[professorResumo.proximaAula.diaSemana as Weekday]} - {professorResumo.proximaAula.horarioInicio} - {professorResumo.proximaAula.disciplina} - {professorResumo.proximaAula.sala}
+        </div>
+      ) : null}
+      {professorResumo.horarioSemanal.length ? (
+        <div className="mt-4 divide-y divide-slate-100">
+          {professorResumo.horarioSemanal.map((lesson) => (
+            <div className="grid gap-1 py-3 text-sm sm:grid-cols-[8rem_1fr_7rem]" key={`${lesson.diaSemana}-${lesson.horarioInicio}-${lesson.turma}`}>
+              <span className="font-bold text-brand-navy">{lesson.horarioInicio} - {lesson.horarioFim}</span>
+              <span className="font-semibold text-slate-600">{lesson.disciplina} - {lesson.turma}</span>
+              <span className="font-semibold text-slate-500 sm:text-right">{lesson.sala}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+      <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-brand-navy">{value}</p>
     </div>
   );
 }

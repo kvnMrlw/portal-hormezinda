@@ -164,7 +164,11 @@ export function Catalogs() {
             onDelete={(item) => void handleDelete('subjects', item.id)}
             onEdit={(item) => setModalState({ tab: 'subjects', item })}
             renderAccent={(item) => item.cor}
-            renderMeta={(item) => item.professorPadrao?.nomeCompleto ?? 'Sem professor padrao'}
+            renderMeta={(item) =>
+              item.professores.length
+                ? `${item.professores.length} ${item.professores.length === 1 ? 'professor' : 'professores'}`
+                : 'Sem professores vinculados'
+            }
             renderTitle={(item) => item.nome}
           />
         ) : null}
@@ -280,7 +284,7 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
         cor: subject?.cor ?? subjectColors.Matematica,
         icone: subject?.icone ?? 'BookOpen',
         nome: subject?.nome ?? '',
-        professorPadraoId: subject?.professorPadrao?.id ?? ''
+        professorIds: subject?.professores.map((teacher) => teacher.id).join(',') ?? ''
       });
     }
 
@@ -321,7 +325,7 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
           cor: form.cor,
           icone: form.icone,
           nome: form.nome,
-          professorPadraoId: form.professorPadraoId || undefined
+          professorIds: form.professorIds ? form.professorIds.split(',').filter(Boolean) : []
         };
         await (modalState.item ? updateSubject(modalState.item.id, payload) : createSubject(payload));
       }
@@ -378,14 +382,32 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
                 </option>
               ))}
             </Select>
-            <Select label="Professor padrao" name="professorPadraoId" onChange={(event) => setForm((current) => ({ ...current, professorPadraoId: event.target.value }))} value={form.professorPadraoId ?? ''}>
-              <option value="">Nenhum</option>
-              {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.nomeCompleto}
-                </option>
-              ))}
-            </Select>
+            <fieldset className="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <legend className="px-1 text-sm font-semibold text-brand-navy">Professores</legend>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {teachers.map((teacher) => {
+                  const selectedIds = form.professorIds ? form.professorIds.split(',').filter(Boolean) : [];
+                  const checked = selectedIds.includes(teacher.id);
+
+                  return (
+                    <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-100" key={teacher.id}>
+                      <input
+                        checked={checked}
+                        className="h-4 w-4 accent-brand-blue"
+                        onChange={(event) => {
+                          const nextIds = event.target.checked
+                            ? [...selectedIds, teacher.id]
+                            : selectedIds.filter((teacherId) => teacherId !== teacher.id);
+                          setForm((current) => ({ ...current, professorIds: nextIds.join(',') }));
+                        }}
+                        type="checkbox"
+                      />
+                      {teacher.nomeCompleto}
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
           </div>
         ) : null}
 

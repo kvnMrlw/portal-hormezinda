@@ -15,7 +15,7 @@ type UploadOptions = {
   maxFileSize?: number;
 };
 
-export type ImageVariant = 'avatar' | 'banner' | 'feed' | 'notice';
+export type ImageVariant = 'avatar' | 'banner' | 'feed' | 'menu' | 'menuThumb' | 'notice';
 
 type SaveUploadedFileOptions = {
   folderName: string;
@@ -34,6 +34,8 @@ const imageSettings: Record<ImageVariant, { fit: keyof FitEnum; height?: number;
   avatar: { fit: 'cover', height: 512, quality: 82, width: 512 },
   banner: { fit: 'cover', height: 720, quality: 82, width: 1600 },
   feed: { fit: 'inside', quality: 84, width: 1440 },
+  menu: { fit: 'cover', height: 900, quality: 84, width: 1440 },
+  menuThumb: { fit: 'cover', height: 360, quality: 78, width: 480 },
   notice: { fit: 'inside', quality: 82, width: 1440 }
 };
 

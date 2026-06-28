@@ -15,7 +15,7 @@ type ConflictFilter = {
 };
 
 const populateSchedule: PopulateOptions[] = [
-  { path: 'disciplina', populate: { path: 'professorPadrao' } },
+  { path: 'disciplina', populate: [{ path: 'professores' }, { path: 'professorPadrao' }] },
   { path: 'professor' },
   { path: 'sala' },
   { path: 'turma' }

@@ -83,7 +83,7 @@ export async function createSubject(request: AuthenticatedRequest, response: Res
       throw new AppError('Nao foi possivel criar a disciplina', 400);
     }
 
-    const disciplina = await catalogService.createSubject({ ...parsedBody.data, professorPadraoId: parsedBody.data.professorPadraoId || undefined });
+    const disciplina = await catalogService.createSubject(parsedBody.data);
 
     return response.status(201).json(apiResponse({ disciplina }, { message: 'Disciplina criada com sucesso' }));
   } catch (error) {
@@ -100,10 +100,7 @@ export async function updateSubject(request: AuthenticatedRequest, response: Res
       throw new AppError('Nao foi possivel atualizar a disciplina', 400);
     }
 
-    const disciplina = await catalogService.updateSubject(parsedParams.data.id, {
-      ...parsedBody.data,
-      professorPadraoId: parsedBody.data.professorPadraoId || undefined
-    });
+    const disciplina = await catalogService.updateSubject(parsedParams.data.id, parsedBody.data);
 
     if (!disciplina) {
       throw new AppError('Disciplina nao encontrada', 404);

@@ -8,7 +8,7 @@ function subjectPayload(data: SubjectPayload) {
     cor: data.cor,
     icone: data.icone,
     nome: data.nome,
-    professorPadrao: data.professorPadraoId || undefined
+    professores: data.professorIds ?? []
   };
 }
 
@@ -38,21 +38,21 @@ export class CatalogRepository {
   }
 
   async listSubjects(): Promise<SubjectDocument[]> {
-    return SubjectModel.find().populate('professorPadrao').sort({ nome: 1 });
+    return SubjectModel.find().select('+professorPadrao').populate('professores').populate('professorPadrao').sort({ nome: 1 });
   }
 
   async findSubjectById(id: string): Promise<SubjectDocument | null> {
-    return SubjectModel.findById(id).populate('professorPadrao');
+    return SubjectModel.findById(id).select('+professorPadrao').populate('professores').populate('professorPadrao');
   }
 
   async createSubject(data: SubjectPayload): Promise<SubjectDocument> {
     const subject = await SubjectModel.create(subjectPayload(data));
 
-    return subject.populate('professorPadrao');
+    return subject.populate('professores');
   }
 
   async updateSubject(id: string, data: SubjectPayload): Promise<SubjectDocument | null> {
-    return SubjectModel.findByIdAndUpdate(id, subjectPayload(data), { new: true }).populate('professorPadrao');
+    return SubjectModel.findByIdAndUpdate(id, subjectPayload(data), { new: true }).populate('professores');
   }
 
   async deleteSubject(id: string): Promise<void> {

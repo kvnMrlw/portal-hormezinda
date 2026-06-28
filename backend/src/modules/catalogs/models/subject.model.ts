@@ -25,9 +25,16 @@ const subjectSchema = new Schema<Subject>(
       maxlength: 40,
       default: 'BookOpen'
     },
+    professores: {
+      type: [Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+      index: true
+    },
     professorPadrao: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      select: false
     }
   },
   {
@@ -46,5 +53,7 @@ const subjectSchema = new Schema<Subject>(
     }
   }
 );
+
+subjectSchema.index({ nome: 1, professores: 1 });
 
 export const SubjectModel: Model<Subject> = model<Subject>('Subject', subjectSchema);

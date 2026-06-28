@@ -14,7 +14,7 @@ import type { ScheduleDocument } from '../models/schedule.model';
 import { ScheduleRepository } from '../repository/schedule.repository';
 import { ScheduleEntryKind, Weekday, type PublicScheduleEntry, type ScheduleEntry, type ScheduleEntryPayload, type ScheduleFilters } from '../types/schedule.types';
 
-function isUserDocument(user: ScheduleEntry['professor'] | Subject['professorPadrao']): user is UserDocument {
+function isUserDocument(user: ScheduleEntry['professor'] | Subject['professores'][number] | Subject['professorPadrao']): user is UserDocument {
   return Boolean(user && typeof user === 'object' && !(user instanceof Types.ObjectId) && 'nomeCompleto' in user);
 }
 
@@ -47,13 +47,18 @@ function getObjectId(value: unknown): string | undefined {
 }
 
 function toPublicSubject(subject: SubjectDocument) {
+  const teachers = (subject.professores?.length ? subject.professores : subject.professorPadrao ? [subject.professorPadrao] : [])
+    .filter(isUserDocument)
+    .map(toPublicUser);
+
   return {
     id: subject.id,
     cor: subject.cor,
     criadoEm: subject.criadoEm,
     icone: subject.icone,
     nome: subject.nome,
-    professorPadrao: isUserDocument(subject.professorPadrao) ? toPublicUser(subject.professorPadrao) : undefined,
+    professores: teachers,
+    professorPadrao: teachers[0],
     atualizadoEm: subject.atualizadoEm
   };
 }
@@ -251,6 +256,14 @@ export class ScheduleService {
 
     if (!professor || !professor.ativo || professor.cargo !== Cargo.PROFESSOR) {
       throw new AppError('Professor invalido para este horario', 400);
+    }
+
+    const subjectTeacherIds = (subject.professores?.length ? subject.professores : subject.professorPadrao ? [subject.professorPadrao] : [])
+      .map((teacher) => getObjectId(teacher))
+      .filter(Boolean);
+
+    if (!subjectTeacherIds.includes(data.professorId)) {
+      throw new AppError('Este professor nao leciona a disciplina selecionada', 400);
     }
 
     if (!classGroup) {

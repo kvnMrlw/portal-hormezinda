@@ -16,6 +16,7 @@ export type Subject = {
   nome: string;
   cor: string;
   icone: string;
+  professores: User[];
   professorPadrao?: User;
   criadoEm: string;
   atualizadoEm: string;
@@ -39,6 +40,7 @@ export type CatalogsResponse = {
 
 export type ClassGroupPayload = Pick<ClassGroup, 'ano' | 'nome' | 'observacoes' | 'turno'>;
 export type SubjectPayload = Pick<Subject, 'cor' | 'icone' | 'nome'> & {
+  professorIds?: string[];
   professorPadraoId?: string;
 };
 export type RoomPayload = Pick<Room, 'bloco' | 'capacidade' | 'nome' | 'observacoes'>;

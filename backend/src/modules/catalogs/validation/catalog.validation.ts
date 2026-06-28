@@ -17,7 +17,7 @@ export const subjectPayloadSchema = z.object({
   cor: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, 'Informe uma cor valida'),
   icone: z.string().trim().max(40).default('BookOpen'),
   nome: z.string().trim().min(2).max(80),
-  professorPadraoId: z.string().regex(/^[a-f\d]{24}$/i, 'Professor invalido').optional().or(z.literal(''))
+  professorIds: z.array(z.string().regex(/^[a-f\d]{24}$/i, 'Professor invalido')).default([])
 });
 
 export const roomPayloadSchema = z.object({

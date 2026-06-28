@@ -20,6 +20,25 @@ export type PublicProfileResponse = {
     stories: number;
   };
   paginacaoPublicacoes: Pagination;
+  professorResumo?: {
+    cargaHorariaMinutos: number;
+    disciplinas: string[];
+    horarioSemanal: Array<{
+      diaSemana: string;
+      disciplina: string;
+      horarioFim: string;
+      horarioInicio: string;
+      sala: string;
+      turma: string;
+    }>;
+    proximaAula?: {
+      diaSemana: string;
+      disciplina: string;
+      horarioInicio: string;
+      sala: string;
+    };
+    quantidadeTurmas: number;
+  };
   publicacoes: FeedPost[];
   stories: FeedStory[];
   usuario: User;

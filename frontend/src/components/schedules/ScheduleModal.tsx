@@ -1,7 +1,6 @@
 import { Copy, Save } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 
-import type { User } from '../../types/auth';
 import type { ClassGroup, Room, Subject } from '../../types/catalogs';
 import { ScheduleEntryKind, Weekday, weekdayLabels, type ScheduleEntry, type SchedulePayload } from '../../types/schedules';
 import { Button } from '../ui/Button';
@@ -21,7 +20,6 @@ type ScheduleModalProps = {
   rooms: Room[];
   schedule?: ScheduleEntry;
   subjects: Subject[];
-  teachers: User[];
 };
 
 type ScheduleFormState = {
@@ -43,7 +41,7 @@ function getInitialState(schedule?: ScheduleEntry): ScheduleFormState {
     horarioFim: schedule?.horarioFim ?? '07:50',
     horarioInicio: schedule?.horarioInicio ?? '07:00',
     observacao: schedule?.observacao ?? '',
-    professorId: schedule?.professor?.id ?? schedule?.disciplina.professorPadrao?.id ?? '',
+    professorId: schedule?.professor?.id ?? schedule?.disciplina.professores[0]?.id ?? '',
     salaId: schedule?.sala?.id ?? '',
     tipo: schedule?.tipo ?? ScheduleEntryKind.LESSON,
     turmaId: schedule?.turma?.id ?? ''
@@ -60,13 +58,13 @@ export function ScheduleModal({
   onSubmit,
   rooms,
   schedule,
-  subjects,
-  teachers
+  subjects
 }: ScheduleModalProps) {
   const [form, setForm] = useState<ScheduleFormState>(() => getInitialState(schedule));
   const isLesson = form.tipo === ScheduleEntryKind.LESSON;
   const title = mode === 'edit' ? 'Editar horario' : mode === 'duplicate' ? 'Duplicar horario' : 'Novo horario';
   const selectedSubject = subjects.find((subject) => subject.id === form.disciplinaId);
+  const availableTeachers = selectedSubject?.professores.length ? selectedSubject.professores : [];
 
   useEffect(() => {
     if (isOpen) {
@@ -80,7 +78,9 @@ export function ScheduleModal({
     setForm((current) => ({
       ...current,
       disciplinaId: subjectId,
-      professorId: subject?.professorPadrao?.id ?? current.professorId
+      professorId: subject?.professores.some((teacher) => teacher.id === current.professorId)
+        ? current.professorId
+        : subject?.professores[0]?.id ?? ''
     }));
   }
 
@@ -149,7 +149,7 @@ export function ScheduleModal({
               value={form.professorId}
             >
               <option value="">Selecione</option>
-              {teachers.map((teacher) => (
+              {availableTeachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
                   {teacher.nomeCompleto}
                 </option>

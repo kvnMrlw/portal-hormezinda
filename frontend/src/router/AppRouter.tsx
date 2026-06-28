@@ -4,6 +4,7 @@ import { Home } from '../pages/Home';
 import { Catalogs } from '../pages/Catalogs';
 import { Login } from '../pages/Login';
 import { ModulePlaceholder } from '../pages/ModulePlaceholder';
+import { Menu } from '../pages/Menu';
 import { Notices } from '../pages/Notices';
 import { People } from '../pages/People';
 import { PlatformHome } from '../pages/PlatformHome';
@@ -54,6 +55,14 @@ const router = createBrowserRouter([
     )
   },
   {
+    path: '/cardapio',
+    element: (
+      <ProtectedRoute>
+        <Menu />
+      </ProtectedRoute>
+    )
+  },
+  {
     path: '/pessoas',
     element: (
       <ProtectedRoute>
@@ -93,7 +102,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
-  ...schoolModules.filter((module) => module.href !== '/avisos' && module.href !== '/horarios').map((module) => ({
+  ...schoolModules.filter((module) => module.href !== '/avisos' && module.href !== '/horarios' && module.href !== '/cardapio').map((module) => ({
     path: module.href,
     element: (
       <ProtectedRoute>

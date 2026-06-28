@@ -16,7 +16,7 @@ import type {
   SubjectPayload
 } from '../types/catalog.types';
 
-function isUserDocument(user: Subject['professorPadrao']): user is UserDocument {
+function isUserDocument(user: Subject['professores'][number] | Subject['professorPadrao']): user is UserDocument {
   return Boolean(user && typeof user === 'object' && !(user instanceof Types.ObjectId) && 'nomeCompleto' in user);
 }
 
@@ -33,13 +33,18 @@ function toPublicClassGroup(classGroup: Awaited<ReturnType<CatalogRepository['fi
 }
 
 function toPublicSubject(subject: Awaited<ReturnType<CatalogRepository['findSubjectById']>> extends infer T ? NonNullable<T> : never): PublicSubject {
+  const teachers = (subject.professores?.length ? subject.professores : subject.professorPadrao ? [subject.professorPadrao] : [])
+    .filter(isUserDocument)
+    .map(toPublicUser);
+
   return {
     id: subject.id,
     cor: subject.cor,
     criadoEm: subject.criadoEm,
     icone: subject.icone,
     nome: subject.nome,
-    professorPadrao: isUserDocument(subject.professorPadrao) ? toPublicUser(subject.professorPadrao) : undefined,
+    professores: teachers,
+    professorPadrao: teachers[0],
     atualizadoEm: subject.atualizadoEm
   };
 }
@@ -157,14 +162,14 @@ export class CatalogService {
   }
 
   private async validateSubjectPayload(data: SubjectPayload): Promise<void> {
-    if (!data.professorPadraoId) {
+    if (!data.professorIds?.length) {
       return;
     }
 
-    const teacher = await this.userRepository.findById(data.professorPadraoId);
+    const teachers = await Promise.all(data.professorIds.map((teacherId) => this.userRepository.findById(teacherId)));
 
-    if (!teacher || !teacher.ativo || teacher.cargo !== Cargo.PROFESSOR) {
-      throw new AppError('Professor padrao invalido', 400);
+    if (teachers.some((teacher) => !teacher || !teacher.ativo || teacher.cargo !== Cargo.PROFESSOR)) {
+      throw new AppError('Professor invalido para esta disciplina', 400);
     }
   }
 }
