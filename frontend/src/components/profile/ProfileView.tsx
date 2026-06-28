@@ -1,12 +1,14 @@
 import {
   CalendarDays,
   Camera,
+  Bell,
   ExternalLink,
   BookOpen,
   Grid3X3,
   Heart,
   ImagePlus,
   KeyRound,
+  Lightbulb,
   Link as LinkIcon,
   Loader2,
   MapPin,
@@ -22,6 +24,9 @@ import { getDisplayRoleLabel, isAdminRole } from '../../lib/roles';
 import type { ProfileUpdatePayload, User } from '../../types/auth';
 import { Cargo } from '../../types/auth';
 import { StoryKind, type FeedPost, type FeedStory } from '../../types/feed';
+import type { Idea } from '../../types/ideas';
+import { ideaCategoryLabels, ideaStatusLabels } from '../../types/ideas';
+import type { Notification } from '../../types/notifications';
 import { weekdayLabels, type Weekday } from '../../types/schedules';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
@@ -40,6 +45,8 @@ type ProfileViewProps = {
     stories?: number;
   };
   publicacoes?: FeedPost[];
+  recentIdeas?: Idea[];
+  recentNotifications?: Notification[];
   professorResumo?: {
     cargaHorariaMinutos: number;
     disciplinas: string[];
@@ -74,7 +81,7 @@ type ProfileFormData = {
 
 const maxImageSize = 5 * 1024 * 1024;
 
-export function ProfileView({ editable = false, estatisticas, professorResumo, publicacoes, stories, user }: ProfileViewProps) {
+export function ProfileView({ editable = false, estatisticas, professorResumo, publicacoes, recentIdeas, recentNotifications, stories, user }: ProfileViewProps) {
   const { updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -355,6 +362,11 @@ export function ProfileView({ editable = false, estatisticas, professorResumo, p
         </div>
       </Card>
 
+      <div className="grid gap-5 lg:grid-cols-2">
+        {recentNotifications ? <NotificationPreview notifications={recentNotifications} /> : null}
+        {recentIdeas ? <IdeaPreview ideas={recentIdeas} /> : null}
+      </div>
+
       {publicacoes ? <PostGrid posts={publicacoes} /> : null}
     </div>
   );
@@ -475,6 +487,62 @@ function PostGrid({ posts }: { posts: FeedPost[] }) {
         </div>
       ) : (
         <p className="mt-5 rounded-3xl bg-slate-50 p-5 text-sm text-slate-500">Nenhuma publicacao encontrada.</p>
+      )}
+    </Card>
+  );
+}
+
+function NotificationPreview({ notifications }: { notifications: Notification[] }) {
+  return (
+    <Card className="shadow-sm">
+      <div className="flex items-center gap-2">
+        <Bell className="h-5 w-5 text-brand-blue" />
+        <h2 className="text-lg font-semibold text-brand-navy">Ultimas notificacoes</h2>
+      </div>
+      {notifications.length ? (
+        <div className="mt-4 space-y-3">
+          {notifications.map((notification) => (
+            <article className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100" key={notification.id}>
+              <div className="flex items-start gap-2">
+                {!notification.lida ? <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-brand-blue" /> : null}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-brand-navy">{notification.titulo}</p>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{notification.descricao}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 rounded-3xl bg-slate-50 p-5 text-sm text-slate-500">Nenhuma notificacao recente.</p>
+      )}
+    </Card>
+  );
+}
+
+function IdeaPreview({ ideas }: { ideas: Idea[] }) {
+  return (
+    <Card className="shadow-sm">
+      <div className="flex items-center gap-2">
+        <Lightbulb className="h-5 w-5 text-yellow-600" />
+        <h2 className="text-lg font-semibold text-brand-navy">Ultimas ideias</h2>
+      </div>
+      {ideas.length ? (
+        <div className="mt-4 space-y-3">
+          {ideas.map((idea) => (
+            <article className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100" key={idea.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-brand-navy">{idea.titulo}</p>
+                  <p className="mt-1 text-xs font-bold text-slate-400">{ideaCategoryLabels[idea.categoria]} - {ideaStatusLabels[idea.status]}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-brand-blue">{idea.quantidadeApoios}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 rounded-3xl bg-slate-50 p-5 text-sm text-slate-500">Nenhuma ideia criada ainda.</p>
       )}
     </Card>
   );

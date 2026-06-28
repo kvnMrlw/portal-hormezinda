@@ -5,6 +5,8 @@ import { removeUploadedFiles } from '../../../utils/imageUpload';
 import type { UserDocument } from '../../users/models/user.model';
 import { toPublicUser } from '../../users/service/user.service';
 import { Cargo, type PublicUser } from '../../users/types/user.types';
+import { NotificationService } from '../../notifications/service/notification.service';
+import { NotificationEntityType, NotificationType } from '../../notifications/types/notification.types';
 import { NoticeRepository } from '../repository/notice.repository';
 import type {
   CreateNoticeData,
@@ -43,7 +45,10 @@ function toPublicNotice(notice: NoticeDocument): PublicNotice {
 }
 
 export class NoticeService {
-  constructor(private readonly noticeRepository = new NoticeRepository()) {}
+  constructor(
+    private readonly noticeRepository = new NoticeRepository(),
+    private readonly notificationService = new NotificationService()
+  ) {}
 
   async list(options: ListNoticesOptions): Promise<PublicNotice[]> {
     const notices = await this.noticeRepository.list(options);
@@ -55,6 +60,16 @@ export class NoticeService {
     const notice = await this.noticeRepository.create({
       ...data,
       autor: authorId
+    });
+
+    void this.notificationService.notifyAllActive({
+      autorId: authorId,
+      descricao: data.descricao.slice(0, 180),
+      entidadeId: notice.id,
+      entidadeTipo: NotificationEntityType.NOTICE,
+      tipo: NotificationType.NEW_NOTICE,
+      titulo: `Novo aviso: ${data.titulo}`,
+      url: `/avisos?aviso=${notice.id}`
     });
 
     return toPublicNotice(notice);
@@ -105,7 +120,10 @@ export class NoticeService {
     this.assertCanManageNotice(notice, viewer);
 
     await this.noticeRepository.delete(id);
-    await removeUploadedFiles((notice.anexos ?? []).map((attachment) => attachment.url));
+    await Promise.all([
+      removeUploadedFiles((notice.anexos ?? []).map((attachment) => attachment.url)),
+      this.notificationService.deleteByEntity(id)
+    ]);
 
     return true;
   }

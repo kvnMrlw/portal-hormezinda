@@ -6,11 +6,14 @@ import type { UserDocument } from '../../users/models/user.model';
 import { UserRepository } from '../../users/repository/user.repository';
 import { toPublicUser } from '../../users/service/user.service';
 import { Cargo, type PublicUser } from '../../users/types/user.types';
+import { NotificationService } from '../../notifications/service/notification.service';
+import { NotificationEntityType, NotificationType } from '../../notifications/types/notification.types';
 import type { CourseDocument } from '../models/course.model';
 import { CourseRepository } from '../repository/course.repository';
 import {
   CourseContentType,
   CourseStatus,
+  CourseType,
   type Course,
   type CourseAsset,
   type CourseCover,
@@ -111,7 +114,8 @@ function getAssetContentType(mimeType: string): CourseContentType {
 export class CourseService {
   constructor(
     private readonly courseRepository = new CourseRepository(),
-    private readonly userRepository = new UserRepository()
+    private readonly userRepository = new UserRepository(),
+    private readonly notificationService = new NotificationService()
   ) {}
 
   async list(filters: CourseFilters): Promise<PublicCourse[]> {
@@ -129,8 +133,19 @@ export class CourseService {
     await this.validatePayload({ ...data, professorId: ownerId });
     const course = await this.courseRepository.create({ ...data, professorId: ownerId });
     const hydratedCourse = await this.courseRepository.updateAssets(course.id, this.mergeAssets(course, cover, assets));
+    const publicCourse = toPublicCourse(hydratedCourse ?? course);
 
-    return toPublicCourse(hydratedCourse ?? course);
+    void this.notificationService.notifyAllActive({
+      autorId: viewer.id,
+      descricao: data.descricao.slice(0, 180),
+      entidadeId: publicCourse.id,
+      entidadeTipo: NotificationEntityType.COURSE,
+      tipo: data.tipo === CourseType.PLATFORM ? NotificationType.NEW_PLATFORM : NotificationType.NEW_COURSE,
+      titulo: data.tipo === CourseType.PLATFORM ? `Nova plataforma: ${data.titulo}` : `Novo curso: ${data.titulo}`,
+      url: `/cursos?curso=${publicCourse.id}`
+    });
+
+    return publicCourse;
   }
 
   async update(
@@ -181,8 +196,11 @@ export class CourseService {
 
     this.assertCanManageCourse(course, viewer);
 
-    await this.courseRepository.delete(id);
-    await removeUploadedFiles(collectUploadUrls(course));
+    await Promise.all([
+      this.courseRepository.delete(id),
+      removeUploadedFiles(collectUploadUrls(course)),
+      this.notificationService.deleteByEntity(id)
+    ]);
 
     return true;
   }

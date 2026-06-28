@@ -7,6 +7,8 @@ import { Login } from '../pages/Login';
 import { ModulePlaceholder } from '../pages/ModulePlaceholder';
 import { Menu } from '../pages/Menu';
 import { Notices } from '../pages/Notices';
+import { Ideas } from '../pages/Ideas';
+import { Notifications } from '../pages/Notifications';
 import { People } from '../pages/People';
 import { PlatformHome } from '../pages/PlatformHome';
 import { Profile } from '../pages/Profile';
@@ -52,6 +54,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Notices />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/notificacoes',
+    element: (
+      <ProtectedRoute>
+        <Notifications />
       </ProtectedRoute>
     )
   },
@@ -104,6 +114,14 @@ const router = createBrowserRouter([
     )
   },
   {
+    path: '/ideias',
+    element: (
+      <ProtectedRoute>
+        <Ideas />
+      </ProtectedRoute>
+    )
+  },
+  {
     path: '/usuarios',
     element: (
       <ProtectedRoute allowedRoles={[Cargo.ADMIN]}>
@@ -119,7 +137,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
-  ...schoolModules.filter((module) => module.href !== '/avisos' && module.href !== '/horarios' && module.href !== '/cardapio' && module.href !== '/cursos').map((module) => ({
+  ...schoolModules.filter((module) => module.href !== '/avisos' && module.href !== '/horarios' && module.href !== '/cardapio' && module.href !== '/cursos' && module.href !== '/ideias').map((module) => ({
     path: module.href,
     element: (
       <ProtectedRoute>

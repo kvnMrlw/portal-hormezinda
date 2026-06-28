@@ -7,6 +7,8 @@ import { Cargo, type AdminCreateUserData, type AdminUpdateUserData, type PublicU
 import type { UserDocument } from '../models/user.model';
 import { canViewRole } from '../../auth/permissions/roles';
 import { FeedService } from '../../feed/service/feed.service';
+import { IdeaService } from '../../ideas/service/idea.service';
+import { NotificationService } from '../../notifications/service/notification.service';
 import type { FeedPagination } from '../../feed/types/feed.types';
 import { NoticeRepository } from '../../notices/repository/notice.repository';
 import { CatalogRepository } from '../../catalogs/repository/catalog.repository';
@@ -54,6 +56,8 @@ export class UserService {
   constructor(
     private readonly userRepository = new UserRepository(),
     private readonly feedService = new FeedService(),
+    private readonly ideaService = new IdeaService(),
+    private readonly notificationService = new NotificationService(),
     private readonly noticeRepository = new NoticeRepository(),
     private readonly catalogRepository = new CatalogRepository(),
     private readonly scheduleRepository = new ScheduleRepository()
@@ -143,6 +147,8 @@ export class UserService {
       this.feedService.deletePostsByAuthor(id),
       this.feedService.deleteStoriesByAuthor(id),
       this.feedService.removeUserActivity(id),
+      this.ideaService.deleteByAuthor(id),
+      this.notificationService.deleteByUser(id),
       this.userRepository.delete(id)
     ]);
     await removeUploadedFiles([

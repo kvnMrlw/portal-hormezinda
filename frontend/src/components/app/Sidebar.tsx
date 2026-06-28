@@ -1,4 +1,4 @@
-import { Database, Home, LogOut, UserRound, UsersRound, X } from 'lucide-react';
+import { Bell, Database, Home, LogOut, UserRound, UsersRound, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -24,6 +24,7 @@ type SidebarProps = {
 const navigation: NavigationItem[] = [
   { href: '/home', icon: Home, label: 'Inicio' },
   { href: '/perfil', icon: UserRound, label: 'Perfil' },
+  { href: '/notificacoes', icon: Bell, label: 'Notificacoes' },
   ...schoolModules.map((module) => ({
     href: module.href,
     icon: module.icon,

@@ -1,10 +1,13 @@
 import { Bell, ChevronsLeft, ChevronsRight, LogOut, Menu, UserRound } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/useAuth';
 import { getAssetUrl } from '../../lib/assets';
+import { listNotifications, markNotificationAsRead } from '../../services/notifications';
+import type { Notification } from '../../types/notifications';
 import { Avatar } from '../ui/Avatar';
+import { Button } from '../ui/Button';
 import { SearchInput } from '../ui/SearchInput';
 import { SchoolLogo } from '../ui/SchoolLogo';
 
@@ -19,7 +22,41 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
   const { user } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const unreadNotifications = 0;
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  const loadNotifications = useCallback(async () => {
+    if (!user) {
+      setNotifications([]);
+      setUnreadNotifications(0);
+      return;
+    }
+
+    try {
+      const response = await listNotifications({ limit: 5 });
+      setNotifications(response.notificacoes);
+      setUnreadNotifications(response.naoLidas);
+    } catch {
+      setNotifications([]);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    void loadNotifications();
+    const interval = window.setInterval(() => void loadNotifications(), 15000);
+
+    return () => window.clearInterval(interval);
+  }, [loadNotifications]);
+
+  async function openNotification(notification: Notification): Promise<void> {
+    if (!notification.lida) {
+      const updatedNotification = await markNotificationAsRead(notification.id);
+      setNotifications((current) => current.map((item) => (item.id === updatedNotification.id ? updatedNotification : item)));
+      setUnreadNotifications((current) => Math.max(0, current - 1));
+    }
+
+    window.location.href = notification.url;
+  }
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/85 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
@@ -69,9 +106,41 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
               ) : null}
             </button>
             {isNotificationOpen ? (
-              <div className="absolute right-0 mt-3 w-72 rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
-                <p className="text-sm font-semibold text-brand-navy">Notificacoes</p>
-                <p className="mt-2 text-sm leading-6 text-slate-500">Nenhuma notificacao disponivel no momento.</p>
+              <div className="absolute right-0 mt-3 w-[min(22rem,calc(100vw-2rem))] rounded-3xl border border-slate-200 bg-white p-3 shadow-soft">
+                <div className="flex items-center justify-between gap-3 px-2 py-1">
+                  <p className="text-sm font-semibold text-brand-navy">Notificacoes</p>
+                  <Link className="text-xs font-bold text-brand-blue" onClick={() => setIsNotificationOpen(false)} to="/notificacoes">
+                    Ver todas
+                  </Link>
+                </div>
+                <div className="mt-2 max-h-96 space-y-2 overflow-y-auto">
+                  {notifications.length ? (
+                    notifications.map((notification) => (
+                      <button
+                        className="w-full rounded-2xl p-3 text-left transition hover:bg-slate-50"
+                        key={notification.id}
+                        onClick={() => void openNotification(notification)}
+                        type="button"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="relative mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-brand-blue">
+                            <Bell className="h-4 w-4" />
+                            {!notification.lida ? <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-brand-blue ring-2 ring-white" /> : null}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-brand-navy">{notification.titulo}</span>
+                            <span className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{notification.descricao}</span>
+                          </span>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-500">Nenhuma notificacao disponivel no momento.</p>
+                  )}
+                </div>
+                <Button className="mt-3 w-full py-2" onClick={() => void loadNotifications()} type="button" variant="secondary">
+                  Atualizar
+                </Button>
               </div>
             ) : null}
           </div>

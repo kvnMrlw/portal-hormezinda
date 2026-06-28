@@ -6,6 +6,8 @@ import { toPublicUser } from '../../users/service/user.service';
 import { Cargo } from '../../users/types/user.types';
 import type { PublicUser } from '../../users/types/user.types';
 import type { UserDocument } from '../../users/models/user.model';
+import { NotificationService } from '../../notifications/service/notification.service';
+import { NotificationEntityType, NotificationType } from '../../notifications/types/notification.types';
 import { FeedRepository } from '../repository/feed.repository';
 import {
   reactionEmojis,
@@ -81,7 +83,10 @@ function toFeedStory(story: StoryDocument, viewerId: string): FeedStory {
 }
 
 export class FeedService {
-  constructor(private readonly feedRepository = new FeedRepository()) {}
+  constructor(
+    private readonly feedRepository = new FeedRepository(),
+    private readonly notificationService = new NotificationService()
+  ) {}
 
   async listPosts(
     viewerId: string,
@@ -142,11 +147,33 @@ export class FeedService {
   async createPost(authorId: string, data: Omit<Parameters<FeedRepository['create']>[0], 'autor'>): Promise<FeedPost> {
     const post = await this.feedRepository.create({ autor: authorId, ...data });
 
+    void this.notificationService.notifyAllActive({
+      autorId: authorId,
+      descricao: data.texto?.slice(0, 180) || 'Nova imagem publicada no feed.',
+      entidadeId: post.id,
+      entidadeTipo: NotificationEntityType.POST,
+      tipo: NotificationType.NEW_POST,
+      titulo: 'Nova publicacao no feed',
+      url: `/home?post=${post.id}`
+    });
+
     return toFeedPost(post, authorId);
   }
 
   async reactToPost(postId: string, viewerId: string, emoji: ReactionEmoji): Promise<FeedPost | null> {
     const post = await this.feedRepository.react(postId, viewerId, emoji);
+
+    if (post && isUserDocument(post.autor) && post.autor.id !== viewerId) {
+      void this.notificationService.notifyUsers([post.autor.id], {
+        autorId: viewerId,
+        descricao: `Sua publicacao recebeu uma reacao ${emoji}.`,
+        entidadeId: post.id,
+        entidadeTipo: NotificationEntityType.POST,
+        tipo: NotificationType.POST_REACTION,
+        titulo: 'Nova reacao na sua publicacao',
+        url: `/home?post=${post.id}`
+      });
+    }
 
     return post ? toFeedPost(post, viewerId) : null;
   }
@@ -209,8 +236,11 @@ export class FeedService {
       throw new AppError('Acesso nao autorizado', 403);
     }
 
-    await this.feedRepository.delete(postId);
-    await removeUploadedFiles((post.imagens ?? []).map((image) => image.url));
+    await Promise.all([
+      this.feedRepository.delete(postId),
+      removeUploadedFiles((post.imagens ?? []).map((image) => image.url)),
+      this.notificationService.deleteByEntity(postId)
+    ]);
 
     return true;
   }
@@ -230,6 +260,16 @@ export class FeedService {
 
   async createStory(authorId: string, data: Omit<CreateStoryData, 'autor'>): Promise<FeedStory> {
     const story = await this.feedRepository.createStory({ autor: authorId, ...data });
+
+    void this.notificationService.notifyAllActive({
+      autorId: authorId,
+      descricao: data.texto?.slice(0, 180) || 'Novo story publicado.',
+      entidadeId: story.id,
+      entidadeTipo: NotificationEntityType.STORY,
+      tipo: NotificationType.NEW_STORY,
+      titulo: 'Novo story',
+      url: `/home?story=${story.id}`
+    });
 
     return toFeedStory(story, authorId);
   }
@@ -258,8 +298,11 @@ export class FeedService {
       throw new AppError('Acesso nao autorizado', 403);
     }
 
-    await this.feedRepository.deleteStory(storyId);
-    await removeUploadedFiles([story.imagem?.url]);
+    await Promise.all([
+      this.feedRepository.deleteStory(storyId),
+      removeUploadedFiles([story.imagem?.url]),
+      this.notificationService.deleteByEntity(storyId)
+    ]);
 
     return true;
   }

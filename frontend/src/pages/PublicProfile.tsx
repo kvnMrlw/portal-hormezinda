@@ -7,11 +7,14 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { Loading } from '../components/ui/Loading';
 import { useAuth } from '../contexts/useAuth';
 import { getPublicProfile, type PublicProfileResponse } from '../services/users';
+import { listUserIdeas } from '../services/ideas';
+import type { Idea } from '../types/ideas';
 
 export function PublicProfile() {
   const { id } = useParams();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<PublicProfileResponse | null>(null);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -26,7 +29,9 @@ export function PublicProfile() {
       try {
         setIsLoading(true);
         setHasError(false);
-        setProfile(await getPublicProfile(id));
+        const [loadedProfile, loadedIdeas] = await Promise.all([getPublicProfile(id), listUserIdeas(id)]);
+        setProfile(loadedProfile);
+        setIdeas(loadedIdeas);
       } catch {
         setHasError(true);
       } finally {
@@ -46,6 +51,7 @@ export function PublicProfile() {
           estatisticas={profile.estatisticas}
           publicacoes={profile.publicacoes}
           professorResumo={profile.professorResumo}
+          recentIdeas={ideas}
           stories={profile.stories}
           user={profile.usuario}
         />
