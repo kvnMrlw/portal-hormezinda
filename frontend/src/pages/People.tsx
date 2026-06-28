@@ -1,6 +1,7 @@
-import { CheckCircle2, Crown, Search, ShieldCheck, UsersRound } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Crown, Search, ShieldCheck, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 import { AppShell } from '../components/app/AppShell';
 import { Button } from '../components/ui/Button';
@@ -76,39 +77,36 @@ export function People() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-7xl space-y-5">
-        <header className="rounded-[1.75rem] border border-white/80 bg-white/80 p-5 shadow-soft backdrop-blur-xl sm:p-7">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mx-auto max-w-4xl space-y-5">
+        <header className="border-b border-slate-100 pb-5">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue ring-1 ring-blue-100">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-brand-blue ring-1 ring-blue-100">
                   <UsersRound className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Comunidade</p>
-                  <h1 className="text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">Pessoas</h1>
+                  <h1 className="text-2xl font-semibold tracking-normal text-brand-navy sm:text-3xl">Pessoas</h1>
                 </div>
               </div>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-500">
-                Encontre alunos, professores e colaboradores da escola.
-              </p>
             </div>
             {totalLabel ? (
-              <span className="w-fit rounded-full bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-100">
+              <span className="w-fit text-sm font-semibold text-slate-500">
                 {totalLabel}
               </span>
             ) : null}
           </div>
 
-          <label className="mt-7 block" htmlFor="pesquisa-pessoas">
+          <label className="mt-6 block" htmlFor="pesquisa-pessoas">
             <span className="sr-only">Pesquisar pessoas</span>
-            <div className="flex items-center rounded-[1.35rem] border border-slate-200 bg-white px-5 shadow-sm transition focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-blue-100">
+            <div className="flex items-center rounded-full border border-slate-200 bg-white px-5 shadow-sm transition focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-blue-100">
               <Search className="h-5 w-5 shrink-0 text-slate-400" />
               <input
-                className="h-16 w-full bg-transparent px-4 text-base font-medium text-brand-navy outline-none placeholder:text-slate-400"
+                className="h-14 w-full bg-transparent px-4 text-base font-medium text-brand-navy outline-none placeholder:text-slate-400"
                 id="pesquisa-pessoas"
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Pesquisar por nome ou username"
+                placeholder="Pesquisar"
                 value={query}
               />
             </div>
@@ -124,32 +122,26 @@ export function People() {
         ) : null}
         {!isLoading && !hasError && users.length ? (
           <>
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Pessoas da escola">
+            <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" aria-label="Pessoas da escola">
               {users.map((user) => (
-                <Link
-                  className="group overflow-hidden rounded-[1.5rem] border border-white/80 bg-white/85 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-soft focus:outline-none focus:ring-4 focus:ring-blue-100"
+                <motion.div
+                  animate={{ opacity: 1, y: 0 }}
+                  className="border-b border-slate-100 last:border-b-0"
+                  initial={{ opacity: 0, y: 8 }}
                   key={user.id}
-                  to={`/pessoas/${user.id}`}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
                 >
-                  <div className="h-20 bg-slate-100">
-                    {user.bannerPerfil ? (
-                      <img
-                        alt=""
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                        src={getAssetUrl(user.bannerPerfil)}
-                      />
-                    ) : (
-                      <div className="h-full bg-[linear-gradient(135deg,#dbeafe,#ffffff_45%,#dcfce7)]" />
-                    )}
-                  </div>
-                  <div className="px-4 pb-4">
-                    <div className="-mt-8 flex items-end justify-between gap-3">
-                      <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-white bg-blue-100 text-brand-blue shadow-sm">
+                  <Link
+                    className="group grid gap-4 px-4 py-4 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-inset focus:ring-blue-100 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:px-5"
+                    to={`/pessoas/${user.id}`}
+                  >
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-blue-100 text-brand-blue ring-1 ring-slate-100 sm:h-[4.5rem] sm:w-[4.5rem]">
                         {user.fotoPerfil ? (
                           <img
                             alt={user.nomeCompleto}
                             className="h-full w-full object-cover"
+                            decoding="async"
                             loading="lazy"
                             src={getAssetUrl(user.fotoPerfil)}
                           />
@@ -159,41 +151,41 @@ export function People() {
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-1.5">
-                        {user.cargo === Cargo.GREMIO ? (
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-blue text-white shadow-sm" title="Gremio">
-                            <Crown className="h-4 w-4" />
-                          </span>
-                        ) : null}
-                        {isVerified(user) ? (
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" title="Verificado">
-                            <ShieldCheck className="h-4 w-4" />
-                          </span>
-                        ) : null}
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <h2 className="truncate text-base font-semibold text-brand-navy sm:text-lg">{user.nomeCompleto}</h2>
+                          {user.cargo === Cargo.GREMIO ? <CheckCircle2 className="h-5 w-5 shrink-0 fill-brand-blue text-white" /> : null}
+                        </div>
+                        <p className="mt-0.5 truncate text-sm font-medium text-slate-500">@{user.usuario}</p>
                       </div>
                     </div>
 
-                    <div className="mt-4 min-w-0">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <h2 className="truncate text-lg font-semibold text-brand-navy">{user.nomeCompleto}</h2>
-                        {user.cargo === Cargo.GREMIO ? <CheckCircle2 className="h-5 w-5 shrink-0 fill-brand-blue text-white" /> : null}
-                      </div>
-                      <p className="mt-1 truncate text-sm font-medium text-slate-500">@{user.usuario}</p>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 pl-20 sm:pl-0">
+                      <span className="truncate text-sm font-semibold text-slate-600">{getDisplayRoleLabel(user)}</span>
+                      {user.cargo === Cargo.GREMIO ? (
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-blue text-white" title="Gremio">
+                          <Crown className="h-4 w-4" />
+                        </span>
+                      ) : null}
+                      {isVerified(user) ? (
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" title="Verificado">
+                          <ShieldCheck className="h-4 w-4" />
+                        </span>
+                      ) : null}
+                      {user.turma ? <span className="text-sm font-medium text-slate-400">{user.turma}</span> : null}
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <span
-                        className={cn(
-                          'rounded-full px-3 py-1 text-xs font-semibold',
-                          user.cargo === Cargo.GREMIO ? 'bg-blue-50 text-brand-blue' : 'bg-slate-100 text-slate-700'
-                        )}
-                      >
-                        {getDisplayRoleLabel(user)}
+                    <div className="flex items-center justify-end pl-20 sm:pl-0">
+                      <span className={cn(
+                        'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition',
+                        'bg-slate-50 text-brand-navy ring-1 ring-slate-100 group-hover:bg-brand-blue group-hover:text-white group-hover:ring-brand-blue'
+                      )}>
+                        Ver Perfil
+                        <ArrowRight className="h-4 w-4" />
                       </span>
-                      {user.turma ? <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{user.turma}</span> : null}
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </motion.div>
               ))}
             </section>
 

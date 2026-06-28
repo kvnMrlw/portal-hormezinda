@@ -72,4 +72,11 @@ export class NoticeRepository {
   async delete(id: string): Promise<void> {
     await NoticeModel.findByIdAndDelete(id);
   }
+
+  async deleteByAuthor(authorId: string): Promise<NoticeDocument[]> {
+    const notices = await NoticeModel.find({ autor: authorId });
+    await NoticeModel.deleteMany({ autor: authorId });
+
+    return notices;
+  }
 }

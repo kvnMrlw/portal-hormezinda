@@ -1,12 +1,14 @@
 import bcrypt from 'bcrypt';
 
 import { AppError } from '../../../middlewares/error.middleware';
+import { removeUploadedFiles } from '../../../utils/imageUpload';
 import { UserRepository } from '../repository/user.repository';
 import { Cargo, type AdminCreateUserData, type AdminUpdateUserData, type PublicUser, type UpdateProfileData } from '../types/user.types';
 import type { UserDocument } from '../models/user.model';
 import { canViewRole } from '../../auth/permissions/roles';
 import { FeedService } from '../../feed/service/feed.service';
 import type { FeedPagination } from '../../feed/types/feed.types';
+import { NoticeRepository } from '../../notices/repository/notice.repository';
 
 const PASSWORD_SALT_ROUNDS = 10;
 const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$.{53}$/;
@@ -47,7 +49,8 @@ export function toPublicUser(user: UserDocument): PublicUser {
 export class UserService {
   constructor(
     private readonly userRepository = new UserRepository(),
-    private readonly feedService = new FeedService()
+    private readonly feedService = new FeedService(),
+    private readonly noticeRepository = new NoticeRepository()
   ) {}
 
   async adminListUsers(): Promise<PublicUser[]> {
@@ -111,6 +114,13 @@ export class UserService {
 
     const user = await this.userRepository.adminUpdate(id, nextData);
 
+    if (user) {
+      await removeUploadedFiles([
+        nextData.fotoPerfil ? currentUser.fotoPerfil : undefined,
+        nextData.bannerPerfil ? currentUser.bannerPerfil : undefined
+      ]);
+    }
+
     return user ? toPublicUser(user) : null;
   }
 
@@ -121,7 +131,18 @@ export class UserService {
       return false;
     }
 
-    await this.userRepository.delete(id);
+    const notices = await this.noticeRepository.deleteByAuthor(id);
+    await Promise.all([
+      this.feedService.deletePostsByAuthor(id),
+      this.feedService.deleteStoriesByAuthor(id),
+      this.feedService.removeUserActivity(id),
+      this.userRepository.delete(id)
+    ]);
+    await removeUploadedFiles([
+      user.fotoPerfil,
+      user.bannerPerfil,
+      ...notices.flatMap((notice) => (notice.anexos ?? []).map((attachment) => attachment.url))
+    ]);
 
     return true;
   }
@@ -229,7 +250,20 @@ export class UserService {
       nextData.senha = await bcrypt.hash(novaSenha, PASSWORD_SALT_ROUNDS);
     }
 
+    const currentUser = await this.userRepository.findById(userId);
+
+    if (!currentUser) {
+      return null;
+    }
+
     const user = await this.userRepository.updateProfile(userId, nextData);
+
+    if (user) {
+      await removeUploadedFiles([
+        nextData.fotoPerfil ? currentUser.fotoPerfil : undefined,
+        nextData.bannerPerfil ? currentUser.bannerPerfil : undefined
+      ]);
+    }
 
     return user ? toPublicUser(user) : null;
   }

@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../middlewares/error.middleware';
+import { removeUploadedFiles } from '../../../utils/imageUpload';
 import { toPublicUser } from '../../users/service/user.service';
 import { Cargo } from '../../users/types/user.types';
 import type { PublicUser } from '../../users/types/user.types';
@@ -123,15 +124,17 @@ export class FeedService {
     return stories.map((story) => toFeedStory(story, viewerId));
   }
 
-  async getUserStats(authorId: string): Promise<{ curtidasRecebidas: number; publicacoes: number }> {
-    const [publicacoes, curtidasRecebidas] = await Promise.all([
+  async getUserStats(authorId: string): Promise<{ curtidasRecebidas: number; publicacoes: number; stories: number }> {
+    const [publicacoes, curtidasRecebidas, stories] = await Promise.all([
       this.feedRepository.countByAuthor(authorId),
-      this.feedRepository.countReactionsReceivedByAuthor(authorId)
+      this.feedRepository.countReactionsReceivedByAuthor(authorId),
+      this.feedRepository.countActiveStoriesByAuthor(authorId)
     ]);
 
     return {
       curtidasRecebidas,
-      publicacoes
+      publicacoes,
+      stories
     };
   }
 
@@ -172,8 +175,16 @@ export class FeedService {
     }
 
     await this.feedRepository.delete(postId);
+    await removeUploadedFiles((post.imagens ?? []).map((image) => image.url));
 
     return true;
+  }
+
+  async deletePostsByAuthor(authorId: string): Promise<void> {
+    const posts = await this.feedRepository.deletePostsByAuthor(authorId);
+    const imageUrls = posts.flatMap((post) => (post.imagens ?? []).map((image) => image.url));
+
+    await removeUploadedFiles(imageUrls);
   }
 
   async listStories(viewerId: string): Promise<FeedStory[]> {
@@ -192,5 +203,40 @@ export class FeedService {
     const story = await this.feedRepository.markStoryAsViewed(storyId, viewerId);
 
     return story ? toFeedStory(story, viewerId) : null;
+  }
+
+  async deleteStory(storyId: string, viewer: PublicUser): Promise<boolean> {
+    const story = await this.feedRepository.findStoryById(storyId);
+
+    if (!story) {
+      return false;
+    }
+
+    if (!isStoryUserDocument(story.autor)) {
+      throw new AppError('Autor do story nao carregado', 500);
+    }
+
+    const isAuthor = story.autor.id === viewer.id;
+    const isAdmin = viewer.cargo === Cargo.ADMIN;
+
+    if (!isAuthor && !isAdmin) {
+      throw new AppError('Acesso nao autorizado', 403);
+    }
+
+    await this.feedRepository.deleteStory(storyId);
+    await removeUploadedFiles([story.imagem?.url]);
+
+    return true;
+  }
+
+  async deleteStoriesByAuthor(authorId: string): Promise<void> {
+    const stories = await this.feedRepository.deleteStoriesByAuthor(authorId);
+    const imageUrls = stories.map((story) => story.imagem?.url);
+
+    await removeUploadedFiles(imageUrls);
+  }
+
+  async removeUserActivity(userId: string): Promise<void> {
+    await this.feedRepository.removeUserActivity(userId);
   }
 }

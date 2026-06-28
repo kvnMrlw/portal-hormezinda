@@ -2,6 +2,7 @@ import type { NextFunction, Response } from 'express';
 
 import { AppError } from '../../../middlewares/error.middleware';
 import { apiResponse } from '../../../utils/apiResponse';
+import { removeUploadedFiles, saveUploadedFile } from '../../../utils/imageUpload';
 import { Cargo } from '../types/user.types';
 import type { AuthenticatedRequest } from '../../auth/types/auth.types';
 import { UserService } from '../service/user.service';
@@ -21,8 +22,29 @@ type ProfileFiles = {
   fotoPerfil?: Express.Multer.File[];
 };
 
-function profileFileToPath(file?: Express.Multer.File): string | undefined {
-  return file ? `/uploads/profile/${file.filename}` : undefined;
+async function profileFileToPath(file: Express.Multer.File | undefined, variant: 'avatar' | 'banner'): Promise<string | undefined> {
+  if (!file) {
+    return undefined;
+  }
+
+  const savedFile = await saveUploadedFile(file, {
+    folderName: 'profile',
+    imageVariant: variant
+  });
+
+  return savedFile.publicUrl;
+}
+
+async function getSavedProfileFiles(files?: ProfileFiles): Promise<{ bannerPerfil?: string; fotoPerfil?: string }> {
+  const [fotoPerfil, bannerPerfil] = await Promise.all([
+    profileFileToPath(files?.fotoPerfil?.[0], 'avatar'),
+    profileFileToPath(files?.bannerPerfil?.[0], 'banner')
+  ]);
+
+  return {
+    bannerPerfil,
+    fotoPerfil
+  };
 }
 
 export async function listUsers(request: AuthenticatedRequest, response: Response, next: NextFunction) {
@@ -107,19 +129,23 @@ export async function adminCreateUser(request: AuthenticatedRequest, response: R
     }
 
     const files = request.files as ProfileFiles | undefined;
-    const fotoPerfil = profileFileToPath(files?.fotoPerfil?.[0]);
-    const bannerPerfil = profileFileToPath(files?.bannerPerfil?.[0]);
+    const { bannerPerfil, fotoPerfil } = await getSavedProfileFiles(files);
 
-    const user = await userService.adminCreateUser({
-      ...parsedBody.data,
-      fotoPerfil: fotoPerfil ?? '',
-      bannerPerfil: bannerPerfil ?? '',
-      bio: '',
-      redeSocial: '',
-      ativo: true
-    });
+    try {
+      const user = await userService.adminCreateUser({
+        ...parsedBody.data,
+        fotoPerfil: fotoPerfil ?? '',
+        bannerPerfil: bannerPerfil ?? '',
+        bio: '',
+        redeSocial: '',
+        ativo: true
+      });
 
-    return response.status(201).json(apiResponse({ usuario: user }, { message: 'Usuario criado com sucesso' }));
+      return response.status(201).json(apiResponse({ usuario: user }, { message: 'Usuario criado com sucesso' }));
+    } catch (error) {
+      await removeUploadedFiles([fotoPerfil, bannerPerfil]);
+      throw error;
+    }
   } catch (error) {
     return next(error);
   }
@@ -135,20 +161,24 @@ export async function adminUpdateUser(request: AuthenticatedRequest, response: R
     }
 
     const files = request.files as ProfileFiles | undefined;
-    const fotoPerfil = profileFileToPath(files?.fotoPerfil?.[0]);
-    const bannerPerfil = profileFileToPath(files?.bannerPerfil?.[0]);
+    const { bannerPerfil, fotoPerfil } = await getSavedProfileFiles(files);
 
-    const user = await userService.adminUpdateUser(parsedParams.data.id, {
-      ...parsedBody.data,
-      ...(fotoPerfil ? { fotoPerfil } : {}),
-      ...(bannerPerfil ? { bannerPerfil } : {})
-    });
+    try {
+      const user = await userService.adminUpdateUser(parsedParams.data.id, {
+        ...parsedBody.data,
+        ...(fotoPerfil ? { fotoPerfil } : {}),
+        ...(bannerPerfil ? { bannerPerfil } : {})
+      });
 
-    if (!user) {
-      throw new AppError('Usuario nao encontrado', 404);
+      if (!user) {
+        throw new AppError('Usuario nao encontrado', 404);
+      }
+
+      return response.status(200).json(apiResponse({ usuario: user }, { message: 'Usuario atualizado com sucesso' }));
+    } catch (error) {
+      await removeUploadedFiles([fotoPerfil, bannerPerfil]);
+      throw error;
     }
-
-    return response.status(200).json(apiResponse({ usuario: user }, { message: 'Usuario atualizado com sucesso' }));
   } catch (error) {
     return next(error);
   }
@@ -231,20 +261,24 @@ export async function updateCurrentUserProfile(request: AuthenticatedRequest, re
     }
 
     const files = request.files as ProfileFiles | undefined;
-    const fotoPerfil = profileFileToPath(files?.fotoPerfil?.[0]);
-    const bannerPerfil = profileFileToPath(files?.bannerPerfil?.[0]);
+    const { bannerPerfil, fotoPerfil } = await getSavedProfileFiles(files);
 
-    const user = await userService.updateProfile(request.user.id, {
-      ...parsedBody.data,
-      ...(fotoPerfil ? { fotoPerfil } : {}),
-      ...(bannerPerfil ? { bannerPerfil } : {})
-    });
+    try {
+      const user = await userService.updateProfile(request.user.id, {
+        ...parsedBody.data,
+        ...(fotoPerfil ? { fotoPerfil } : {}),
+        ...(bannerPerfil ? { bannerPerfil } : {})
+      });
 
-    if (!user) {
-      throw new AppError('Usuario nao encontrado', 404);
+      if (!user) {
+        throw new AppError('Usuario nao encontrado', 404);
+      }
+
+      return response.status(200).json(apiResponse({ usuario: user }, { message: 'Perfil atualizado com sucesso' }));
+    } catch (error) {
+      await removeUploadedFiles([fotoPerfil, bannerPerfil]);
+      throw error;
     }
-
-    return response.status(200).json(apiResponse({ usuario: user }, { message: 'Perfil atualizado com sucesso' }));
   } catch (error) {
     return next(error);
   }

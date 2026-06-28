@@ -79,3 +79,9 @@ export async function markFeedStoryAsViewed(storyId: string): Promise<FeedStory>
 
   return response.data.data.story;
 }
+
+export async function deleteFeedStory(storyId: string): Promise<string> {
+  const response = await api.delete<ApiResponse<{ id: string }>>(`/feed/stories/${storyId}`);
+
+  return response.data.data.id;
+}

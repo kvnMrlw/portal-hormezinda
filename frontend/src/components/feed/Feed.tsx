@@ -3,11 +3,12 @@ import { AlertCircle } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { useAuth } from '../../contexts/useAuth';
-import { canCreateFeedPost, canDeleteFeedPost, canPinFeedPost, groupStories } from './feedUtils';
+import { canCreateFeedPost, canDeleteFeedPost, canDeleteFeedStory, canPinFeedPost, groupStories } from './feedUtils';
 import {
   createFeedPost,
   createFeedStory,
   deleteFeedPost,
+  deleteFeedStory,
   listFeedPosts,
   listFeedStories,
   markFeedStoryAsViewed,
@@ -50,6 +51,7 @@ export function Feed() {
   const [reactingPostId, setReactingPostId] = useState<string>();
   const [pinningPostId, setPinningPostId] = useState<string>();
   const [postToDeleteId, setPostToDeleteId] = useState<string>();
+  const [deletingStoryId, setDeletingStoryId] = useState<string>();
   const [viewerGroupIndex, setViewerGroupIndex] = useState<number>();
   const canCreate = canCreateFeedPost(user?.cargo);
   const canPin = canPinFeedPost(user?.cargo);
@@ -144,6 +146,28 @@ export function Feed() {
     }
   });
 
+  const deleteStoryMutation = useMutation({
+    mutationFn: deleteFeedStory,
+    onMutate: async (storyId) => {
+      setDeletingStoryId(storyId);
+      await queryClient.cancelQueries({ queryKey: storiesQueryKey });
+      const previousStories = queryClient.getQueryData<FeedStory[]>(storiesQueryKey);
+
+      queryClient.setQueryData<FeedStory[]>(storiesQueryKey, (current) => current?.filter((story) => story.id !== storyId));
+
+      return { previousStories };
+    },
+    onError: (_error, _storyId, context) => {
+      if (context?.previousStories) {
+        queryClient.setQueryData(storiesQueryKey, context.previousStories);
+      }
+    },
+    onSettled: async () => {
+      setDeletingStoryId(undefined);
+      await queryClient.invalidateQueries({ queryKey: storiesQueryKey });
+    }
+  });
+
   const viewStoryMutation = useMutation({
     mutationFn: markFeedStoryAsViewed,
     onSuccess: (updatedStory) => {
@@ -193,6 +217,17 @@ export function Feed() {
       viewStoryMutation.mutate(storyId);
     },
     [viewStoryMutation]
+  );
+
+  const handleDeleteStory = useCallback(
+    (storyId: string) => {
+      const confirmed = window.confirm('Deseja realmente excluir este Story?');
+
+      if (confirmed && !deleteStoryMutation.isPending) {
+        deleteStoryMutation.mutate(storyId);
+      }
+    },
+    [deleteStoryMutation]
   );
 
   const handleConfirmDelete = useCallback(() => {
@@ -246,7 +281,10 @@ export function Feed() {
         <StoryViewer
           groups={storyGroups}
           initialGroupIndex={viewerGroupIndex}
+          canDeleteStory={(story) => canDeleteFeedStory(user?.id, user?.cargo, story.autor.id)}
+          deletingStoryId={deletingStoryId}
           onClose={() => setViewerGroupIndex(undefined)}
+          onDelete={handleDeleteStory}
           onView={handleViewStory}
         />
       ) : null}

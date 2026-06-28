@@ -76,6 +76,8 @@ export const PostCard = memo(function PostCard({
         <img
           alt={post.imagens[0].alt ?? 'Imagem da publicacao'}
           className="max-h-[48rem] w-full rounded-[1.5rem] object-cover ring-1 ring-slate-100"
+          decoding="async"
+          loading="lazy"
           src={getAssetUrl(post.imagens[0].url)}
         />
       ) : null}

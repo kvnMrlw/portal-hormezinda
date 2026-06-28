@@ -96,7 +96,9 @@ export function NoticeCard({ isAdmin, notice, onDelete, onEdit, onToggleActive, 
                 <img
                   alt={notice.titulo}
                   className="max-h-[34rem] w-full rounded-3xl object-cover shadow-sm ring-1 ring-slate-100"
+                  decoding="async"
                   key={attachment.url}
+                  loading="lazy"
                   src={resolveUploadUrl(attachment.url)}
                 />
               ))}

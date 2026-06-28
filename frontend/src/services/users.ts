@@ -17,6 +17,7 @@ export type PublicProfileResponse = {
   estatisticas: {
     curtidasRecebidas: number;
     publicacoes: number;
+    stories: number;
   };
   paginacaoPublicacoes: Pagination;
   publicacoes: FeedPost[];

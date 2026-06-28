@@ -12,6 +12,7 @@ import feedRoutes from './modules/feed/routes/feed.routes';
 import noticeRoutes from './modules/notices/routes/notice.routes';
 import userRoutes from './modules/users/routes/user.routes';
 import healthRoutes from './routes/health.routes';
+import { getStaticUploadOptions } from './utils/imageUpload';
 
 const app = express();
 
@@ -39,7 +40,7 @@ app.use(
 app.use(express.json({ limit: env.JSON_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: env.JSON_LIMIT }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-app.use('/uploads', express.static(path.resolve(process.cwd(), 'src/uploads')));
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'src/uploads'), getStaticUploadOptions()));
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);

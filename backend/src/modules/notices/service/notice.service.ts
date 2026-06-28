@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../middlewares/error.middleware';
+import { removeUploadedFiles } from '../../../utils/imageUpload';
 import type { UserDocument } from '../../users/models/user.model';
 import { toPublicUser } from '../../users/service/user.service';
 import { NoticeRepository } from '../repository/notice.repository';
@@ -84,6 +85,10 @@ export class NoticeService {
       anexos: data.removerAnexos || data.anexos ? nextAttachments : undefined
     });
 
+    if (notice && data.removerAnexos?.length) {
+      await removeUploadedFiles(data.removerAnexos);
+    }
+
     return notice ? toPublicNotice(notice) : null;
   }
 
@@ -95,8 +100,16 @@ export class NoticeService {
     }
 
     await this.noticeRepository.delete(id);
+    await removeUploadedFiles((notice.anexos ?? []).map((attachment) => attachment.url));
 
     return true;
+  }
+
+  async deleteByAuthor(authorId: string): Promise<void> {
+    const notices = await this.noticeRepository.deleteByAuthor(authorId);
+    const attachmentUrls = notices.flatMap((notice) => (notice.anexos ?? []).map((attachment) => attachment.url));
+
+    await removeUploadedFiles(attachmentUrls);
   }
 }
 

@@ -1,18 +1,29 @@
-import { X } from 'lucide-react';
+import { Loader2, Trash2, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { StoryKind } from '../../types/feed';
+import { StoryKind, type FeedStory } from '../../types/feed';
 import { getAssetUrl, type StoryGroup } from './feedUtils';
 
 type StoryViewerProps = {
   groups: StoryGroup[];
   initialGroupIndex: number;
+  canDeleteStory?: (story: FeedStory) => boolean;
+  deletingStoryId?: string;
   onClose: () => void;
+  onDelete?: (storyId: string) => void;
   onView: (storyId: string) => void;
 };
 
-export function StoryViewer({ groups, initialGroupIndex, onClose, onView }: StoryViewerProps) {
+export function StoryViewer({
+  canDeleteStory,
+  deletingStoryId,
+  groups,
+  initialGroupIndex,
+  onClose,
+  onDelete,
+  onView
+}: StoryViewerProps) {
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -76,6 +87,13 @@ export function StoryViewer({ groups, initialGroupIndex, onClose, onView }: Stor
   }, [groupIndex, groups.length, onClose]);
 
   useEffect(() => {
+    if (group && storyIndex >= group.stories.length) {
+      setStoryIndex(Math.max(group.stories.length - 1, 0));
+      setProgress(0);
+    }
+  }, [group, storyIndex]);
+
+  useEffect(() => {
     if (!storyId) {
       return undefined;
     }
@@ -123,13 +141,26 @@ export function StoryViewer({ groups, initialGroupIndex, onClose, onView }: Stor
               <p className="text-sm font-semibold">{group.authorName}</p>
               <p className="text-xs text-white/70">Story</p>
             </div>
-            <button className="rounded-full bg-white/10 p-2 backdrop-blur transition hover:bg-white/20" onClick={onClose} type="button">
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {canDeleteStory?.(story) ? (
+                <button
+                  aria-label="Excluir Story"
+                  className="rounded-full bg-white/10 p-2 backdrop-blur transition hover:bg-red-500/80 disabled:opacity-60"
+                  disabled={deletingStoryId === story.id}
+                  onClick={() => onDelete?.(story.id)}
+                  type="button"
+                >
+                  {deletingStoryId === story.id ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+                </button>
+              ) : null}
+              <button className="rounded-full bg-white/10 p-2 backdrop-blur transition hover:bg-white/20" onClick={onClose} type="button">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
         {story.tipo === StoryKind.IMAGE && story.imagem ? (
-          <img alt={story.imagem.alt ?? 'Story'} className="h-full w-full object-cover" src={getAssetUrl(story.imagem.url)} />
+          <img alt={story.imagem.alt ?? 'Story'} className="h-full w-full object-cover" decoding="async" src={getAssetUrl(story.imagem.url)} />
         ) : (
           <div className="flex h-full items-center justify-center px-8 text-center" style={{ background: story.fundo }}>
             <p className="whitespace-pre-wrap break-words text-3xl font-semibold leading-tight text-white">{story.texto}</p>

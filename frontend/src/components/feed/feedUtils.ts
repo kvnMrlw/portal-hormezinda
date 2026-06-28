@@ -32,6 +32,10 @@ export function canDeleteFeedPost(currentUserId: string | undefined, currentUser
   return currentUserRole === Cargo.ADMIN || currentUserId === authorId;
 }
 
+export function canDeleteFeedStory(currentUserId: string | undefined, currentUserRole: Cargo | undefined, authorId: string): boolean {
+  return currentUserRole === Cargo.ADMIN || currentUserId === authorId;
+}
+
 export function getFeedRoleLabel(role?: Cargo): string {
   if (role === Cargo.GREMIO) {
     return 'Gremio Estudantil';

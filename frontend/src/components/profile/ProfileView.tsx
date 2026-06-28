@@ -36,6 +36,7 @@ type ProfileViewProps = {
   estatisticas?: {
     curtidasRecebidas: number;
     publicacoes: number;
+    stories?: number;
   };
   publicacoes?: FeedPost[];
   stories?: FeedStory[];
@@ -213,6 +214,10 @@ export function ProfileView({ editable = false, estatisticas, publicacoes, stori
                       <Grid3X3 className="h-4 w-4 text-brand-blue" />
                       {estatisticas.publicacoes} publicacoes
                     </span>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-brand-blue ring-1 ring-blue-100">
+                      <Camera className="h-4 w-4" />
+                      {estatisticas.stories ?? stories?.length ?? 0} stories
+                    </span>
                     <span className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600 ring-1 ring-rose-100">
                       <Heart className="h-4 w-4" />
                       {estatisticas.curtidasRecebidas} curtidas
@@ -362,7 +367,7 @@ function StoryStrip({ stories }: { stories: FeedStory[] }) {
               style={story.tipo === StoryKind.TEXT ? { backgroundColor: story.fundo } : undefined}
             >
               {story.imagem ? (
-                <img alt={story.texto || 'Story'} className="h-full w-full object-cover" loading="lazy" src={getAssetUrl(story.imagem.url)} />
+                <img alt={story.texto || 'Story'} className="h-full w-full object-cover" decoding="async" loading="lazy" src={getAssetUrl(story.imagem.url)} />
               ) : (
                 <p className="line-clamp-3 px-3 text-center text-xs font-semibold text-white">{story.texto || 'Story'}</p>
               )}
@@ -391,7 +396,7 @@ function PostGrid({ posts }: { posts: FeedPost[] }) {
             return (
               <article className="overflow-hidden rounded-3xl bg-slate-50 ring-1 ring-slate-100" key={post.id}>
                 {image ? (
-                  <img alt={image.alt || post.texto || 'Publicacao'} className="aspect-square w-full object-cover" loading="lazy" src={getAssetUrl(image.url)} />
+                  <img alt={image.alt || post.texto || 'Publicacao'} className="aspect-square w-full object-cover" decoding="async" loading="lazy" src={getAssetUrl(image.url)} />
                 ) : (
                   <div className="flex aspect-square items-center justify-center p-5 text-center text-sm font-semibold leading-6 text-brand-navy">
                     {post.texto || 'Publicacao'}

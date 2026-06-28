@@ -39,6 +39,10 @@ export class FeedRepository {
     return PostModel.countDocuments({ autor: authorId });
   }
 
+  async countActiveStoriesByAuthor(authorId: string): Promise<number> {
+    return StoryModel.countDocuments({ autor: authorId, expiraEm: { $gt: new Date() } });
+  }
+
   async countReactionsReceivedByAuthor(authorId: string): Promise<number> {
     const [result] = await PostModel.aggregate<{ total: number }>([
       { $match: { autor: new Types.ObjectId(authorId) } },
@@ -83,6 +87,13 @@ export class FeedRepository {
     await PostModel.findByIdAndDelete(postId);
   }
 
+  async deletePostsByAuthor(authorId: string): Promise<PostDocument[]> {
+    const posts = await PostModel.find({ autor: authorId });
+    await PostModel.deleteMany({ autor: authorId });
+
+    return posts;
+  }
+
   async createStory(data: CreateStoryData): Promise<StoryDocument> {
     const story = await StoryModel.create({
       autor: data.autor,
@@ -104,6 +115,10 @@ export class FeedRepository {
     return StoryModel.find({ autor: authorId, expiraEm: { $gt: new Date() } }).populate('autor').sort({ data: -1 }).limit(12);
   }
 
+  async findStoryById(storyId: string): Promise<StoryDocument | null> {
+    return StoryModel.findById(storyId).populate('autor');
+  }
+
   async markStoryAsViewed(storyId: string, userId: string): Promise<StoryDocument | null> {
     const story = await StoryModel.findById(storyId);
 
@@ -119,5 +134,23 @@ export class FeedRepository {
     }
 
     return story.populate('autor');
+  }
+
+  async deleteStory(storyId: string): Promise<void> {
+    await StoryModel.findByIdAndDelete(storyId);
+  }
+
+  async deleteStoriesByAuthor(authorId: string): Promise<StoryDocument[]> {
+    const stories = await StoryModel.find({ autor: authorId });
+    await StoryModel.deleteMany({ autor: authorId });
+
+    return stories;
+  }
+
+  async removeUserActivity(userId: string): Promise<void> {
+    await Promise.all([
+      PostModel.updateMany({}, { $pull: { reacoes: { usuario: userId } } }),
+      StoryModel.updateMany({}, { $pull: { visualizacoes: userId } })
+    ]);
   }
 }
