@@ -27,6 +27,28 @@ export class FeedRepository {
     return PostModel.countDocuments();
   }
 
+  async listByAuthor(authorId: string, { limit, page }: ListPostsOptions): Promise<PostDocument[]> {
+    return PostModel.find({ autor: authorId })
+      .populate('autor')
+      .sort({ data: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+  }
+
+  async countByAuthor(authorId: string): Promise<number> {
+    return PostModel.countDocuments({ autor: authorId });
+  }
+
+  async countReactionsReceivedByAuthor(authorId: string): Promise<number> {
+    const [result] = await PostModel.aggregate<{ total: number }>([
+      { $match: { autor: new Types.ObjectId(authorId) } },
+      { $project: { total: { $size: { $ifNull: ['$reacoes', []] } } } },
+      { $group: { _id: null, total: { $sum: '$total' } } }
+    ]);
+
+    return result?.total ?? 0;
+  }
+
   async findById(postId: string): Promise<PostDocument | null> {
     return PostModel.findById(postId).populate('autor');
   }
@@ -76,6 +98,10 @@ export class FeedRepository {
 
   async listActiveStories(): Promise<StoryDocument[]> {
     return StoryModel.find({ expiraEm: { $gt: new Date() } }).populate('autor').sort({ data: 1 });
+  }
+
+  async listActiveStoriesByAuthor(authorId: string): Promise<StoryDocument[]> {
+    return StoryModel.find({ autor: authorId, expiraEm: { $gt: new Date() } }).populate('autor').sort({ data: -1 }).limit(12);
   }
 
   async markStoryAsViewed(storyId: string, userId: string): Promise<StoryDocument | null> {

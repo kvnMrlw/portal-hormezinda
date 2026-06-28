@@ -35,7 +35,7 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
   const { user } = useAuth();
   const visibleNavigation = isAdminRole(user?.cargo)
     ? [...navigation, { href: '/usuarios', icon: UsersRound, label: 'Usuarios' }]
-    : navigation;
+    : [...navigation, { href: '/pessoas', icon: UsersRound, label: 'Pessoas' }];
 
   return (
     <>

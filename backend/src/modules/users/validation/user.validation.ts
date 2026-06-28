@@ -60,6 +60,17 @@ export const userIdParamSchema = z.object({
   id: z.string().regex(/^[a-f\d]{24}$/i, 'Id do usuario e obrigatorio')
 });
 
+export const listPeopleQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(30).default(18),
+  page: z.coerce.number().int().min(1).default(1),
+  search: z.string().trim().max(80).optional()
+});
+
+export const publicProfileQuerySchema = z.object({
+  postsLimit: z.coerce.number().int().min(1).max(18).default(12),
+  postsPage: z.coerce.number().int().min(1).default(1)
+});
+
 export const updateProfileSchema = z.object({
   bio: z.string().trim().max(280, 'A bio deve ter no maximo 280 caracteres').optional(),
   redeSocial: z.string().trim().max(120, 'A rede social deve ter no maximo 120 caracteres').optional(),

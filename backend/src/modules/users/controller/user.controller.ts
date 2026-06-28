@@ -5,7 +5,14 @@ import { apiResponse } from '../../../utils/apiResponse';
 import { Cargo } from '../types/user.types';
 import type { AuthenticatedRequest } from '../../auth/types/auth.types';
 import { UserService } from '../service/user.service';
-import { adminCreateUserSchema, adminUpdateUserSchema, updateProfileSchema, userIdParamSchema } from '../validation/user.validation';
+import {
+  adminCreateUserSchema,
+  adminUpdateUserSchema,
+  listPeopleQuerySchema,
+  publicProfileQuerySchema,
+  updateProfileSchema,
+  userIdParamSchema
+} from '../validation/user.validation';
 
 const userService = new UserService();
 
@@ -41,6 +48,51 @@ export async function adminListUsers(request: AuthenticatedRequest, response: Re
     const users = await userService.adminListUsers();
 
     return response.status(200).json(apiResponse({ usuarios: users }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function listPeople(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
+    const parsedQuery = listPeopleQuerySchema.safeParse(request.query);
+
+    if (!parsedQuery.success) {
+      throw new AppError('Nao foi possivel listar as pessoas', 400);
+    }
+
+    const people = await userService.listPeople(request.user, parsedQuery.data);
+
+    return response.status(200).json(apiResponse(people));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function getPublicProfile(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
+    const parsedParams = userIdParamSchema.safeParse(request.params);
+    const parsedQuery = publicProfileQuerySchema.safeParse(request.query);
+
+    if (!parsedParams.success || !parsedQuery.success) {
+      throw new AppError('Perfil nao encontrado', 404);
+    }
+
+    const profile = await userService.getPublicProfile(parsedParams.data.id, request.user, parsedQuery.data);
+
+    if (!profile) {
+      throw new AppError('Perfil nao encontrado', 404);
+    }
+
+    return response.status(200).json(apiResponse(profile));
   } catch (error) {
     return next(error);
   }

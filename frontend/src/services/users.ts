@@ -1,5 +1,28 @@
 import { api } from './api';
-import type { AdminUserPayload, ApiResponse, ProfileUpdatePayload, User } from '../types/auth';
+import type { AdminUserPayload, ApiResponse, Pagination, ProfileUpdatePayload, User } from '../types/auth';
+import type { FeedPost, FeedStory } from '../types/feed';
+
+type ListPeopleParams = {
+  limit?: number;
+  page?: number;
+  search?: string;
+};
+
+export type PeopleResponse = {
+  paginacao: Pagination;
+  usuarios: User[];
+};
+
+export type PublicProfileResponse = {
+  estatisticas: {
+    curtidasRecebidas: number;
+    publicacoes: number;
+  };
+  paginacaoPublicacoes: Pagination;
+  publicacoes: FeedPost[];
+  stories: FeedStory[];
+  usuario: User;
+};
 
 export async function listUsers(): Promise<User[]> {
   const response = await api.get<ApiResponse<{ usuarios: User[] }>>('/users');
@@ -11,6 +34,29 @@ export async function listAdminUsers(): Promise<User[]> {
   const response = await api.get<ApiResponse<{ usuarios: User[] }>>('/users/admin');
 
   return response.data.data.usuarios;
+}
+
+export async function listPeople({ limit = 18, page = 1, search = '' }: ListPeopleParams = {}): Promise<PeopleResponse> {
+  const response = await api.get<ApiResponse<PeopleResponse>>('/users/people', {
+    params: {
+      limit,
+      page,
+      search: search || undefined
+    }
+  });
+
+  return response.data.data;
+}
+
+export async function getPublicProfile(id: string, { postsLimit = 12, postsPage = 1 } = {}): Promise<PublicProfileResponse> {
+  const response = await api.get<ApiResponse<PublicProfileResponse>>(`/users/people/${id}/profile`, {
+    params: {
+      postsLimit,
+      postsPage
+    }
+  });
+
+  return response.data.data;
 }
 
 export async function getUserById(id: string): Promise<User> {

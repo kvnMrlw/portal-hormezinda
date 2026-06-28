@@ -89,6 +89,13 @@ export type AdminUserPayload = {
   bannerPerfil?: File;
 };
 
+export type Pagination = {
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+};
+
 export const turmasPorTurno: Record<Turno, Turma[]> = {
   [Turno.MATUTINO]: [
     Turma.PRIMEIRO_A,

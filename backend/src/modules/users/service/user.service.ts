@@ -5,6 +5,8 @@ import { UserRepository } from '../repository/user.repository';
 import { Cargo, type AdminCreateUserData, type AdminUpdateUserData, type PublicUser, type UpdateProfileData } from '../types/user.types';
 import type { UserDocument } from '../models/user.model';
 import { canViewRole } from '../../auth/permissions/roles';
+import { FeedService } from '../../feed/service/feed.service';
+import type { FeedPagination } from '../../feed/types/feed.types';
 
 const PASSWORD_SALT_ROUNDS = 10;
 const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$.{53}$/;
@@ -43,7 +45,10 @@ export function toPublicUser(user: UserDocument): PublicUser {
 }
 
 export class UserService {
-  constructor(private readonly userRepository = new UserRepository()) {}
+  constructor(
+    private readonly userRepository = new UserRepository(),
+    private readonly feedService = new FeedService()
+  ) {}
 
   async adminListUsers(): Promise<PublicUser[]> {
     const users = await this.userRepository.listAll();
@@ -151,6 +156,48 @@ export class UserService {
     const users = await this.userRepository.listActive({ includeAdmins: viewer.cargo === Cargo.ADMIN });
 
     return users.map(toPublicUser);
+  }
+
+  async listPeople(
+    viewer: PublicUser,
+    options: { limit: number; page: number; search?: string }
+  ): Promise<{ paginacao: FeedPagination; usuarios: PublicUser[] }> {
+    const includeAdmins = viewer.cargo === Cargo.ADMIN;
+    const [users, total] = await Promise.all([
+      this.userRepository.listPeople({ ...options, includeAdmins }),
+      this.userRepository.countPeople({ includeAdmins, search: options.search })
+    ]);
+
+    return {
+      usuarios: users.map(toPublicUser),
+      paginacao: {
+        ...options,
+        total,
+        hasMore: options.page * options.limit < total
+      }
+    };
+  }
+
+  async getPublicProfile(id: string, viewer: PublicUser, options: { postsLimit: number; postsPage: number }) {
+    const user = await this.userRepository.findById(id);
+
+    if (!user || !user.ativo || !canViewRole(viewer.cargo, user.cargo)) {
+      return null;
+    }
+
+    const [feed, stories, estatisticas] = await Promise.all([
+      this.feedService.listUserPosts(user.id, viewer.id, { limit: options.postsLimit, page: options.postsPage }),
+      this.feedService.listUserStories(user.id, viewer.id),
+      this.feedService.getUserStats(user.id)
+    ]);
+
+    return {
+      usuario: toPublicUser(user),
+      publicacoes: feed.publicacoes,
+      stories,
+      estatisticas,
+      paginacaoPublicacoes: feed.paginacao
+    };
   }
 
   async updateProfile(userId: string, data: UpdateProfileInput): Promise<PublicUser | null> {

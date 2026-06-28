@@ -1,5 +1,5 @@
 import { Cargo, type User } from '../types/auth';
-import { getRoleLabel, isAdminRole } from './roles';
+import { getDisplayRoleLabel, isAdminRole } from './roles';
 
 export function getProfileHeadline(user?: User | null): string {
   if (!user) {
@@ -10,7 +10,7 @@ export function getProfileHeadline(user?: User | null): string {
     return 'Administrador do Sistema';
   }
 
-  return getRoleLabel(user.cargo);
+  return getDisplayRoleLabel(user);
 }
 
 export function getProfileDetails(user?: User | null): string[] {

@@ -97,6 +97,44 @@ export class FeedService {
     };
   }
 
+  async listUserPosts(
+    authorId: string,
+    viewerId: string,
+    options: ListPostsOptions
+  ): Promise<{ publicacoes: FeedPost[]; paginacao: FeedPagination }> {
+    const [posts, total] = await Promise.all([
+      this.feedRepository.listByAuthor(authorId, options),
+      this.feedRepository.countByAuthor(authorId)
+    ]);
+
+    return {
+      publicacoes: posts.map((post) => toFeedPost(post, viewerId)),
+      paginacao: {
+        ...options,
+        total,
+        hasMore: options.page * options.limit < total
+      }
+    };
+  }
+
+  async listUserStories(authorId: string, viewerId: string): Promise<FeedStory[]> {
+    const stories = await this.feedRepository.listActiveStoriesByAuthor(authorId);
+
+    return stories.map((story) => toFeedStory(story, viewerId));
+  }
+
+  async getUserStats(authorId: string): Promise<{ curtidasRecebidas: number; publicacoes: number }> {
+    const [publicacoes, curtidasRecebidas] = await Promise.all([
+      this.feedRepository.countByAuthor(authorId),
+      this.feedRepository.countReactionsReceivedByAuthor(authorId)
+    ]);
+
+    return {
+      curtidasRecebidas,
+      publicacoes
+    };
+  }
+
   async createPost(authorId: string, data: Omit<Parameters<FeedRepository['create']>[0], 'autor'>): Promise<FeedPost> {
     const post = await this.feedRepository.create({ autor: authorId, ...data });
 

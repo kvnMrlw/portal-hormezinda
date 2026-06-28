@@ -14,7 +14,11 @@ export function Avatar({ className, name, src }: AvatarProps) {
 
   return (
     <div className={cn('flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-brand-blue', className)}>
-      {src ? <img alt={name ?? 'Avatar'} className="h-full w-full object-cover" src={src} /> : initial ?? <UserRound className="h-5 w-5" />}
+      {src ? (
+        <img alt={name ?? 'Avatar'} className="h-full w-full object-cover" loading="lazy" src={src} />
+      ) : (
+        initial ?? <UserRound className="h-5 w-5" />
+      )}
     </div>
   );
 }

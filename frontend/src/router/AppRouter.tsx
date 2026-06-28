@@ -4,8 +4,10 @@ import { Home } from '../pages/Home';
 import { Login } from '../pages/Login';
 import { ModulePlaceholder } from '../pages/ModulePlaceholder';
 import { Notices } from '../pages/Notices';
+import { People } from '../pages/People';
 import { PlatformHome } from '../pages/PlatformHome';
 import { Profile } from '../pages/Profile';
+import { PublicProfile } from '../pages/PublicProfile';
 import { Register } from '../pages/Register';
 import { Users } from '../pages/Users';
 import { ProtectedRoute } from '../routes/ProtectedRoute';
@@ -46,6 +48,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Notices />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/pessoas',
+    element: (
+      <ProtectedRoute>
+        <People />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/pessoas/:id',
+    element: (
+      <ProtectedRoute>
+        <PublicProfile />
       </ProtectedRoute>
     )
   },

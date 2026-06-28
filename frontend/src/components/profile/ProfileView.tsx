@@ -3,6 +3,8 @@ import {
   Camera,
   ExternalLink,
   BookOpen,
+  Grid3X3,
+  Heart,
   ImagePlus,
   KeyRound,
   Link as LinkIcon,
@@ -16,8 +18,10 @@ import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from '
 import { useAuth } from '../../contexts/useAuth';
 import { getAssetUrl } from '../../lib/assets';
 import { calculateAge, getProfileDetails, getProfileHeadline } from '../../lib/profile';
-import { getRoleLabel, isAdminRole } from '../../lib/roles';
+import { getDisplayRoleLabel, isAdminRole } from '../../lib/roles';
 import type { ProfileUpdatePayload, User } from '../../types/auth';
+import { Cargo } from '../../types/auth';
+import { StoryKind, type FeedPost, type FeedStory } from '../../types/feed';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -29,6 +33,12 @@ import { Textarea } from '../ui/Textarea';
 type ProfileViewProps = {
   user: User;
   editable?: boolean;
+  estatisticas?: {
+    curtidasRecebidas: number;
+    publicacoes: number;
+  };
+  publicacoes?: FeedPost[];
+  stories?: FeedStory[];
 };
 
 type ProfileFormData = {
@@ -43,7 +53,7 @@ type ProfileFormData = {
 
 const maxImageSize = 5 * 1024 * 1024;
 
-export function ProfileView({ editable = false, user }: ProfileViewProps) {
+export function ProfileView({ editable = false, estatisticas, publicacoes, stories, user }: ProfileViewProps) {
   const { updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -193,10 +203,22 @@ export function ProfileView({ editable = false, user }: ProfileViewProps) {
               <div className="pb-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">{user.nomeCompleto}</h1>
-                  <Badge variant={admin ? 'success' : 'info'}>{getRoleLabel(user.cargo)}</Badge>
+                  <Badge variant={admin ? 'success' : 'info'}>{getDisplayRoleLabel(user)}</Badge>
                 </div>
                 <p className="mt-1 text-slate-500">@{user.usuario}</p>
                 <p className="mt-2 font-semibold text-brand-navy">{getProfileHeadline(user)}</p>
+                {estatisticas ? (
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-4 py-2 text-sm font-semibold text-brand-navy ring-1 ring-slate-100">
+                      <Grid3X3 className="h-4 w-4 text-brand-blue" />
+                      {estatisticas.publicacoes} publicacoes
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600 ring-1 ring-rose-100">
+                      <Heart className="h-4 w-4" />
+                      {estatisticas.curtidasRecebidas} curtidas
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
             {editable ? (
@@ -219,6 +241,8 @@ export function ProfileView({ editable = false, user }: ProfileViewProps) {
 
           <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <section className="space-y-5">
+              {stories ? <StoryStrip stories={stories} /> : null}
+
               <div>
                 <h2 className="text-lg font-semibold text-brand-navy">Sobre</h2>
                 <p className="mt-3 rounded-3xl bg-slate-50 p-5 leading-7 text-slate-600">
@@ -291,15 +315,20 @@ export function ProfileView({ editable = false, user }: ProfileViewProps) {
             </section>
 
             <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <InfoCard icon={ShieldCheck} label="Cargo" value={getRoleLabel(user.cargo)} />
+              <InfoCard icon={ShieldCheck} label="Cargo" value={getDisplayRoleLabel(user)} />
               {age && !admin ? <InfoCard icon={CalendarDays} label="Idade" value={age} /> : null}
-              {details[0] ? <InfoCard icon={BookOpen} label="Turma" value={details[0]} /> : null}
+              {user.cargo === Cargo.PROFESSOR && user.materia ? <InfoCard icon={BookOpen} label="Materia" value={user.materia} /> : null}
+              {(user.cargo === Cargo.ALUNO || user.cargo === Cargo.GREMIO) && details[0] ? (
+                <InfoCard icon={BookOpen} label="Turma" value={details[0]} />
+              ) : null}
               {details[1] ? <InfoCard icon={MapPin} label="Turno" value={details[1]} /> : null}
               {!admin && !details.length ? <InfoCard icon={LinkIcon} label="Perfil" value="Informacoes em breve" /> : null}
             </aside>
           </div>
         </div>
       </Card>
+
+      {publicacoes ? <PostGrid posts={publicacoes} /> : null}
     </div>
   );
 }
@@ -317,5 +346,68 @@ function InfoCard({ icon: Icon, label, value }: InfoCardProps) {
       <p className="mt-3 text-sm text-slate-500">{label}</p>
       <p className="mt-1 font-semibold text-brand-navy">{value}</p>
     </div>
+  );
+}
+
+function StoryStrip({ stories }: { stories: FeedStory[] }) {
+  return (
+    <section>
+      <h2 className="text-lg font-semibold text-brand-navy">Stories publicos</h2>
+      {stories.length ? (
+        <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+          {stories.map((story) => (
+            <article
+              className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white shadow-sm ring-2 ring-brand-blue"
+              key={story.id}
+              style={story.tipo === StoryKind.TEXT ? { backgroundColor: story.fundo } : undefined}
+            >
+              {story.imagem ? (
+                <img alt={story.texto || 'Story'} className="h-full w-full object-cover" loading="lazy" src={getAssetUrl(story.imagem.url)} />
+              ) : (
+                <p className="line-clamp-3 px-3 text-center text-xs font-semibold text-white">{story.texto || 'Story'}</p>
+              )}
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 rounded-3xl bg-slate-50 p-5 text-sm text-slate-500">Nenhum story publico no momento.</p>
+      )}
+    </section>
+  );
+}
+
+function PostGrid({ posts }: { posts: FeedPost[] }) {
+  return (
+    <Card className="shadow-sm">
+      <div className="flex items-center gap-2">
+        <Grid3X3 className="h-5 w-5 text-brand-blue" />
+        <h2 className="text-lg font-semibold text-brand-navy">Publicacoes</h2>
+      </div>
+      {posts.length ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {posts.map((post) => {
+            const image = post.imagens[0];
+
+            return (
+              <article className="overflow-hidden rounded-3xl bg-slate-50 ring-1 ring-slate-100" key={post.id}>
+                {image ? (
+                  <img alt={image.alt || post.texto || 'Publicacao'} className="aspect-square w-full object-cover" loading="lazy" src={getAssetUrl(image.url)} />
+                ) : (
+                  <div className="flex aspect-square items-center justify-center p-5 text-center text-sm font-semibold leading-6 text-brand-navy">
+                    {post.texto || 'Publicacao'}
+                  </div>
+                )}
+                <div className="flex items-center justify-between gap-3 px-4 py-3 text-xs font-semibold text-slate-500">
+                  <span>{new Intl.DateTimeFormat('pt-BR').format(new Date(post.data))}</span>
+                  <span>{post.reacoes.reduce((total, reaction) => total + reaction.quantidade, 0)} curtidas</span>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="mt-5 rounded-3xl bg-slate-50 p-5 text-sm text-slate-500">Nenhuma publicacao encontrada.</p>
+      )}
+    </Card>
   );
 }

@@ -9,7 +9,9 @@ import {
   adminListUsers,
   adminPromoteUser,
   adminUpdateUser,
+  getPublicProfile,
   getUserById,
+  listPeople,
   listUsers,
   updateCurrentUserProfile
 } from '../controller/user.controller';
@@ -18,6 +20,8 @@ import { profileUpload } from '../middlewares/profile-upload.middleware';
 const router = Router();
 
 router.get('/', authenticate, listUsers);
+router.get('/people', authenticate, listPeople);
+router.get('/people/:id/profile', authenticate, getPublicProfile);
 router.get('/admin', authenticate, authorizeRoles(Cargo.ADMIN), adminListUsers);
 router.post(
   '/admin',
