@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Crown, Search, ShieldCheck, UsersRound } from 'lucide-react';
+import { ArrowRight, Search, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -7,23 +7,19 @@ import { AppShell } from '../components/app/AppShell';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Loading } from '../components/ui/Loading';
+import { Select } from '../components/ui/Select';
 import { getAssetUrl } from '../lib/assets';
-import { getDisplayRoleLabel } from '../lib/roles';
 import { cn } from '../lib/utils';
 import { listPeople } from '../services/users';
-import { Cargo, type Pagination, type User } from '../types/auth';
+import { type Pagination, type User } from '../types/auth';
+import { CompactRoleIcon, RoleBadge } from '../components/ui/RoleBadge';
 
 const pageSize = 18;
-const verifiedRoles = new Set([Cargo.PROFESSOR, Cargo.COORDENADOR, Cargo.DIRETOR]);
-
-function isVerified(user: User): boolean {
-  return verifiedRoles.has(user.cargo) || user.pertenceGremio;
-}
-
 export function People() {
   const [users, setUsers] = useState<User[]>([]);
   const [pagination, setPagination] = useState<Pagination>();
   const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<'az' | 'za' | 'recentes' | 'antigos'>('az');
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -32,7 +28,7 @@ export function People() {
 
   useEffect(() => {
     setPage(1);
-  }, [query]);
+  }, [query, sort]);
 
   useEffect(() => {
     const requestId = requestIdRef.current + 1;
@@ -44,7 +40,7 @@ export function People() {
         setIsLoading(page === 1);
         setIsLoadingMore(page > 1);
 
-        const response = await listPeople({ limit: pageSize, page, search: query.trim() });
+        const response = await listPeople({ limit: pageSize, page, search: query.trim(), sort });
 
         if (requestIdRef.current !== requestId) {
           return;
@@ -65,7 +61,7 @@ export function People() {
     }
 
     void loadPeople();
-  }, [page, query]);
+  }, [page, query, sort]);
 
   const totalLabel = useMemo(() => {
     if (!pagination) {
@@ -98,19 +94,27 @@ export function People() {
             ) : null}
           </div>
 
-          <label className="mt-6 block" htmlFor="pesquisa-pessoas">
-            <span className="sr-only">Pesquisar pessoas</span>
-            <div className="flex items-center rounded-full border border-slate-200 bg-white px-5 shadow-sm transition focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-blue-100">
-              <Search className="h-5 w-5 shrink-0 text-slate-400" />
-              <input
-                className="h-14 w-full bg-transparent px-4 text-base font-medium text-brand-navy outline-none placeholder:text-slate-400"
-                id="pesquisa-pessoas"
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Pesquisar"
-                value={query}
-              />
+          <div className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_14rem]">
+            <label className="block" htmlFor="pesquisa-pessoas">
+              <span className="sr-only">Pesquisar pessoas</span>
+              <div className="flex items-center rounded-full border border-slate-200 bg-white px-5 shadow-sm transition focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-blue-100">
+                <Search className="h-5 w-5 shrink-0 text-slate-400" />
+                <input
+                  className="h-14 w-full bg-transparent px-4 text-base font-medium text-brand-navy outline-none placeholder:text-slate-400"
+                  id="pesquisa-pessoas"
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Nome, cargo, sala ou disciplina"
+                  value={query}
+                />
+              </div>
+            </label>
+            <Select label="Ordenacao" name="peopleSort" onChange={(event) => setSort(event.target.value as typeof sort)} value={sort}>
+              <option value="az">A-Z</option>
+              <option value="za">Z-A</option>
+              <option value="recentes">Mais recentes</option>
+              <option value="antigos">Mais antigos</option>
+            </Select>
             </div>
-          </label>
         </header>
 
         {isLoading ? <Loading className="min-h-64" /> : null}
@@ -154,25 +158,16 @@ export function People() {
                       <div className="min-w-0">
                         <div className="flex min-w-0 items-center gap-2">
                           <h2 className="truncate text-base font-semibold text-brand-navy sm:text-lg">{user.nomeCompleto}</h2>
-                          {user.cargo === Cargo.GREMIO || user.pertenceGremio ? <CheckCircle2 className="h-5 w-5 shrink-0 fill-brand-blue text-white" /> : null}
+                          <CompactRoleIcon user={user} />
                         </div>
                         <p className="mt-0.5 truncate text-sm font-medium text-slate-500">@{user.usuario}</p>
                       </div>
                     </div>
 
                     <div className="flex min-w-0 flex-wrap items-center gap-2 pl-20 sm:pl-0">
-                      <span className="truncate text-sm font-semibold text-slate-600">{getDisplayRoleLabel(user)}</span>
-                      {user.cargo === Cargo.GREMIO || user.pertenceGremio ? (
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-blue text-white" title="Gremio">
-                          <Crown className="h-4 w-4" />
-                        </span>
-                      ) : null}
-                      {isVerified(user) ? (
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" title="Verificado">
-                          <ShieldCheck className="h-4 w-4" />
-                        </span>
-                      ) : null}
+                      <RoleBadge user={user} />
                       {user.turma ? <span className="text-sm font-medium text-slate-400">{user.turma}</span> : null}
+                      {user.materia ? <span className="text-sm font-medium text-slate-400">{user.materia}</span> : null}
                     </div>
 
                     <div className="flex items-center justify-end pl-20 sm:pl-0">

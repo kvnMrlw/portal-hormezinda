@@ -6,6 +6,7 @@ type ListPeopleOptions = {
   limit: number;
   page: number;
   search?: string;
+  sort?: 'az' | 'za' | 'recentes' | 'antigos';
 };
 
 function escapeRegex(value: string): string {
@@ -22,7 +23,10 @@ function activeUserFilter({ includeAdmins = false, search }: Pick<ListPeopleOpti
       ? {
           $or: [
             { nomeCompleto: { $regex: escapeRegex(normalizedSearch), $options: 'i' } },
-            { usuario: { $regex: escapeRegex(normalizedSearch), $options: 'i' } }
+            { usuario: { $regex: escapeRegex(normalizedSearch), $options: 'i' } },
+            { cargo: { $regex: escapeRegex(normalizedSearch), $options: 'i' } },
+            { turma: { $regex: escapeRegex(normalizedSearch), $options: 'i' } },
+            { materia: { $regex: escapeRegex(normalizedSearch), $options: 'i' } }
           ]
         }
       : {})
@@ -54,9 +58,24 @@ export class UserRepository {
     return UserModel.find(activeUserFilter({ includeAdmins })).sort({ nomeCompleto: 1 });
   }
 
-  async listPeople({ includeAdmins = false, limit, page, search }: ListPeopleOptions): Promise<UserDocument[]> {
+  async listStudentsByClassCodes(classCodes: string[]): Promise<UserDocument[]> {
+    return UserModel.find({
+      ativo: true,
+      cargo: { $in: [Cargo.ALUNO, Cargo.GREMIO] },
+      turma: { $in: classCodes }
+    }).sort({ nomeCompleto: 1 });
+  }
+
+  async listPeople({ includeAdmins = false, limit, page, search, sort = 'az' }: ListPeopleOptions): Promise<UserDocument[]> {
+    const sortMap = {
+      antigos: { criadoEm: 1 },
+      az: { nomeCompleto: 1, usuario: 1 },
+      recentes: { criadoEm: -1 },
+      za: { nomeCompleto: -1, usuario: -1 }
+    } as const;
+
     return UserModel.find(activeUserFilter({ includeAdmins, search }))
-      .sort({ nomeCompleto: 1, usuario: 1 })
+      .sort(sortMap[sort])
       .skip((page - 1) * limit)
       .limit(limit);
   }
@@ -67,6 +86,27 @@ export class UserRepository {
 
   async listAll(): Promise<UserDocument[]> {
     return UserModel.find().sort({ criadoEm: -1 });
+  }
+
+  async listBirthdayUsers(month: number, day: number): Promise<UserDocument[]> {
+    return UserModel.find({
+      ativo: true,
+      dataNascimento: { $exists: true },
+      'privacidade.mostrarAniversario': { $ne: false },
+      $expr: {
+        $and: [
+          { $eq: [{ $month: '$dataNascimento' }, month] },
+          { $eq: [{ $dayOfMonth: '$dataNascimento' }, day] }
+        ]
+      }
+    }).sort({ nomeCompleto: 1 });
+  }
+
+  async listBirthdayNotificationRecipients(): Promise<UserDocument[]> {
+    return UserModel.find({
+      ativo: true,
+      'notificacoes.aniversarios': { $ne: false }
+    }).sort({ nomeCompleto: 1 });
   }
 
   async adminUpdate(id: string, data: AdminUpdateUserData): Promise<UserDocument | null> {

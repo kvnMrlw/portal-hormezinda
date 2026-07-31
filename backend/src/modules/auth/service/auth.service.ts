@@ -13,6 +13,7 @@ import { toPublicUser } from '../../users/service/user.service';
 
 const PASSWORD_SALT_ROUNDS = 10;
 const JWT_EXPIRES_IN = '1d';
+const REFRESH_TOKEN_EXPIRES_IN = '30d';
 const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$.{53}$/;
 
 function normalizeUsuario(usuario: string): string {
@@ -23,18 +24,27 @@ function isBcryptHash(value: string): boolean {
   return BCRYPT_HASH_REGEX.test(value);
 }
 
-function createToken(user: UserDocument): string {
+function createToken(user: UserDocument, tipo: 'access' | 'refresh' = 'access'): string {
   return jwt.sign(
     {
       sub: user.id,
       usuario: user.usuario,
-      cargo: user.cargo
+      cargo: user.cargo,
+      tipo
     },
     env.JWT_SECRET,
     {
-      expiresIn: JWT_EXPIRES_IN
+      expiresIn: tipo === 'refresh' ? REFRESH_TOKEN_EXPIRES_IN : JWT_EXPIRES_IN
     }
   );
+}
+
+function createAuthResult(user: UserDocument): AuthResult {
+  return {
+    refreshToken: createToken(user, 'refresh'),
+    token: createToken(user),
+    usuario: toPublicUser(user)
+  };
 }
 
 export function hasCargo(userCargo: Cargo, allowedCargos: Cargo[]): boolean {
@@ -65,14 +75,26 @@ export class AuthService {
       fotoPerfil: '',
       bannerPerfil: '',
       bio: '',
+      telefone: '',
       redeSocial: '',
+      privacidade: {
+        mostrarAniversario: true,
+        mostrarBanner: true,
+        mostrarBio: true,
+        mostrarTelefone: false
+      },
+      notificacoes: {
+        aniversarios: true,
+        avisos: true,
+        cursos: true,
+        ideias: true,
+        publicacoes: true,
+        stories: true
+      },
       ativo: true
     });
 
-    return {
-      token: createToken(user),
-      usuario: toPublicUser(user)
-    };
+    return createAuthResult(user);
   }
 
   async login(input: LoginInput): Promise<AuthResult> {
@@ -94,10 +116,31 @@ export class AuthService {
       await this.authRepository.updatePassword(user.id, await bcrypt.hash(input.senha, PASSWORD_SALT_ROUNDS));
     }
 
-    return {
-      token: createToken(user),
-      usuario: toPublicUser(user)
-    };
+    return createAuthResult(user);
+  }
+
+  async refresh(refreshToken: string): Promise<AuthResult> {
+    try {
+      const payload = jwt.verify(refreshToken, env.JWT_SECRET) as JwtPayload;
+
+      if (payload.tipo !== 'refresh') {
+        throw new AppError('Refresh token invalido', 401);
+      }
+
+      const user = await this.authRepository.findById(payload.sub);
+
+      if (!user || !user.ativo) {
+        throw new AppError('Usuario autenticado nao encontrado', 401);
+      }
+
+      return createAuthResult(user);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      throw new AppError('Sessao expirada', 401);
+    }
   }
 
   async getAuthenticatedUser(userId: string): Promise<PublicUser> {

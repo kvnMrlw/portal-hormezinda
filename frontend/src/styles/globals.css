@@ -11,6 +11,24 @@
   color: var(--color-text);
 }
 
+@keyframes birthday-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-2rem) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(110vh) rotate(540deg);
+  }
+}
+
+.birthday-confetti {
+  animation: birthday-confetti-fall 3.2s ease-in forwards;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -19,6 +37,13 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+}
+
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 button,

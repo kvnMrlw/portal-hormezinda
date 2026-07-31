@@ -6,6 +6,7 @@ type ListPeopleParams = {
   limit?: number;
   page?: number;
   search?: string;
+  sort?: 'az' | 'za' | 'recentes' | 'antigos';
 };
 
 export type PeopleResponse = {
@@ -15,7 +16,9 @@ export type PeopleResponse = {
 
 export type PublicProfileResponse = {
   estatisticas: {
+    apoiosRecebidos: number;
     curtidasRecebidas: number;
+    ideiasCriadas: number;
     publicacoes: number;
     stories: number;
   };
@@ -56,12 +59,13 @@ export async function listAdminUsers(): Promise<User[]> {
   return response.data.data.usuarios;
 }
 
-export async function listPeople({ limit = 18, page = 1, search = '' }: ListPeopleParams = {}): Promise<PeopleResponse> {
+export async function listPeople({ limit = 18, page = 1, search = '', sort = 'az' }: ListPeopleParams = {}): Promise<PeopleResponse> {
   const response = await api.get<ApiResponse<PeopleResponse>>('/users/people', {
     params: {
       limit,
       page,
-      search: search || undefined
+      search: search || undefined,
+      sort
     }
   });
 
@@ -90,7 +94,7 @@ function toFormData(payload: ProfileUpdatePayload): FormData {
 
   Object.entries(payload).forEach(([key, value]) => {
     if (value) {
-      formData.append(key, value);
+      formData.append(key, value instanceof File ? value : typeof value === 'object' ? JSON.stringify(value) : String(value));
     }
   });
 

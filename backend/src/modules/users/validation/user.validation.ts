@@ -61,7 +61,8 @@ export const userIdParamSchema = z.object({
 export const listPeopleQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(30).default(18),
   page: z.coerce.number().int().min(1).default(1),
-  search: z.string().trim().max(80).optional()
+  search: z.string().trim().max(80).optional(),
+  sort: z.enum(['az', 'za', 'recentes', 'antigos']).default('az')
 });
 
 export const publicProfileQuerySchema = z.object({
@@ -71,7 +72,26 @@ export const publicProfileQuerySchema = z.object({
 
 export const updateProfileSchema = z.object({
   bio: z.string().trim().max(280, 'A bio deve ter no maximo 280 caracteres').optional(),
+  telefone: z.string().trim().max(24, 'Telefone deve ter no maximo 24 caracteres').optional(),
   redeSocial: z.string().trim().max(120, 'A rede social deve ter no maximo 120 caracteres').optional(),
+  privacidade: z
+    .object({
+      mostrarAniversario: z.preprocess(parseBoolean, z.boolean()).optional(),
+      mostrarBanner: z.preprocess(parseBoolean, z.boolean()).optional(),
+      mostrarBio: z.preprocess(parseBoolean, z.boolean()).optional(),
+      mostrarTelefone: z.preprocess(parseBoolean, z.boolean()).optional()
+    })
+    .optional(),
+  notificacoes: z
+    .object({
+      aniversarios: z.preprocess(parseBoolean, z.boolean()).optional(),
+      avisos: z.preprocess(parseBoolean, z.boolean()).optional(),
+      cursos: z.preprocess(parseBoolean, z.boolean()).optional(),
+      ideias: z.preprocess(parseBoolean, z.boolean()).optional(),
+      publicacoes: z.preprocess(parseBoolean, z.boolean()).optional(),
+      stories: z.preprocess(parseBoolean, z.boolean()).optional()
+    })
+    .optional(),
   senhaAtual: z.string().optional(),
   novaSenha: z
     .string()

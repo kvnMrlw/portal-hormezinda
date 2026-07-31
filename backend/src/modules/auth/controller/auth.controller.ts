@@ -45,6 +45,22 @@ export async function login(request: Request, response: Response, next: NextFunc
   }
 }
 
+export async function refresh(request: Request, response: Response, next: NextFunction) {
+  try {
+    const refreshToken = typeof request.body?.refreshToken === 'string' ? request.body.refreshToken : '';
+
+    if (!refreshToken) {
+      throw new AppError('Refresh token nao informado', 401);
+    }
+
+    const result = await authService.refresh(refreshToken);
+
+    return response.status(200).json(apiResponse(result, { message: 'Sessao renovada com sucesso' }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export function me(request: AuthenticatedRequest, response: Response): Response {
   return response.status(200).json(apiResponse({ usuario: request.user }, { message: 'Usuario autenticado' }));
 }

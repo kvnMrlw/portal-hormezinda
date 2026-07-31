@@ -1,6 +1,9 @@
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../middlewares/error.middleware';
+import { AcademicRepository } from '../../academic/repository/academic.repository';
+import { NotificationService } from '../../notifications/service/notification.service';
+import { NotificationEntityType, NotificationType } from '../../notifications/types/notification.types';
 import type { UserDocument } from '../../users/models/user.model';
 import { UserRepository } from '../../users/repository/user.repository';
 import { toPublicUser } from '../../users/service/user.service';
@@ -64,7 +67,9 @@ function toPublicRoom(room: Awaited<ReturnType<CatalogRepository['findRoomById']
 export class CatalogService {
   constructor(
     private readonly catalogRepository = new CatalogRepository(),
-    private readonly userRepository = new UserRepository()
+    private readonly userRepository = new UserRepository(),
+    private readonly notificationService = new NotificationService(),
+    private readonly academicRepository = new AcademicRepository()
   ) {}
 
   async listAll() {
@@ -122,7 +127,23 @@ export class CatalogService {
     await this.validateSubjectPayload(data);
     const subject = await this.catalogRepository.updateSubject(id, data);
 
-    return subject ? toPublicSubject(subject) : null;
+    if (!subject) {
+      return null;
+    }
+
+    await this.notificationService.notifyUsers(
+      toPublicSubject(subject).professores.map((teacher) => teacher.id),
+      {
+        descricao: `A disciplina ${subject.nome} foi atualizada pela administracao.`,
+        entidadeId: subject.id,
+        entidadeTipo: NotificationEntityType.SUBJECT,
+        tipo: NotificationType.ACADEMIC_SUBJECT_UPDATED,
+        titulo: 'Disciplina atualizada',
+        url: `/disciplinas?disciplina=${subject.id}`
+      }
+    );
+
+    return toPublicSubject(subject);
   }
 
   async deleteSubject(id: string): Promise<boolean> {
@@ -132,7 +153,7 @@ export class CatalogService {
       return false;
     }
 
-    await this.catalogRepository.deleteSubject(id);
+    await Promise.all([this.academicRepository.deleteBySubject(id), this.catalogRepository.deleteSubject(id)]);
 
     return true;
   }

@@ -17,12 +17,13 @@ import { ideaUpload } from '../middlewares/idea-upload.middleware';
 
 const router = Router();
 const ideaAuthorRoles = [Cargo.ADMIN, Cargo.DIRETOR, Cargo.COORDENADOR, Cargo.PROFESSOR, Cargo.GREMIO, Cargo.ALUNO];
+const officialResponderRoles = [Cargo.ADMIN, Cargo.DIRETOR, Cargo.COORDENADOR, Cargo.PROFESSOR, Cargo.GREMIO];
 
 router.get('/', authenticate, listIdeas);
 router.get('/users/:id', authenticate, listUserIdeas);
 router.post('/', authenticate, authorizeRoles(...ideaAuthorRoles), ideaUpload.single('imagem'), createIdea);
 router.patch('/:id', authenticate, authorizeRoles(...ideaAuthorRoles), ideaUpload.single('imagem'), updateIdea);
-router.patch('/:id/admin', authenticate, authorizeRoles(Cargo.ADMIN), updateIdeaAdmin);
+router.patch('/:id/admin', authenticate, authorizeRoles(...officialResponderRoles), updateIdeaAdmin);
 router.post('/:id/support', authenticate, toggleIdeaSupport);
 router.post('/:id/reactions', authenticate, reactToIdea);
 router.delete('/:id', authenticate, deleteIdea);

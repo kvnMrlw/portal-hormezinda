@@ -22,6 +22,11 @@ export async function authenticate(
 
     const token = authHeader.replace('Bearer ', '');
     const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+
+    if (payload.tipo && payload.tipo !== 'access') {
+      throw new AppError('Token invalido', 401);
+    }
+
     request.user = await authService.getAuthenticatedUser(payload.sub);
 
     return next();

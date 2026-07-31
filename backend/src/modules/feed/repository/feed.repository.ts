@@ -125,6 +125,13 @@ export class FeedRepository {
     return StoryModel.find({ expiraEm: { $gt: new Date() } }).populate('autor').sort({ data: 1 });
   }
 
+  async deleteExpiredStories(): Promise<StoryDocument[]> {
+    const stories = await StoryModel.find({ expiraEm: { $lte: new Date() } });
+    await StoryModel.deleteMany({ _id: { $in: stories.map((story) => story._id) } });
+
+    return stories;
+  }
+
   async listActiveStoriesByAuthor(authorId: string): Promise<StoryDocument[]> {
     return StoryModel.find({ autor: authorId, expiraEm: { $gt: new Date() } }).populate('autor').sort({ data: -1 }).limit(12);
   }

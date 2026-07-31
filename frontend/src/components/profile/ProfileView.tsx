@@ -4,6 +4,7 @@ import {
   Bell,
   ExternalLink,
   BookOpen,
+  CheckCircle2,
   Grid3X3,
   Heart,
   ImagePlus,
@@ -23,17 +24,18 @@ import { calculateAge, getProfileDetails, getProfileHeadline } from '../../lib/p
 import { getDisplayRoleLabel, isAdminRole } from '../../lib/roles';
 import type { ProfileUpdatePayload, User } from '../../types/auth';
 import { Cargo } from '../../types/auth';
+import type { AcademicSummary } from '../../types/academic';
 import { StoryKind, type FeedPost, type FeedStory } from '../../types/feed';
 import type { Idea } from '../../types/ideas';
 import { ideaCategoryLabels, ideaStatusLabels } from '../../types/ideas';
 import type { Notification } from '../../types/notifications';
 import { weekdayLabels, type Weekday } from '../../types/schedules';
 import { Avatar } from '../ui/Avatar';
-import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { PasswordInput } from '../ui/PasswordInput';
+import { RoleBadge } from '../ui/RoleBadge';
 import { Textarea } from '../ui/Textarea';
 
 type ProfileViewProps = {
@@ -41,12 +43,15 @@ type ProfileViewProps = {
   editable?: boolean;
   estatisticas?: {
     curtidasRecebidas: number;
+    apoiosRecebidos?: number;
+    ideiasCriadas?: number;
     publicacoes: number;
     stories?: number;
   };
   publicacoes?: FeedPost[];
   recentIdeas?: Idea[];
   recentNotifications?: Notification[];
+  academicSummary?: AcademicSummary;
   professorResumo?: {
     cargaHorariaMinutos: number;
     disciplinas: string[];
@@ -81,7 +86,7 @@ type ProfileFormData = {
 
 const maxImageSize = 5 * 1024 * 1024;
 
-export function ProfileView({ editable = false, estatisticas, professorResumo, publicacoes, recentIdeas, recentNotifications, stories, user }: ProfileViewProps) {
+export function ProfileView({ academicSummary, editable = false, estatisticas, professorResumo, publicacoes, recentIdeas, recentNotifications, stories, user }: ProfileViewProps) {
   const { updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -231,27 +236,10 @@ export function ProfileView({ editable = false, estatisticas, professorResumo, p
               <div className="pb-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">{user.nomeCompleto}</h1>
-                  <Badge variant={admin ? 'success' : 'info'}>{getDisplayRoleLabel(user)}</Badge>
-                  {user.pertenceGremio ? <Badge variant="info">Gremio Estudantil</Badge> : null}
+                  <RoleBadge user={user} />
                 </div>
                 <p className="mt-1 text-slate-500">@{user.usuario}</p>
                 <p className="mt-2 font-semibold text-brand-navy">{getProfileHeadline(user)}</p>
-                {estatisticas ? (
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-4 py-2 text-sm font-semibold text-brand-navy ring-1 ring-slate-100">
-                      <Grid3X3 className="h-4 w-4 text-brand-blue" />
-                      {estatisticas.publicacoes} publicacoes
-                    </span>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-brand-blue ring-1 ring-blue-100">
-                      <Camera className="h-4 w-4" />
-                      {estatisticas.stories ?? stories?.length ?? 0} stories
-                    </span>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600 ring-1 ring-rose-100">
-                      <Heart className="h-4 w-4" />
-                      {estatisticas.curtidasRecebidas} curtidas
-                    </span>
-                  </div>
-                ) : null}
               </div>
             </div>
             {editable ? (
@@ -274,8 +262,10 @@ export function ProfileView({ editable = false, estatisticas, professorResumo, p
 
           <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <section className="space-y-5">
+              {estatisticas ? <SocialStatsCards estatisticas={estatisticas} storiesCount={stories?.length ?? 0} /> : null}
               {stories ? <StoryStrip stories={stories} /> : null}
               {professorResumo ? <TeacherProfileSummary professorResumo={professorResumo} /> : null}
+              {academicSummary ? <AcademicProfileSummary academicSummary={academicSummary} user={user} /> : null}
 
               <div>
                 <h2 className="text-lg font-semibold text-brand-navy">Sobre</h2>
@@ -356,6 +346,8 @@ export function ProfileView({ editable = false, estatisticas, professorResumo, p
                 <InfoCard icon={BookOpen} label="Turma" value={details[0]} />
               ) : null}
               {details[1] ? <InfoCard icon={MapPin} label="Turno" value={details[1]} /> : null}
+              {user.telefone ? <InfoCard icon={LinkIcon} label="Telefone" value={user.telefone} /> : null}
+              <InfoCard icon={CalendarDays} label="Entrada" value={new Intl.DateTimeFormat('pt-BR').format(new Date(user.criadoEm))} />
               {!admin && !details.length ? <InfoCard icon={LinkIcon} label="Perfil" value="Informacoes em breve" /> : null}
             </aside>
           </div>
@@ -400,6 +392,64 @@ function TeacherProfileSummary({ professorResumo }: { professorResumo: NonNullab
           ))}
         </div>
       ) : null}
+    </section>
+  );
+}
+
+function SocialStatsCards({ estatisticas, storiesCount }: { estatisticas: NonNullable<ProfileViewProps['estatisticas']>; storiesCount: number }) {
+  return (
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <SocialStat icon={Grid3X3} label="Publicacoes" value={estatisticas.publicacoes} />
+      <SocialStat icon={Camera} label="Stories" value={estatisticas.stories ?? storiesCount} />
+      <SocialStat icon={Lightbulb} label="Ideias" value={estatisticas.ideiasCriadas ?? 0} />
+      <SocialStat icon={Heart} label="Curtidas" value={estatisticas.curtidasRecebidas} />
+      <SocialStat icon={CheckCircle2} label="Apoios" value={estatisticas.apoiosRecebidos ?? 0} />
+    </section>
+  );
+}
+
+function SocialStat({ icon: Icon, label, value }: { icon: typeof Grid3X3; label: string; value: number }) {
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+      <Icon className="h-5 w-5 text-brand-blue" />
+      <p className="mt-3 text-2xl font-semibold text-brand-navy">{value}</p>
+      <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
+    </div>
+  );
+}
+
+function AcademicProfileSummary({ academicSummary, user }: { academicSummary: AcademicSummary; user: User }) {
+  const isStudent = user.cargo === Cargo.ALUNO || user.cargo === Cargo.GREMIO;
+
+  return (
+    <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <h2 className="text-lg font-semibold text-brand-navy">{isStudent ? 'Resumo academico' : 'Atividades academicas'}</h2>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <InfoPill label="Disciplinas" value={academicSummary.disciplinas.length ? academicSummary.disciplinas.join(', ') : 'Nenhuma'} />
+        <InfoPill label="Turmas" value={String(academicSummary.quantidadeTurmas)} />
+        <InfoPill label="Tarefas recentes" value={String(academicSummary.ultimasAtividades.length)} />
+      </div>
+      {academicSummary.proximaAula ? (
+        <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
+          Proxima aula: {weekdayLabels[academicSummary.proximaAula.diaSemana]} - {academicSummary.proximaAula.horarioInicio} - {academicSummary.proximaAula.disciplina}
+        </div>
+      ) : null}
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">Ultimas tarefas</p>
+          {academicSummary.ultimasAtividades.slice(0, 3).map((task) => (
+            <p className="mt-2 text-sm font-semibold text-brand-navy" key={task.id}>{task.titulo}</p>
+          ))}
+          {!academicSummary.ultimasAtividades.length ? <p className="mt-2 text-sm text-slate-500">Nenhuma tarefa recente.</p> : null}
+        </div>
+        <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">Ultimos conteudos</p>
+          {academicSummary.ultimosConteudos.slice(0, 3).map((content) => (
+            <p className="mt-2 text-sm font-semibold text-brand-navy" key={content.id}>{content.titulo}</p>
+          ))}
+          {!academicSummary.ultimosConteudos.length ? <p className="mt-2 text-sm text-slate-500">Nenhum conteudo recente.</p> : null}
+        </div>
+      </div>
     </section>
   );
 }

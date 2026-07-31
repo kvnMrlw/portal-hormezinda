@@ -9,6 +9,7 @@ import { canViewRole } from '../../auth/permissions/roles';
 import { FeedService } from '../../feed/service/feed.service';
 import { IdeaService } from '../../ideas/service/idea.service';
 import { NotificationService } from '../../notifications/service/notification.service';
+import { SocialService } from '../../social/service/social.service';
 import type { FeedPagination } from '../../feed/types/feed.types';
 import { NoticeRepository } from '../../notices/repository/notice.repository';
 import { CatalogRepository } from '../../catalogs/repository/catalog.repository';
@@ -17,6 +18,22 @@ import { ScheduleEntryKind, Weekday } from '../../schedules/types/schedule.types
 
 const PASSWORD_SALT_ROUNDS = 10;
 const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$.{53}$/;
+
+const defaultPrivacy = {
+  mostrarAniversario: true,
+  mostrarBanner: true,
+  mostrarBio: true,
+  mostrarTelefone: false
+};
+
+const defaultNotificationPreferences = {
+  aniversarios: true,
+  avisos: true,
+  cursos: true,
+  ideias: true,
+  publicacoes: true,
+  stories: true
+};
 
 type UpdateProfileInput = Omit<UpdateProfileData, 'senha'> & {
   senhaAtual?: string;
@@ -45,7 +62,10 @@ export function toPublicUser(user: UserDocument): PublicUser {
     fotoPerfil: user.fotoPerfil,
     bannerPerfil: user.bannerPerfil,
     bio: user.bio,
+    telefone: user.telefone ?? '',
     redeSocial: user.redeSocial,
+    privacidade: { ...defaultPrivacy, ...(user.privacidade ?? {}) },
+    notificacoes: { ...defaultNotificationPreferences, ...(user.notificacoes ?? {}) },
     ativo: user.ativo,
     criadoEm: user.criadoEm,
     atualizadoEm: user.atualizadoEm
@@ -60,7 +80,8 @@ export class UserService {
     private readonly notificationService = new NotificationService(),
     private readonly noticeRepository = new NoticeRepository(),
     private readonly catalogRepository = new CatalogRepository(),
-    private readonly scheduleRepository = new ScheduleRepository()
+    private readonly scheduleRepository = new ScheduleRepository(),
+    private readonly socialService = new SocialService()
   ) {}
 
   async adminListUsers(): Promise<PublicUser[]> {
@@ -149,6 +170,7 @@ export class UserService {
       this.feedService.removeUserActivity(id),
       this.ideaService.deleteByAuthor(id),
       this.notificationService.deleteByUser(id),
+      this.socialService.deleteByUser(id),
       this.userRepository.delete(id)
     ]);
     await removeUploadedFiles([
@@ -194,7 +216,7 @@ export class UserService {
 
   async listPeople(
     viewer: PublicUser,
-    options: { limit: number; page: number; search?: string }
+    options: { limit: number; page: number; search?: string; sort?: 'az' | 'za' | 'recentes' | 'antigos' }
   ): Promise<{ paginacao: FeedPagination; usuarios: PublicUser[] }> {
     const includeAdmins = viewer.cargo === Cargo.ADMIN;
     const [users, total] = await Promise.all([
@@ -219,18 +241,24 @@ export class UserService {
       return null;
     }
 
-    const [feed, stories, estatisticas, professorResumo] = await Promise.all([
+    const [feed, stories, estatisticas, professorResumo, ideias] = await Promise.all([
       this.feedService.listUserPosts(user.id, viewer.id, { limit: options.postsLimit, page: options.postsPage }),
       this.feedService.listUserStories(user.id, viewer.id),
       this.feedService.getUserStats(user.id),
-      user.cargo === Cargo.PROFESSOR ? this.getTeacherProfileSummary(user.id) : Promise.resolve(undefined)
+      user.cargo === Cargo.PROFESSOR ? this.getTeacherProfileSummary(user.id) : Promise.resolve(undefined),
+      this.ideaService.listByAuthor(user.id, viewer.id, 100)
     ]);
+    const canViewPrivate = viewer.id === user.id || viewer.cargo === Cargo.ADMIN;
 
     return {
-      usuario: toPublicUser(user),
+      usuario: applyPrivacy(toPublicUser(user), canViewPrivate),
       publicacoes: feed.publicacoes,
       stories,
-      estatisticas,
+      estatisticas: {
+        ...estatisticas,
+        apoiosRecebidos: ideias.reduce((total, idea) => total + idea.quantidadeApoios, 0),
+        ideiasCriadas: ideias.length
+      },
       professorResumo,
       paginacaoPublicacoes: feed.paginacao
     };
@@ -315,6 +343,20 @@ export class UserService {
       quantidadeTurmas: classIds.size
     };
   }
+}
+
+function applyPrivacy(user: PublicUser, canViewPrivate: boolean): PublicUser {
+  if (canViewPrivate) {
+    return user;
+  }
+
+  return {
+    ...user,
+    bannerPerfil: user.privacidade.mostrarBanner ? user.bannerPerfil : '',
+    bio: user.privacidade.mostrarBio ? user.bio : '',
+    dataNascimento: user.privacidade.mostrarAniversario ? user.dataNascimento : undefined,
+    telefone: user.privacidade.mostrarTelefone ? user.telefone : ''
+  };
 }
 
 function getTimeDiff(start: string, end: string): number {

@@ -57,7 +57,22 @@ function createSystemOwner(): PublicUser {
     fotoPerfil: '',
     bannerPerfil: '',
     bio: '',
+    telefone: '',
     redeSocial: '',
+    privacidade: {
+      mostrarAniversario: true,
+      mostrarBanner: true,
+      mostrarBio: true,
+      mostrarTelefone: false
+    },
+    notificacoes: {
+      aniversarios: true,
+      avisos: true,
+      cursos: true,
+      ideias: true,
+      publicacoes: true,
+      stories: true
+    },
     ativo: true,
     criadoEm: now,
     atualizadoEm: now

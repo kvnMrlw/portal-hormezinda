@@ -214,7 +214,7 @@ export async function listStories(request: AuthenticatedRequest, response: Respo
       throw new AppError('Usuario nao autenticado', 401);
     }
 
-    const stories = await feedService.listStories(request.user.id);
+    const stories = await feedService.listStories(request.user);
 
     return response.status(200).json(apiResponse({ stories }));
   } catch (error) {

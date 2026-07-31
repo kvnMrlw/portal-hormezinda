@@ -42,7 +42,7 @@ const emptyPayload: CoursePayload = {
   descricao: '',
   link: '',
   professorId: '',
-  status: CourseStatus.DRAFT,
+  status: CourseStatus.PUBLISHED,
   titulo: ''
 };
 

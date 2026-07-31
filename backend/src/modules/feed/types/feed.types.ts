@@ -94,6 +94,7 @@ export type FeedStory = {
   expiraEm: Date;
   data: Date;
   vistoPeloUsuario: boolean;
+  visualizacoesQuantidade?: number;
 };
 
 export type CreateStoryData = {

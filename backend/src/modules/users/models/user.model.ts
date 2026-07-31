@@ -66,9 +66,29 @@ const userSchema = new Schema<User>(
       type: String,
       default: ''
     },
+    telefone: {
+      type: String,
+      default: '',
+      trim: true,
+      maxlength: 24
+    },
     redeSocial: {
       type: String,
       default: ''
+    },
+    privacidade: {
+      mostrarAniversario: { type: Boolean, default: true },
+      mostrarBanner: { type: Boolean, default: true },
+      mostrarBio: { type: Boolean, default: true },
+      mostrarTelefone: { type: Boolean, default: false }
+    },
+    notificacoes: {
+      aniversarios: { type: Boolean, default: true },
+      avisos: { type: Boolean, default: true },
+      cursos: { type: Boolean, default: true },
+      ideias: { type: Boolean, default: true },
+      publicacoes: { type: Boolean, default: true },
+      stories: { type: Boolean, default: true }
     },
     ativo: {
       type: Boolean,
@@ -95,5 +115,6 @@ const userSchema = new Schema<User>(
 );
 
 userSchema.index({ cargo: 1, ativo: 1, nomeCompleto: 1 });
+userSchema.index({ dataNascimento: 1, ativo: 1 });
 
 export const UserModel: Model<User> = model<User>('User', userSchema);

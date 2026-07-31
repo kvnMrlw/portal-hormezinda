@@ -1,10 +1,8 @@
 import {
   Archive,
-  BadgeCheck,
   CheckCircle2,
   Clock3,
   Edit3,
-  Flag,
   ImagePlus,
   Lightbulb,
   MessageSquareText,
@@ -25,14 +23,13 @@ import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Input } from '../components/ui/Input';
-import { Loading } from '../components/ui/Loading';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Textarea } from '../components/ui/Textarea';
 import { useAuth } from '../contexts/useAuth';
 import { getAssetUrl } from '../lib/assets';
-import { getDisplayRoleLabel, isAdminRole } from '../lib/roles';
+import { getDisplayRoleLabel, hasGremioAccess, isAdminRole } from '../lib/roles';
 import { cn } from '../lib/utils';
 import { createIdea, deleteIdea, listIdeas, reactToIdea, toggleIdeaSupport, updateIdea, updateIdeaAdmin } from '../services/ideas';
 import type { ReactionEmoji } from '../types/feed';
@@ -44,6 +41,7 @@ import {
   type Idea,
   type IdeaPayload
 } from '../types/ideas';
+import { Cargo, type User } from '../types/auth';
 
 type IdeaFormState = IdeaPayload & {
   imagem?: File;
@@ -83,9 +81,21 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
+function canRespondOfficially(user?: User | null): boolean {
+  return Boolean(
+    user &&
+      (user.cargo === Cargo.ADMIN ||
+        user.cargo === Cargo.DIRETOR ||
+        user.cargo === Cargo.COORDENADOR ||
+        user.cargo === Cargo.PROFESSOR ||
+        hasGremioAccess(user))
+  );
+}
+
 export function Ideas() {
   const { user } = useAuth();
   const isAdmin = isAdminRole(user?.cargo);
+  const canOfficiallyRespond = canRespondOfficially(user);
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
   const [form, setForm] = useState<IdeaFormState>(emptyForm);
@@ -101,10 +111,12 @@ export function Ideas() {
 
   const totalSupports = useMemo(() => ideas.reduce((total, idea) => total + idea.quantidadeApoios, 0), [ideas]);
 
-  const loadIdeas = useCallback(async () => {
+  const loadIdeas = useCallback(async (silent = false) => {
     try {
       setError('');
-      setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+      }
       const response = await listIdeas({ categoria: category, page: 1, search, sort, status });
       setIdeas(response.ideias);
       setAdminDrafts(
@@ -121,7 +133,9 @@ export function Ideas() {
     } catch (loadError) {
       setError(getErrorMessage(loadError));
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   }, [category, search, sort, status]);
 
@@ -129,6 +143,12 @@ export function Ideas() {
     const timeout = window.setTimeout(() => void loadIdeas(), 250);
 
     return () => window.clearTimeout(timeout);
+  }, [loadIdeas]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => void loadIdeas(true), 15000);
+
+    return () => window.clearInterval(interval);
   }, [loadIdeas]);
 
   function openCreate(): void {
@@ -287,6 +307,7 @@ export function Ideas() {
               <IdeaCard
                 adminDraft={adminDrafts[idea.id]}
                 canManage={isAdmin || idea.autor.id === user?.id}
+                canOfficiallyRespond={canOfficiallyRespond}
                 idea={idea}
                 isAdmin={isAdmin}
                 key={idea.id}
@@ -350,6 +371,7 @@ function IdeaSkeleton() {
 type IdeaCardProps = {
   adminDraft?: { destaque: boolean; respostaOficial: string; status: IdeaStatus };
   canManage: boolean;
+  canOfficiallyRespond: boolean;
   idea: Idea;
   isAdmin: boolean;
   onAdminDraftChange: (draft: Partial<{ destaque: boolean; respostaOficial: string; status: IdeaStatus }>) => void;
@@ -360,7 +382,7 @@ type IdeaCardProps = {
   onSupport: () => void;
 };
 
-function IdeaCard({ adminDraft, canManage, idea, isAdmin, onAdminDraftChange, onAdminUpdate, onDelete, onEdit, onReact, onSupport }: IdeaCardProps) {
+function IdeaCard({ adminDraft, canManage, canOfficiallyRespond, idea, isAdmin, onAdminDraftChange, onAdminUpdate, onDelete, onEdit, onReact, onSupport }: IdeaCardProps) {
   const status = statusStyles[idea.status];
   const StatusIcon = status.icon;
 
@@ -395,9 +417,14 @@ function IdeaCard({ adminDraft, canManage, idea, isAdmin, onAdminDraftChange, on
 
         {idea.respostaOficial ? (
           <div className="rounded-3xl border border-blue-100 bg-blue-50 p-4">
-            <div className="flex items-center gap-2 text-sm font-bold text-brand-blue">
-              <ShieldCheck className="h-4 w-4" />
-              Resposta oficial
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white text-brand-blue ring-1 ring-blue-100">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-brand-blue">{getDisplayRoleLabel(idea.respostaOficial.autor)}</p>
+                <p className="truncate text-sm font-semibold text-brand-navy">{idea.respostaOficial.autor.nomeCompleto}</p>
+              </div>
             </div>
             <p className="mt-2 text-sm leading-6 text-slate-700">{idea.respostaOficial.texto}</p>
           </div>
@@ -421,23 +448,25 @@ function IdeaCard({ adminDraft, canManage, idea, isAdmin, onAdminDraftChange, on
 
         <PostFooter isReacting={false} myReaction={idea.minhaReacao} onReact={onReact} reactions={idea.reacoes} />
 
-        {isAdmin && adminDraft ? (
+        {canOfficiallyRespond && adminDraft ? (
           <div className="grid gap-3 rounded-3xl border border-slate-100 bg-slate-50 p-4">
-            <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <Select label="Status" name={`status-${idea.id}`} onChange={(event) => onAdminDraftChange({ status: event.target.value as IdeaStatus })} value={adminDraft.status}>
-                {Object.values(IdeaStatus).map((item) => (
-                  <option key={item} value={item}>{ideaStatusLabels[item]}</option>
-                ))}
-              </Select>
-              <label className="mt-7 flex h-11 items-center gap-2 rounded-2xl bg-white px-4 text-sm font-semibold text-brand-navy ring-1 ring-slate-100">
-                <input checked={adminDraft.destaque} className="h-4 w-4 accent-brand-blue" onChange={(event) => onAdminDraftChange({ destaque: event.target.checked })} type="checkbox" />
-                Destaque
-              </label>
-            </div>
+            {isAdmin ? (
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <Select label="Status" name={`status-${idea.id}`} onChange={(event) => onAdminDraftChange({ status: event.target.value as IdeaStatus })} value={adminDraft.status}>
+                  {Object.values(IdeaStatus).map((item) => (
+                    <option key={item} value={item}>{ideaStatusLabels[item]}</option>
+                  ))}
+                </Select>
+                <label className="mt-7 flex h-11 items-center gap-2 rounded-2xl bg-white px-4 text-sm font-semibold text-brand-navy ring-1 ring-slate-100">
+                  <input checked={adminDraft.destaque} className="h-4 w-4 accent-brand-blue" onChange={(event) => onAdminDraftChange({ destaque: event.target.checked })} type="checkbox" />
+                  Destaque
+                </label>
+              </div>
+            ) : null}
             <Textarea label="Resposta oficial" name={`response-${idea.id}`} onChange={(event) => onAdminDraftChange({ respostaOficial: event.target.value })} rows={3} value={adminDraft.respostaOficial} />
             <Button className="w-full sm:w-fit" onClick={onAdminUpdate} type="button">
               <MessageSquareText className="h-4 w-4" />
-              Atualizar administracao
+              Salvar resposta oficial
             </Button>
           </div>
         ) : null}

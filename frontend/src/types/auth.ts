@@ -36,6 +36,22 @@ export enum Sexo {
   FEMININO = 'FEMININO'
 }
 
+export type PrivacyPreferences = {
+  mostrarAniversario: boolean;
+  mostrarBanner: boolean;
+  mostrarBio: boolean;
+  mostrarTelefone: boolean;
+};
+
+export type NotificationPreferences = {
+  aniversarios: boolean;
+  avisos: boolean;
+  cursos: boolean;
+  ideias: boolean;
+  publicacoes: boolean;
+  stories: boolean;
+};
+
 export type User = {
   id: string;
   nomeCompleto: string;
@@ -50,7 +66,10 @@ export type User = {
   fotoPerfil: string;
   bannerPerfil: string;
   bio: string;
+  telefone?: string;
   redeSocial: string;
+  privacidade: PrivacyPreferences;
+  notificacoes: NotificationPreferences;
   ativo: boolean;
   criadoEm: string;
   atualizadoEm: string;
@@ -63,6 +82,7 @@ export type ApiResponse<TData> = {
 };
 
 export type AuthResponse = {
+  refreshToken: string;
   token: string;
   usuario: User;
 };
@@ -70,6 +90,9 @@ export type AuthResponse = {
 export type ProfileUpdatePayload = Partial<Pick<User, 'bio' | 'redeSocial'>> & {
   bannerPerfil?: File;
   fotoPerfil?: File;
+  telefone?: string;
+  privacidade?: Partial<PrivacyPreferences>;
+  notificacoes?: Partial<NotificationPreferences>;
   senhaAtual?: string;
   novaSenha?: string;
   confirmarSenha?: string;

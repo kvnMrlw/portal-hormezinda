@@ -17,6 +17,7 @@ export class NotificationRepository {
       tipo: data.tipo,
       titulo: data.titulo,
       url: data.url,
+      expiraEm: data.expiraEm,
       usuario: toObjectId(data.usuarioId)
     });
 
@@ -26,6 +27,7 @@ export class NotificationRepository {
   async list(userId: string, options: NotificationListOptions): Promise<NotificationDocument[]> {
     return NotificationModel.find({
       usuario: userId,
+      $or: [{ expiraEm: { $exists: false } }, { expiraEm: { $gt: new Date() } }],
       ...(options.unreadOnly ? { lida: false } : {})
     })
       .populate('autor')
@@ -37,8 +39,19 @@ export class NotificationRepository {
   async count(userId: string, unreadOnly = false): Promise<number> {
     return NotificationModel.countDocuments({
       usuario: userId,
+      $or: [{ expiraEm: { $exists: false } }, { expiraEm: { $gt: new Date() } }],
       ...(unreadOnly ? { lida: false } : {})
     });
+  }
+
+  async exists(userId: string, entityId: string, type: string): Promise<boolean> {
+    return Boolean(
+      await NotificationModel.exists({
+        usuario: userId,
+        entidadeId: entityId,
+        tipo: type
+      })
+    );
   }
 
   async markAsRead(id: string, userId: string): Promise<NotificationDocument | null> {

@@ -7,6 +7,7 @@ import { ContentArea } from './ContentArea';
 import { MainContainer } from './MainContainer';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { BirthdayWelcome } from '../social/BirthdayWelcome';
 
 type AppShellProps = {
   children: ReactNode;
@@ -24,7 +25,7 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-brand-lightGray">
+    <div className="flex min-h-screen overflow-x-hidden bg-brand-lightGray">
       <Sidebar
         collapsed={collapsed}
         isMobileOpen={isMobileOpen}
@@ -39,6 +40,7 @@ export function AppShell({ children }: AppShellProps) {
           onToggleSidebar={() => setCollapsed((current) => !current)}
         />
         <ContentArea>{children}</ContentArea>
+        <BirthdayWelcome />
         <footer className="sr-only" />
       </MainContainer>
     </div>

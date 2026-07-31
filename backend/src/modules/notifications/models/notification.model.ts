@@ -51,6 +51,10 @@ const notificationSchema = new Schema<Notification>(
       required: true,
       trim: true
     },
+    expiraEm: {
+      type: Date,
+      index: true
+    },
     lida: {
       type: Boolean,
       default: false,
@@ -76,5 +80,6 @@ const notificationSchema = new Schema<Notification>(
 
 notificationSchema.index({ usuario: 1, lida: 1, criadaEm: -1 });
 notificationSchema.index({ entidadeTipo: 1, entidadeId: 1 });
+notificationSchema.index({ expiraEm: 1 });
 
 export const NotificationModel: Model<Notification> = model<Notification>('Notification', notificationSchema);

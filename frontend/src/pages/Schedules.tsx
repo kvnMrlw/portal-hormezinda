@@ -68,7 +68,7 @@ export function Schedules() {
   const [error, setError] = useState('');
 
   const selectedClass = classes.find((classGroup) => classGroup.id === classId);
-  const activeClassId = isAdmin ? classId ?? '' : schedules[0]?.turma.id ?? '';
+  const activeClassId = isAdmin ? classId ?? '' : isTeacher ? '' : schedules[0]?.turma.id ?? '';
   const visibleSchedules = useMemo(
     () => schedules.filter((schedule) => !activeClassId || schedule.turma.id === activeClassId),
     [activeClassId, schedules]
@@ -441,10 +441,23 @@ function ScheduleCell({
   }
 
   const isInterval = schedule.tipo === ScheduleEntryKind.INTERVAL;
+  const subjectColor = schedule.disciplina?.cor ?? '#2563eb';
+  const textColor = isInterval ? '#92400e' : getReadableTextColor(subjectColor);
+  const subtleTextColor = isInterval ? '#b45309' : textColor;
   const content = (
-    <article className={`${compact ? '' : 'min-h-24'} rounded-2xl p-3 ring-1 ${isInterval ? 'bg-amber-50 text-amber-800 ring-amber-100' : 'bg-white text-brand-navy ring-slate-100'}`}>
+    <article
+      className={`${compact ? '' : 'min-h-28'} min-w-0 rounded-2xl p-3 shadow-sm ring-1 ${isInterval ? 'bg-amber-50 ring-amber-100' : 'ring-black/5'}`}
+      style={isInterval ? undefined : { backgroundColor: subjectColor, color: textColor }}
+    >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-bold">{formatTimeRange(schedule)}</p>
+        <div className="min-w-0">
+          <p className="text-[0.68rem] font-bold uppercase tracking-[0.12em]" style={{ color: subtleTextColor }}>
+            {isInterval ? 'Pausa' : 'Aula'}
+          </p>
+          <h3 className="mt-1 break-words text-sm font-bold leading-snug" style={{ color: textColor }}>
+            {isInterval ? 'Intervalo' : schedule.disciplina?.nome}
+          </h3>
+        </div>
         {canManage ? (
           <div className="flex gap-1">
             <button aria-label="Editar horario" className="rounded-lg bg-slate-50 p-1.5 text-slate-500 hover:text-brand-blue" onClick={(event) => { event.stopPropagation(); onEdit?.(schedule); }} type="button">
@@ -457,15 +470,26 @@ function ScheduleCell({
         ) : null}
       </div>
       {isInterval ? (
-        <h3 className="mt-2 flex items-center gap-1.5 text-sm font-bold"><Coffee className="h-4 w-4" />Intervalo</h3>
+        <div className="mt-3 flex items-center gap-2 text-sm font-bold text-amber-800">
+          <Coffee className="h-4 w-4" />
+          {formatTimeRange(schedule)}
+        </div>
       ) : (
         <>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: schedule.disciplina?.cor ?? '#2563eb' }} />
-            <h3 className="truncate text-sm font-bold">{schedule.disciplina?.nome}</h3>
+          <p className="mt-2 truncate text-xs font-semibold opacity-90" style={{ color: textColor }}>
+            {schedule.professor ? `Prof. ${schedule.professor.nomeCompleto}` : 'Professor nao definido'}
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-white/20 px-2 py-1.5 ring-1 ring-white/20">
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] opacity-75" style={{ color: textColor }}>Inicio</p>
+              <p className="text-sm font-bold" style={{ color: textColor }}>{schedule.horarioInicio}</p>
+            </div>
+            <div className="rounded-xl bg-white/20 px-2 py-1.5 ring-1 ring-white/20">
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] opacity-75" style={{ color: textColor }}>Termino</p>
+              <p className="text-sm font-bold" style={{ color: textColor }}>{schedule.horarioFim}</p>
+            </div>
           </div>
-          <p className="mt-1 truncate text-xs font-semibold text-slate-500">Prof. {schedule.professor?.nomeCompleto}</p>
-          {schedule.sala ? <p className="mt-1 text-xs font-bold text-slate-500">{schedule.sala.nome}</p> : null}
+          {schedule.sala ? <p className="mt-2 truncate text-xs font-bold opacity-80" style={{ color: textColor }}>{schedule.sala.nome}</p> : null}
         </>
       )}
     </article>
@@ -478,4 +502,19 @@ function ScheduleCell({
       {content}
     </button>
   );
+}
+
+function getReadableTextColor(color: string): string {
+  const hex = color.replace('#', '');
+
+  if (!/^[0-9a-f]{6}$/i.test(hex)) {
+    return '#ffffff';
+  }
+
+  const red = Number.parseInt(hex.slice(0, 2), 16);
+  const green = Number.parseInt(hex.slice(2, 4), 16);
+  const blue = Number.parseInt(hex.slice(4, 6), 16);
+  const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
+
+  return brightness > 155 ? '#172033' : '#ffffff';
 }

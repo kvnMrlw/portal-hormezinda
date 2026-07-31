@@ -64,10 +64,13 @@ function toFeedPost(post: PostDocument, viewerId: string): FeedPost {
   };
 }
 
-function toFeedStory(story: StoryDocument, viewerId: string): FeedStory {
+function toFeedStory(story: StoryDocument, viewer: PublicUser | string): FeedStory {
   if (!isStoryUserDocument(story.autor)) {
     throw new Error('Autor do story nao carregado');
   }
+
+  const viewerId = typeof viewer === 'string' ? viewer : viewer.id;
+  const canViewStats = typeof viewer !== 'string' && (viewer.cargo === Cargo.ADMIN || viewer.id === story.autor.id);
 
   return {
     id: story.id,
@@ -78,7 +81,8 @@ function toFeedStory(story: StoryDocument, viewerId: string): FeedStory {
     fundo: story.fundo,
     expiraEm: story.expiraEm,
     data: story.data,
-    vistoPeloUsuario: story.visualizacoes.some((userId) => userId.toString() === viewerId)
+    vistoPeloUsuario: story.visualizacoes.some((userId) => userId.toString() === viewerId),
+    visualizacoesQuantidade: canViewStats ? story.visualizacoes.length : undefined
   };
 }
 
@@ -252,10 +256,11 @@ export class FeedService {
     await removeUploadedFiles(imageUrls);
   }
 
-  async listStories(viewerId: string): Promise<FeedStory[]> {
+  async listStories(viewer: PublicUser): Promise<FeedStory[]> {
+    await this.cleanupExpiredStories();
     const stories = await this.feedRepository.listActiveStories();
 
-    return stories.map((story) => toFeedStory(story, viewerId));
+    return stories.map((story) => toFeedStory(story, viewer));
   }
 
   async createStory(authorId: string, data: Omit<CreateStoryData, 'autor'>): Promise<FeedStory> {
@@ -316,5 +321,16 @@ export class FeedService {
 
   async removeUserActivity(userId: string): Promise<void> {
     await this.feedRepository.removeUserActivity(userId);
+  }
+
+  private async cleanupExpiredStories(): Promise<void> {
+    const expiredStories = await this.feedRepository.deleteExpiredStories();
+
+    if (!expiredStories.length) return;
+
+    await Promise.all([
+      removeUploadedFiles(expiredStories.map((story) => story.imagem?.url)),
+      ...expiredStories.map((story) => this.notificationService.deleteByEntity(story.id))
+    ]);
   }
 }

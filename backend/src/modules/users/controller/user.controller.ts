@@ -47,6 +47,18 @@ async function getSavedProfileFiles(files?: ProfileFiles): Promise<{ bannerPerfi
   };
 }
 
+function parseJsonField(value: unknown): unknown {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
 export async function listUsers(request: AuthenticatedRequest, response: Response, next: NextFunction) {
   try {
     if (!request.user) {
@@ -136,10 +148,25 @@ export async function adminCreateUser(request: AuthenticatedRequest, response: R
         ...parsedBody.data,
         fotoPerfil: fotoPerfil ?? '',
         bannerPerfil: bannerPerfil ?? '',
-      bio: '',
-      redeSocial: '',
-      pertenceGremio: Boolean(parsedBody.data.pertenceGremio),
-      ativo: true
+        bio: '',
+        telefone: '',
+        redeSocial: '',
+        privacidade: {
+          mostrarAniversario: true,
+          mostrarBanner: true,
+          mostrarBio: true,
+          mostrarTelefone: false
+        },
+        notificacoes: {
+          aniversarios: true,
+          avisos: true,
+          cursos: true,
+          ideias: true,
+          publicacoes: true,
+          stories: true
+        },
+        pertenceGremio: Boolean(parsedBody.data.pertenceGremio),
+        ativo: true
       });
 
       return response.status(201).json(apiResponse({ usuario: user }, { message: 'Usuario criado com sucesso' }));
@@ -255,7 +282,11 @@ export async function updateCurrentUserProfile(request: AuthenticatedRequest, re
       throw new AppError('Usuario nao autenticado', 401);
     }
 
-    const parsedBody = updateProfileSchema.safeParse(request.body);
+    const parsedBody = updateProfileSchema.safeParse({
+      ...request.body,
+      notificacoes: parseJsonField(request.body.notificacoes),
+      privacidade: parseJsonField(request.body.privacidade)
+    });
 
     if (!parsedBody.success) {
       throw new AppError('Nao foi possivel atualizar o perfil', 400);

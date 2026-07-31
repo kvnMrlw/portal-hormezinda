@@ -1,4 +1,4 @@
-import { Bell, Database, Home, LogOut, UserRound, UsersRound, X } from 'lucide-react';
+import { Bell, Database, Home, LogOut, Settings, UserRound, UsersRound, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/useAuth';
 import { schoolModules } from '../../data/schoolModules';
 import { isAdminRole } from '../../lib/roles';
 import { cn } from '../../lib/utils';
+import { Cargo } from '../../types/auth';
 import { SchoolLogo } from '../ui/SchoolLogo';
 
 type NavigationItem = {
@@ -25,6 +26,7 @@ const navigation: NavigationItem[] = [
   { href: '/home', icon: Home, label: 'Inicio' },
   { href: '/perfil', icon: UserRound, label: 'Perfil' },
   { href: '/notificacoes', icon: Bell, label: 'Notificacoes' },
+  { href: '/configuracoes', icon: Settings, label: 'Configuracoes' },
   ...schoolModules.map((module) => ({
     href: module.href,
     icon: module.icon,
@@ -34,9 +36,10 @@ const navigation: NavigationItem[] = [
 
 export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: SidebarProps) {
   const { user } = useAuth();
+  const roleNavigation = navigation.filter((item) => item.href !== '/diario' || user?.cargo === Cargo.ADMIN || user?.cargo === Cargo.DIRETOR || user?.cargo === Cargo.COORDENADOR || user?.cargo === Cargo.PROFESSOR);
   const visibleNavigation = isAdminRole(user?.cargo)
-    ? [...navigation, { href: '/cadastros', icon: Database, label: 'Cadastros' }, { href: '/usuarios', icon: UsersRound, label: 'Usuarios' }]
-    : [...navigation, { href: '/pessoas', icon: UsersRound, label: 'Pessoas' }];
+    ? [...roleNavigation, { href: '/cadastros', icon: Database, label: 'Cadastros' }, { href: '/usuarios', icon: UsersRound, label: 'Usuarios' }]
+    : [...roleNavigation, { href: '/pessoas', icon: UsersRound, label: 'Pessoas' }];
 
   return (
     <>

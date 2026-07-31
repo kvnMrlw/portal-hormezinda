@@ -9,12 +9,16 @@ import { Menu } from '../pages/Menu';
 import { Notices } from '../pages/Notices';
 import { Ideas } from '../pages/Ideas';
 import { Notifications } from '../pages/Notifications';
+import { MySubjects } from '../pages/MySubjects';
+import { MyTasks } from '../pages/MyTasks';
 import { People } from '../pages/People';
 import { PlatformHome } from '../pages/PlatformHome';
 import { Profile } from '../pages/Profile';
 import { PublicProfile } from '../pages/PublicProfile';
 import { Register } from '../pages/Register';
 import { Schedules } from '../pages/Schedules';
+import { Settings } from '../pages/Settings';
+import { TeacherDiary } from '../pages/TeacherDiary';
 import { Users } from '../pages/Users';
 import { ProtectedRoute } from '../routes/ProtectedRoute';
 import { schoolModules } from '../data/schoolModules';
@@ -62,6 +66,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Notifications />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/configuracoes',
+    element: (
+      <ProtectedRoute>
+        <Settings />
       </ProtectedRoute>
     )
   },
@@ -122,6 +134,30 @@ const router = createBrowserRouter([
     )
   },
   {
+    path: '/disciplinas',
+    element: (
+      <ProtectedRoute>
+        <MySubjects />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/tarefas',
+    element: (
+      <ProtectedRoute>
+        <MyTasks />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/diario',
+    element: (
+      <ProtectedRoute allowedRoles={[Cargo.ADMIN, Cargo.DIRETOR, Cargo.COORDENADOR, Cargo.PROFESSOR]}>
+        <TeacherDiary />
+      </ProtectedRoute>
+    )
+  },
+  {
     path: '/usuarios',
     element: (
       <ProtectedRoute allowedRoles={[Cargo.ADMIN]}>
@@ -137,7 +173,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
-  ...schoolModules.filter((module) => module.href !== '/avisos' && module.href !== '/horarios' && module.href !== '/cardapio' && module.href !== '/cursos' && module.href !== '/ideias').map((module) => ({
+  ...schoolModules.filter((module) => !['/avisos', '/horarios', '/cardapio', '/cursos', '/ideias', '/disciplinas', '/tarefas', '/diario'].includes(module.href)).map((module) => ({
     path: module.href,
     element: (
       <ProtectedRoute>

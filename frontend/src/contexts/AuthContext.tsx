@@ -1,15 +1,13 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { AUTH_SESSION_EXPIRED_EVENT, api } from '../services/api';
+import { AUTH_SESSION_EXPIRED_EVENT, REFRESH_TOKEN_KEY, TOKEN_KEY, USER_KEY, api, clearStoredSession } from '../services/api';
 import { updateMyProfile } from '../services/users';
 import type { ApiResponse, AuthResponse, ProfileUpdatePayload, User } from '../types/auth';
 import { AuthContext, type LoginCredentials, type RegisterPayload } from './auth-context';
 
-const TOKEN_KEY = 'portal_hormezinda_token';
-const USER_KEY = 'portal_hormezinda_user';
-
 function persistSession(authResponse: AuthResponse): void {
   localStorage.setItem(TOKEN_KEY, authResponse.token);
+  localStorage.setItem(REFRESH_TOKEN_KEY, authResponse.refreshToken);
   localStorage.setItem(USER_KEY, JSON.stringify(authResponse.usuario));
 }
 
@@ -32,11 +30,29 @@ function readStoredUser(): User | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState<User | null>(() => readStoredUser());
-  const [isLoading, setIsLoading] = useState(Boolean(token));
+  const [isLoading, setIsLoading] = useState(() => Boolean(localStorage.getItem(TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY)));
 
   useEffect(() => {
     async function loadCurrentUser() {
       if (!token) {
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+        if (refreshToken) {
+          try {
+            const response = await api.post<ApiResponse<AuthResponse>>('/auth/refresh', { refreshToken });
+            persistSession(response.data.data);
+            setToken(response.data.data.token);
+            setUser(response.data.data.usuario);
+          } catch {
+            clearStoredSession();
+            setToken(null);
+            setUser(null);
+            setIsLoading(false);
+          }
+
+          return;
+        }
+
         setIsLoading(false);
         return;
       }
@@ -44,10 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const response = await api.get<ApiResponse<{ usuario: User }>>('/auth/me');
         setUser(response.data.data.usuario);
+        setToken(localStorage.getItem(TOKEN_KEY));
         localStorage.setItem(USER_KEY, JSON.stringify(response.data.data.usuario));
       } catch {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        clearStoredSession();
         setToken(null);
         setUser(null);
       } finally {
@@ -91,8 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    clearStoredSession();
     setToken(null);
     setUser(null);
   }

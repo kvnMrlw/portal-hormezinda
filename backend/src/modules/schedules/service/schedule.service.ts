@@ -72,7 +72,7 @@ function toPublicSubject(subject: SubjectDocument) {
   };
 }
 
-function toPublicScheduleEntry(schedule: ScheduleDocument): PublicScheduleEntry {
+function toPublicScheduleEntry(schedule: ScheduleDocument): PublicScheduleEntry | null {
   const disciplina = isSubjectDocument(schedule.disciplina) ? toPublicSubject(schedule.disciplina) : undefined;
 
   const professor = isUserDocument(schedule.professor) ? toPublicUser(schedule.professor) : undefined;
@@ -88,7 +88,7 @@ function toPublicScheduleEntry(schedule: ScheduleDocument): PublicScheduleEntry 
       }
     : undefined;
   if (!isClassGroupDocument(schedule.turma)) {
-    throw new AppError('Turma do horario nao carregada', 500);
+    return null;
   }
 
   const turma = {
@@ -116,6 +116,14 @@ function toPublicScheduleEntry(schedule: ScheduleDocument): PublicScheduleEntry 
     turma,
     atualizadoEm: schedule.atualizadoEm
   };
+}
+
+function toPublicScheduleEntries(schedules: ScheduleDocument[]): PublicScheduleEntry[] {
+  return schedules.flatMap((schedule) => {
+    const publicSchedule = toPublicScheduleEntry(schedule);
+
+    return publicSchedule ? [publicSchedule] : [];
+  });
 }
 
 function getConflictMessage(conflicts: ScheduleDocument[], data: ScheduleEntryPayload): string {
@@ -156,13 +164,13 @@ export class ScheduleService {
     if (viewer.cargo === Cargo.ADMIN || viewer.cargo === Cargo.DIRETOR || viewer.cargo === Cargo.COORDENADOR) {
       const schedules = await this.scheduleRepository.list(filters);
 
-      return schedules.map(toPublicScheduleEntry);
+      return toPublicScheduleEntries(schedules);
     }
 
     if (viewer.cargo === Cargo.PROFESSOR) {
       const schedules = await this.scheduleRepository.listForProfessor(viewer.id, filters);
 
-      return schedules.map(toPublicScheduleEntry);
+      return toPublicScheduleEntries(schedules);
     }
 
     if (!viewer.turma) {
@@ -177,14 +185,20 @@ export class ScheduleService {
 
     const schedules = await this.scheduleRepository.listForStudent(classGroup.id, filters);
 
-    return schedules.map(toPublicScheduleEntry);
+    return toPublicScheduleEntries(schedules);
   }
 
   async create(data: ScheduleEntryPayload): Promise<PublicScheduleEntry> {
     await this.validatePayload(data);
     const schedule = await this.scheduleRepository.create(data);
 
-    return toPublicScheduleEntry(schedule);
+    const publicSchedule = toPublicScheduleEntry(schedule);
+
+    if (!publicSchedule) {
+      throw new AppError('Turma do horario nao carregada', 500);
+    }
+
+    return publicSchedule;
   }
 
   async update(id: string, data: ScheduleEntryPayload): Promise<PublicScheduleEntry | null> {
@@ -224,7 +238,13 @@ export class ScheduleService {
 
     const schedule = await this.scheduleRepository.create(payload);
 
-    return toPublicScheduleEntry(schedule);
+    const publicSchedule = toPublicScheduleEntry(schedule);
+
+    if (!publicSchedule) {
+      throw new AppError('Turma do horario nao carregada', 500);
+    }
+
+    return publicSchedule;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -259,7 +279,7 @@ export class ScheduleService {
 
     const copiedSchedules = await this.scheduleRepository.copyWeek(data.origemTurmaId, data.destinoTurmaId);
 
-    return copiedSchedules.map(toPublicScheduleEntry);
+    return toPublicScheduleEntries(copiedSchedules);
   }
 
   async reorder(data: ReorderSchedulePayload): Promise<PublicScheduleEntry[]> {
@@ -271,7 +291,7 @@ export class ScheduleService {
 
     const schedules = await this.scheduleRepository.reorder(data.turmaId, data.diaSemana, data.ids);
 
-    return schedules.map(toPublicScheduleEntry);
+    return toPublicScheduleEntries(schedules);
   }
 
   private async validatePayload(data: ScheduleEntryPayload, excludeId?: string): Promise<void> {

@@ -17,6 +17,13 @@ export enum NotificationType {
   POST_REACTION = 'POST_REACTION',
   IDEA_REACTION = 'IDEA_REACTION',
   IDEA_SUPPORT = 'IDEA_SUPPORT',
+  ACADEMIC_CONTENT = 'ACADEMIC_CONTENT',
+  ACADEMIC_TASK = 'ACADEMIC_TASK',
+  ACADEMIC_TASK_UPDATED = 'ACADEMIC_TASK_UPDATED',
+  ACADEMIC_SUBMISSION = 'ACADEMIC_SUBMISSION',
+  ACADEMIC_SUBJECT_UPDATED = 'ACADEMIC_SUBJECT_UPDATED',
+  BIRTHDAY_TODAY = 'BIRTHDAY_TODAY',
+  BIRTHDAY_MESSAGE = 'BIRTHDAY_MESSAGE',
   FUTURE_COMMENT = 'FUTURE_COMMENT'
 }
 
@@ -26,6 +33,12 @@ export enum NotificationEntityType {
   POST = 'POST',
   COURSE = 'COURSE',
   IDEA = 'IDEA',
+  SUBJECT = 'SUBJECT',
+  LESSON_CONTENT = 'LESSON_CONTENT',
+  TASK = 'TASK',
+  SUBMISSION = 'SUBMISSION',
+  BIRTHDAY = 'BIRTHDAY',
+  BIRTHDAY_MESSAGE = 'BIRTHDAY_MESSAGE',
   COMMENT = 'COMMENT'
 }
 
@@ -38,6 +51,7 @@ export type Notification = {
   titulo: string;
   descricao: string;
   url: string;
+  expiraEm?: Date;
   lida: boolean;
   criadaEm: Date;
   atualizadaEm: Date;
@@ -57,6 +71,7 @@ export type CreateNotificationData = {
   titulo: string;
   tipo: NotificationType;
   url: string;
+  expiraEm?: Date;
   usuarioId: string;
 };
 

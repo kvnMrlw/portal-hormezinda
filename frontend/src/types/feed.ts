@@ -53,6 +53,7 @@ export type FeedStory = {
   expiraEm: string;
   data: string;
   vistoPeloUsuario: boolean;
+  visualizacoesQuantidade?: number;
 };
 
 export type CreatePostPayload = {

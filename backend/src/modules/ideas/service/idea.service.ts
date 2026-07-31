@@ -12,7 +12,6 @@ import type { IdeaDocument } from '../models/idea.model';
 import { IdeaRepository } from '../repository/idea.repository';
 import {
   IdeaStatus,
-  type Idea,
   type IdeaAdminPayload,
   type IdeaFilters,
   type IdeaImage,
@@ -85,6 +84,17 @@ function getStatusNotificationType(status: IdeaStatus): NotificationType | undef
   return undefined;
 }
 
+function canRespondOfficially(user: PublicUser): boolean {
+  return (
+    user.cargo === Cargo.ADMIN ||
+    user.cargo === Cargo.DIRETOR ||
+    user.cargo === Cargo.COORDENADOR ||
+    user.cargo === Cargo.PROFESSOR ||
+    user.cargo === Cargo.GREMIO ||
+    user.pertenceGremio
+  );
+}
+
 export class IdeaService {
   constructor(
     private readonly ideaRepository = new IdeaRepository(),
@@ -143,8 +153,8 @@ export class IdeaService {
     return idea ? toPublicIdea(idea, viewer.id) : null;
   }
 
-  async updateAdmin(id: string, admin: PublicUser, data: IdeaAdminPayload): Promise<PublicIdea | null> {
-    if (admin.cargo !== Cargo.ADMIN) {
+  async updateAdmin(id: string, responder: PublicUser, data: IdeaAdminPayload): Promise<PublicIdea | null> {
+    if (!canRespondOfficially(responder)) {
       throw new AppError('Acesso nao autorizado', 403);
     }
 
@@ -154,16 +164,17 @@ export class IdeaService {
 
     const previousStatus = currentIdea.status;
     const hadOfficialResponse = Boolean(currentIdea.respostaOficial?.texto);
-    const idea = await this.ideaRepository.updateAdmin(id, admin.id, data);
+    const allowedData = responder.cargo === Cargo.ADMIN ? data : { respostaOficial: data.respostaOficial };
+    const idea = await this.ideaRepository.updateAdmin(id, responder.id, allowedData);
 
     if (!idea) return null;
 
     const authorId = getAuthorId(idea);
-    const statusNotificationType = data.status && data.status !== previousStatus ? getStatusNotificationType(data.status) : undefined;
+    const statusNotificationType = allowedData.status && allowedData.status !== previousStatus ? getStatusNotificationType(allowedData.status) : undefined;
 
     if (statusNotificationType) {
       void this.notificationService.notifyUsers([authorId], {
-        autorId: admin.id,
+        autorId: responder.id,
         descricao: `Sua ideia "${idea.titulo}" teve o status atualizado.`,
         entidadeId: idea.id,
         entidadeTipo: NotificationEntityType.IDEA,
@@ -173,10 +184,10 @@ export class IdeaService {
       });
     }
 
-    if (data.respostaOficial && !hadOfficialResponse) {
+    if (allowedData.respostaOficial && !hadOfficialResponse) {
       void this.notificationService.notifyUsers([authorId], {
-        autorId: admin.id,
-        descricao: data.respostaOficial.slice(0, 180),
+        autorId: responder.id,
+        descricao: allowedData.respostaOficial.slice(0, 180),
         entidadeId: idea.id,
         entidadeTipo: NotificationEntityType.IDEA,
         tipo: NotificationType.IDEA_RESPONSE,
@@ -185,7 +196,7 @@ export class IdeaService {
       });
     }
 
-    return toPublicIdea(idea, admin.id);
+    return toPublicIdea(idea, responder.id);
   }
 
   async toggleSupport(id: string, viewer: PublicUser): Promise<PublicIdea | null> {

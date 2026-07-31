@@ -1,8 +1,11 @@
 import {
   CalendarDays,
   BookOpenCheck,
+  BookMarked,
+  ClipboardList,
   Lightbulb,
   Megaphone,
+  NotebookTabs,
   Utensils
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -50,5 +53,26 @@ export const schoolModules: SchoolModule[] = [
     href: '/cursos',
     icon: BookOpenCheck,
     accent: 'bg-rose-50 text-rose-600 ring-rose-100'
+  },
+  {
+    title: 'Minhas Disciplinas',
+    description: 'Disciplinas, professores, turmas e conteudos.',
+    href: '/disciplinas',
+    icon: BookMarked,
+    accent: 'bg-emerald-50 text-emerald-600 ring-emerald-100'
+  },
+  {
+    title: 'Minhas Tarefas',
+    description: 'Atividades pendentes, entregues e atrasadas.',
+    href: '/tarefas',
+    icon: ClipboardList,
+    accent: 'bg-amber-50 text-amber-600 ring-amber-100'
+  },
+  {
+    title: 'Diario do Professor',
+    description: 'Chamada, conteudos, tarefas e entregas.',
+    href: '/diario',
+    icon: NotebookTabs,
+    accent: 'bg-violet-50 text-violet-600 ring-violet-100'
   }
 ];

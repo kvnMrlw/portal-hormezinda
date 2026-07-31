@@ -1,4 +1,4 @@
-import { Loader2, Trash2, X } from 'lucide-react';
+import { Eye, Loader2, Trash2, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -139,7 +139,12 @@ export function StoryViewer({
           <div className="flex items-center justify-between gap-3 text-white">
             <div>
               <p className="text-sm font-semibold">{group.authorName}</p>
-              <p className="text-xs text-white/70">Story</p>
+              <p className="flex items-center gap-1 text-xs text-white/70">
+                Story
+                {story.visualizacoesQuantidade !== undefined ? (
+                  <span className="inline-flex items-center gap-1">· <Eye className="h-3.5 w-3.5" /> {story.visualizacoesQuantidade}</span>
+                ) : null}
+              </p>
             </div>
             <div className="flex items-center gap-2">
               {canDeleteStory?.(story) ? (

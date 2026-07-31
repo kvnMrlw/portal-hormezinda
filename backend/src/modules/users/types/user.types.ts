@@ -36,6 +36,22 @@ export enum Sexo {
   FEMININO = 'FEMININO'
 }
 
+export type PrivacyPreferences = {
+  mostrarAniversario: boolean;
+  mostrarBanner: boolean;
+  mostrarBio: boolean;
+  mostrarTelefone: boolean;
+};
+
+export type NotificationPreferences = {
+  aniversarios: boolean;
+  avisos: boolean;
+  cursos: boolean;
+  ideias: boolean;
+  publicacoes: boolean;
+  stories: boolean;
+};
+
 export const turmasPorTurno: Record<Turno, Turma[]> = {
   [Turno.MATUTINO]: [
     Turma.PRIMEIRO_A,
@@ -73,7 +89,10 @@ export type User = {
   fotoPerfil: string;
   bannerPerfil: string;
   bio: string;
+  telefone?: string;
   redeSocial: string;
+  privacidade: PrivacyPreferences;
+  notificacoes: NotificationPreferences;
   ativo: boolean;
   criadoEm: Date;
   atualizadoEm: Date;
@@ -105,4 +124,7 @@ export type AdminUpdateUserData = Partial<
   >
 >;
 
-export type UpdateProfileData = Partial<Pick<User, 'fotoPerfil' | 'bannerPerfil' | 'bio' | 'redeSocial' | 'senha'>>;
+export type UpdateProfileData = Partial<Pick<User, 'fotoPerfil' | 'bannerPerfil' | 'bio' | 'telefone' | 'redeSocial' | 'senha'>> & {
+  notificacoes?: Partial<NotificationPreferences>;
+  privacidade?: Partial<PrivacyPreferences>;
+};
