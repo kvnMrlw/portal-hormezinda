@@ -23,12 +23,13 @@ export function Profile() {
     async function loadProfileExtras() {
       if (!user) return;
 
-      const [loadedProfile, loadedIdeas, loadedNotifications, loadedAcademicSummary] = await Promise.all([
-        getPublicProfile(user.id, { postsLimit: 6 }),
-        listUserIdeas(user.id),
-        listNotifications({ limit: 5 }),
-        getAcademicProfileSummary().catch(() => undefined)
-      ]);
+      const [loadedProfile, loadedIdeas, loadedNotifications, loadedAcademicSummary] =
+        await Promise.all([
+          getPublicProfile(user.id, { postsLimit: 6 }),
+          listUserIdeas(user.id),
+          listNotifications({ limit: 5 }),
+          getAcademicProfileSummary().catch(() => undefined),
+        ]);
 
       setProfile(loadedProfile);
       setAcademicSummary(loadedAcademicSummary);
@@ -52,7 +53,9 @@ export function Profile() {
           stories={profile?.stories}
           user={user}
         />
-      ) : <Loading className="min-h-64" />}
+      ) : (
+        <Loading className="min-h-64" />
+      )}
     </AppShell>
   );
 }

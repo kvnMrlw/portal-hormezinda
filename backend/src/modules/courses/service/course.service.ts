@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../middlewares/error.middleware';
+import { runSafely } from '../../../utils/async';
 import { removeUploadedFiles } from '../../../utils/imageUpload';
 import type { UserDocument } from '../../users/models/user.model';
 import { UserRepository } from '../../users/repository/user.repository';
@@ -150,7 +151,7 @@ export class CourseService {
     const hydratedCourse = await this.courseRepository.updateAssets(course.id, this.mergeAssets(course, cover, assets));
     const publicCourse = toPublicCourse(hydratedCourse ?? course);
 
-    void this.notificationService.notifyAllActive({
+    runSafely(this.notificationService.notifyAllActive({
       autorId: viewer.id,
       descricao: data.descricao.slice(0, 180),
       entidadeId: publicCourse.id,
@@ -158,7 +159,7 @@ export class CourseService {
       tipo: data.tipo === CourseType.PLATFORM ? NotificationType.NEW_PLATFORM : NotificationType.NEW_COURSE,
       titulo: data.tipo === CourseType.PLATFORM ? `Nova plataforma: ${data.titulo}` : `Novo curso: ${data.titulo}`,
       url: `/cursos?curso=${publicCourse.id}`
-    });
+    }), 'courses.create.notifyAllActive');
 
     return publicCourse;
   }

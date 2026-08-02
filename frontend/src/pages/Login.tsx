@@ -1,17 +1,40 @@
-import { ArrowRight, LockKeyhole, UserRound } from 'lucide-react';
-import { type FormEvent, useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  Atom,
+  Backpack,
+  BookOpen,
+  Calculator,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  LockKeyhole,
+  Pencil,
+  Ruler,
+  ShieldCheck,
+  TriangleAlert,
+  UserRound,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { type ComponentType, type FormEvent, useEffect, useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { ZodError } from 'zod';
 
-import { AuthLayout } from '../components/layout/AuthLayout';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
-import { PasswordInput } from '../components/ui/PasswordInput';
+import { SchoolLogo } from '../components/ui/SchoolLogo';
 import { useAuth } from '../contexts/useAuth';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
+import './Login.css';
 
 type LoginErrors = Partial<Record<keyof LoginFormData | 'form', string>>;
+type IconComponent = ComponentType<{ className?: string; strokeWidth?: number }>;
+
+const backgroundIcons: Array<{ Icon: IconComponent; className: string }> = [
+  { Icon: BookOpen, className: 'login-bg-icon login-bg-icon-book' },
+  { Icon: Pencil, className: 'login-bg-icon login-bg-icon-pencil' },
+  { Icon: Ruler, className: 'login-bg-icon login-bg-icon-ruler' },
+  { Icon: Calculator, className: 'login-bg-icon login-bg-icon-calculator' },
+  { Icon: Atom, className: 'login-bg-icon login-bg-icon-atom' },
+  { Icon: Backpack, className: 'login-bg-icon login-bg-icon-backpack' },
+];
 
 function zodErrorsToFormErrors(error: ZodError): LoginErrors {
   return error.issues.reduce<LoginErrors>((errors, issue) => {
@@ -25,12 +48,12 @@ function zodErrorsToFormErrors(error: ZodError): LoginErrors {
   }, {});
 }
 
-// Pagina de login por usuario e senha.
 export function Login() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({ usuario: '', senha: '' });
   const [errors, setErrors] = useState<LoginErrors>({});
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -65,51 +88,135 @@ export function Login() {
     return <Navigate replace to="/home" />;
   }
 
+  const usuarioErrorId = errors.usuario ? 'usuario-error' : undefined;
+  const senhaErrorId = errors.senha ? 'senha-error' : undefined;
+
   return (
-    <AuthLayout subtitle="Entre com o usuario criado no Portal Hormezinda." title="Bem-vindo de volta.">
-      <Card className="mx-auto w-full max-w-md">
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div>
-            <h2 className="text-2xl font-semibold">Entrar</h2>
-            <p className="mt-2 text-sm text-slate-500">Acesso com usuario e senha.</p>
+    <main className="login-page">
+      <div className="login-grid" />
+      <div className="login-circle login-circle-top" />
+      <div className="login-circle login-circle-bottom" />
+      <div className="login-line login-line-left" />
+      <div className="login-line login-line-right" />
+
+      <svg aria-hidden="true" className="login-geometry" fill="none" preserveAspectRatio="none" viewBox="0 0 1440 900">
+        <path d="M72 706C246 598 348 648 508 526C668 402 756 274 948 302C1110 326 1220 250 1376 136" />
+        <path d="M116 214H286L364 138H516" />
+        <path d="M1008 720H1142L1200 654H1334" />
+      </svg>
+
+      {backgroundIcons.map(({ Icon, className }) => (
+        <Icon aria-hidden="true" className={className} key={className} strokeWidth={1.2} />
+      ))}
+
+      <motion.section
+        animate={{ opacity: 1, y: 0 }}
+        className="login-card"
+        initial={{ opacity: 0, y: 18 }}
+        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="login-logo-halo">
+          <div className="login-logo">
+            <SchoolLogo />
+          </div>
+        </div>
+
+        <div className="login-heading">
+          <h1>Portal Hormezinda</h1>
+          <p className="login-kicker">Portal Escolar</p>
+          <p className="login-description">Utilize seu usuario e senha para acessar o portal.</p>
+        </div>
+
+        <form className="login-form" noValidate onSubmit={handleSubmit}>
+          <label className="login-field" htmlFor="usuario">
+            <span>Usuario</span>
+            <div className="login-input-shell">
+              <UserRound className="login-input-icon" />
+              <input
+                aria-describedby={usuarioErrorId}
+                aria-invalid={Boolean(errors.usuario)}
+                autoComplete="username"
+                autoFocus
+                disabled={isSubmitting}
+                id="usuario"
+                name="usuario"
+                onChange={(event) => {
+                  setFormData((current) => ({ ...current, usuario: event.target.value }));
+                  setErrors((current) => ({ ...current, usuario: undefined, form: undefined }));
+                }}
+                placeholder="seu.usuario"
+                value={formData.usuario}
+              />
+            </div>
+            {errors.usuario ? (
+              <span className="login-error" id="usuario-error">
+                <TriangleAlert />
+                {errors.usuario}
+              </span>
+            ) : null}
+          </label>
+
+          <label className="login-field" htmlFor="senha">
+            <span>Senha</span>
+            <div className="login-input-shell">
+              <LockKeyhole className="login-input-icon" />
+              <input
+                aria-describedby={senhaErrorId}
+                aria-invalid={Boolean(errors.senha)}
+                autoComplete="current-password"
+                disabled={isSubmitting}
+                id="senha"
+                name="senha"
+                onChange={(event) => {
+                  setFormData((current) => ({ ...current, senha: event.target.value }));
+                  setErrors((current) => ({ ...current, senha: undefined, form: undefined }));
+                }}
+                placeholder="Sua senha"
+                type={isPasswordVisible ? 'text' : 'password'}
+                value={formData.senha}
+              />
+              <button
+                aria-label={isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                className="login-visibility-button"
+                disabled={isSubmitting}
+                onClick={() => setIsPasswordVisible((current) => !current)}
+                type="button"
+              >
+                {isPasswordVisible ? <EyeOff /> : <Eye />}
+              </button>
+            </div>
+            {errors.senha ? (
+              <span className="login-error" id="senha-error">
+                <TriangleAlert />
+                {errors.senha}
+              </span>
+            ) : null}
+          </label>
+
+          <div className="login-forgot-row">
+            <a href="#" onClick={(event) => event.preventDefault()}>
+              Esqueci minha senha
+            </a>
           </div>
 
-          <Input
-            autoComplete="username"
-            error={errors.usuario}
-            label="Usuario"
-            name="usuario"
-            onChange={(event) => setFormData((current) => ({ ...current, usuario: event.target.value }))}
-            placeholder="seu.usuario"
-            value={formData.usuario}
-          />
+          {errors.form ? (
+            <p className="login-alert" role="alert">
+              <TriangleAlert />
+              <span>{errors.form}</span>
+            </p>
+          ) : null}
 
-          <PasswordInput
-            autoComplete="current-password"
-            error={errors.senha}
-            label="Senha"
-            name="senha"
-            onChange={(event) => setFormData((current) => ({ ...current, senha: event.target.value }))}
-            placeholder="Sua senha"
-            value={formData.senha}
-          />
-
-          {errors.form ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{errors.form}</p> : null}
-
-          <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting ? <LockKeyhole className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-            {isSubmitting ? 'Entrando...' : 'Entrar'}
-          </Button>
-
-          <Link
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-brand-navy transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
-            to="/cadastro"
-          >
-            <UserRound className="h-4 w-4" />
-            Criar Conta
-          </Link>
+          <button className="login-button" disabled={isSubmitting} type="submit">
+            {isSubmitting ? <LoaderCircle className="login-spin" /> : <ArrowRight />}
+            <span>{isSubmitting ? 'Entrando...' : 'Entrar'}</span>
+          </button>
         </form>
-      </Card>
-    </AuthLayout>
+
+        <div className="login-safe-box">
+          <ShieldCheck />
+          <span>Acesso seguro ao Portal Hormezinda</span>
+        </div>
+      </motion.section>
+    </main>
   );
 }

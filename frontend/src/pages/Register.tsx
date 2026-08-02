@@ -17,7 +17,7 @@ import {
   registerStepOneSchema,
   registerStepThreeSchema,
   registerStepTwoSchema,
-  type RegisterFormData
+  type RegisterFormData,
 } from '../schemas/auth.schema';
 import { Turno, Turma, turmasPorTurno } from '../types/auth';
 
@@ -30,7 +30,7 @@ const initialFormData: RegisterFormData = {
   turma: Turma.PRIMEIRO_A,
   usuario: '',
   senha: '',
-  confirmarSenha: ''
+  confirmarSenha: '',
 };
 
 function zodErrorsToFormErrors(error: ZodError): RegisterErrors {
@@ -61,13 +61,21 @@ export function Register() {
     }
   }, [isAuthenticated, navigate]);
 
-  function updateField<TField extends keyof RegisterFormData>(field: TField, value: RegisterFormData[TField]) {
+  function updateField<TField extends keyof RegisterFormData>(
+    field: TField,
+    value: RegisterFormData[TField],
+  ) {
     setFormData((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined, form: undefined }));
   }
 
   function validateCurrentStep(): boolean {
-    const schemas = [registerStepOneSchema, registerStepTwoSchema, registerStepThreeSchema, registerStepFourSchema];
+    const schemas = [
+      registerStepOneSchema,
+      registerStepTwoSchema,
+      registerStepThreeSchema,
+      registerStepFourSchema,
+    ];
     const parsedData = schemas[step - 1].safeParse(formData);
 
     if (!parsedData.success) {
@@ -102,7 +110,7 @@ export function Register() {
         senha: parsedData.data.senha,
         dataNascimento: normalizeDateInput(parsedData.data.dataNascimento),
         turno: parsedData.data.turno,
-        turma: parsedData.data.turma
+        turma: parsedData.data.turma,
       });
       navigate('/home', { replace: true });
     } catch {
@@ -117,7 +125,10 @@ export function Register() {
   }
 
   return (
-    <AuthLayout subtitle="Crie seu acesso usando usuario e senha, sem e-mail." title="Crie sua conta.">
+    <AuthLayout
+      subtitle="Crie seu acesso usando usuario e senha, sem e-mail."
+      title="Crie sua conta."
+    >
       <Card className="mx-auto w-full max-w-lg">
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="flex items-center justify-between gap-4">
@@ -132,7 +143,13 @@ export function Register() {
 
           {step === 1 ? (
             <div className="space-y-4">
-              <Input label="Nome Completo" name="nomeCompleto" error={errors.nomeCompleto} value={formData.nomeCompleto} onChange={(event) => updateField('nomeCompleto', event.target.value)} />
+              <Input
+                label="Nome Completo"
+                name="nomeCompleto"
+                error={errors.nomeCompleto}
+                value={formData.nomeCompleto}
+                onChange={(event) => updateField('nomeCompleto', event.target.value)}
+              />
               <DatePicker
                 error={errors.dataNascimento}
                 label="Data de Nascimento"
@@ -158,7 +175,9 @@ export function Register() {
                   {turno}
                 </button>
               ))}
-              {errors.turno ? <p className="text-sm text-red-600 sm:col-span-2">{errors.turno}</p> : null}
+              {errors.turno ? (
+                <p className="text-sm text-red-600 sm:col-span-2">{errors.turno}</p>
+              ) : null}
             </div>
           ) : null}
 
@@ -174,22 +193,50 @@ export function Register() {
                   {turma}
                 </button>
               ))}
-              {errors.turma ? <p className="col-span-2 text-sm text-red-600 sm:col-span-4">{errors.turma}</p> : null}
+              {errors.turma ? (
+                <p className="col-span-2 text-sm text-red-600 sm:col-span-4">{errors.turma}</p>
+              ) : null}
             </div>
           ) : null}
 
           {step === 4 ? (
             <div className="space-y-4">
-              <Input label="Usuario" name="usuario" error={errors.usuario} placeholder="seu.usuario" value={formData.usuario} onChange={(event) => updateField('usuario', event.target.value)} />
-              <PasswordInput label="Senha" name="senha" error={errors.senha} value={formData.senha} onChange={(event) => updateField('senha', event.target.value)} />
-              <PasswordInput label="Confirmar Senha" name="confirmarSenha" error={errors.confirmarSenha} value={formData.confirmarSenha} onChange={(event) => updateField('confirmarSenha', event.target.value)} />
+              <Input
+                label="Usuario"
+                name="usuario"
+                error={errors.usuario}
+                placeholder="seu.usuario"
+                value={formData.usuario}
+                onChange={(event) => updateField('usuario', event.target.value)}
+              />
+              <PasswordInput
+                label="Senha"
+                name="senha"
+                error={errors.senha}
+                value={formData.senha}
+                onChange={(event) => updateField('senha', event.target.value)}
+              />
+              <PasswordInput
+                label="Confirmar Senha"
+                name="confirmarSenha"
+                error={errors.confirmarSenha}
+                value={formData.confirmarSenha}
+                onChange={(event) => updateField('confirmarSenha', event.target.value)}
+              />
             </div>
           ) : null}
 
-          {errors.form ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{errors.form}</p> : null}
+          {errors.form ? (
+            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{errors.form}</p>
+          ) : null}
 
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-            <Button disabled={step === 1 || isSubmitting} onClick={() => setStep((current) => Math.max(current - 1, 1))} type="button" variant="secondary">
+            <Button
+              disabled={step === 1 || isSubmitting}
+              onClick={() => setStep((current) => Math.max(current - 1, 1))}
+              type="button"
+              variant="secondary"
+            >
               <ArrowLeft className="h-4 w-4" />
               Voltar
             </Button>

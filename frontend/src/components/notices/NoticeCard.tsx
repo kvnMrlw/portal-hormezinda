@@ -1,13 +1,4 @@
-import {
-  CalendarClock,
-  Edit3,
-  EyeOff,
-  Pin,
-  PinOff,
-  Power,
-  Trash2,
-  UserRound
-} from 'lucide-react';
+import { CalendarClock, Edit3, EyeOff, Pin, PinOff, Power, Trash2, UserRound } from 'lucide-react';
 
 import { Button } from '../ui/Button';
 import { resolveUploadUrl } from '../../services/notices';
@@ -33,7 +24,7 @@ function formatDate(value?: string): string {
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: 'short',
-    year: 'numeric'
+    year: 'numeric',
   }).format(new Date(value));
 }
 
@@ -45,7 +36,15 @@ function isImageAttachment(attachment: NoticeAttachment): boolean {
   return attachment.tipo.startsWith('image/');
 }
 
-export function NoticeCard({ canManage, isAdmin, notice, onDelete, onEdit, onToggleActive, onTogglePin }: NoticeCardProps) {
+export function NoticeCard({
+  canManage,
+  isAdmin,
+  notice,
+  onDelete,
+  onEdit,
+  onToggleActive,
+  onTogglePin,
+}: NoticeCardProps) {
   const Icon = categoryIcons[notice.categoria];
   const expired = isExpired(notice);
   const imageAttachments = notice.anexos.filter(isImageAttachment);
@@ -53,9 +52,9 @@ export function NoticeCard({ canManage, isAdmin, notice, onDelete, onEdit, onTog
   return (
     <article
       className={cn(
-        'group rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-soft sm:p-6',
+        'group rounded-3xl border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80 transition duration-200 hover:-translate-y-0.5 hover:shadow-soft sm:p-6',
         notice.fixado && 'border-amber-200 bg-amber-50/30',
-        (!notice.ativo || expired) && isAdmin && 'bg-slate-50/80'
+        (!notice.ativo || expired) && isAdmin && 'bg-slate-50/80',
       )}
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
@@ -71,7 +70,12 @@ export function NoticeCard({ canManage, isAdmin, notice, onDelete, onEdit, onTog
                 Fixado
               </span>
             ) : null}
-            <span className={cn('rounded-full px-3 py-1 text-xs font-bold ring-1', priorityStyles[notice.prioridade])}>
+            <span
+              className={cn(
+                'rounded-full px-3 py-1 text-xs font-bold ring-1',
+                priorityStyles[notice.prioridade],
+              )}
+            >
               {priorityLabels[notice.prioridade]}
             </span>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
@@ -84,12 +88,18 @@ export function NoticeCard({ canManage, isAdmin, notice, onDelete, onEdit, onTog
               </span>
             ) : null}
             {isAdmin && expired ? (
-              <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-bold text-zinc-700">Expirado</span>
+              <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-bold text-zinc-700">
+                Expirado
+              </span>
             ) : null}
           </div>
 
-          <h2 className="mt-4 text-2xl font-semibold tracking-normal text-brand-navy">{notice.titulo}</h2>
-          <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">{notice.descricao}</p>
+          <h2 className="mt-4 text-2xl font-semibold tracking-normal text-brand-navy">
+            {notice.titulo}
+          </h2>
+          <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">
+            {notice.descricao}
+          </p>
 
           {imageAttachments.length ? (
             <div className="mt-5 grid gap-3">
@@ -117,7 +127,6 @@ export function NoticeCard({ canManage, isAdmin, notice, onDelete, onEdit, onTog
               {notice.dataFim ? ` ate ${formatDate(notice.dataFim)}` : ''}
             </span>
           </div>
-
         </div>
 
         {canManage ? (
@@ -140,7 +149,9 @@ export function NoticeCard({ canManage, isAdmin, notice, onDelete, onEdit, onTog
                   type="button"
                   variant="secondary"
                 >
-                  <Power className={cn('h-4 w-4', notice.ativo ? 'text-emerald-600' : 'text-slate-400')} />
+                  <Power
+                    className={cn('h-4 w-4', notice.ativo ? 'text-emerald-600' : 'text-slate-400')}
+                  />
                 </Button>
               </>
             ) : null}

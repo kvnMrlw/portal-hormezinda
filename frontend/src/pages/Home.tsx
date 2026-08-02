@@ -8,23 +8,23 @@ const highlights = [
   {
     icon: Users,
     title: 'Comunidade',
-    description: 'Um espaco preparado para aproximar escola, familias e estudantes.'
+    description: 'Um espaco preparado para aproximar escola, familias e estudantes.',
   },
   {
     icon: ShieldCheck,
     title: 'Base segura',
-    description: 'Arquitetura inicial pensada para evoluir com organizacao e confianca.'
+    description: 'Arquitetura inicial pensada para evoluir com organizacao e confianca.',
   },
   {
     icon: Sparkles,
     title: 'Experiencia moderna',
-    description: 'Interface leve, responsiva e pronta para os proximos modulos.'
-  }
+    description: 'Interface leve, responsiva e pronta para os proximos modulos.',
+  },
 ];
 
 export function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-gradient-to-br from-brand-lightGray via-white to-blue-100 text-brand-navy">
+    <main className="min-h-screen overflow-hidden bg-[#f3f6fb] text-brand-navy">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-8 sm:px-10 lg:px-12">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -37,17 +37,17 @@ export function Home() {
 
         <div className="grid flex-1 items-center gap-10 py-12 lg:grid-cols-[1.04fr_0.96fr] lg:py-8">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 0 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.55, ease: 'easeOut' }}
-            className="max-w-3xl"
+            className="max-w-3xl text-brand-navy"
           >
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/75 px-4 py-2 text-sm font-medium text-brand-blue shadow-sm backdrop-blur">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-sm font-medium text-brand-blue shadow-card">
               <Sparkles aria-hidden="true" className="h-4 w-4" />
               Sistema escolar moderno
             </div>
 
-            <h1 className="text-4xl font-bold leading-tight tracking-normal sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold leading-tight tracking-normal text-brand-navy sm:text-5xl lg:text-6xl">
               Portal Hormezinda
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
@@ -56,14 +56,14 @@ export function Home() {
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-blue px-6 py-3 text-base font-semibold text-white shadow-soft transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-portal-blue px-6 py-3 text-base font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-hover focus:outline-none focus:ring-4 focus:ring-blue-200"
                 to="/login"
               >
                 Entrar
                 <ArrowRight aria-hidden="true" className="h-5 w-5" />
               </Link>
               <Link
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white/80 px-6 py-3 text-base font-semibold text-brand-navy shadow-sm transition hover:border-blue-200 hover:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-950/5 bg-white px-6 py-3 text-base font-semibold text-brand-navy shadow-card transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-brand-blue hover:shadow-soft focus:outline-none focus:ring-4 focus:ring-blue-100"
                 to="/cadastro"
               >
                 Criar conta
@@ -72,13 +72,13 @@ export function Home() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 1 }}
+            animate={{ scale: 1 }}
             transition={{ duration: 0.6, delay: 0.12, ease: 'easeOut' }}
             className="relative"
           >
-            <div className="rounded-[2rem] border border-white/80 bg-white/75 p-5 shadow-soft backdrop-blur md:p-6">
-              <div className="rounded-[1.5rem] bg-brand-navy p-5 text-white md:p-6">
+            <div className="rounded-[2rem] border border-slate-950/5 bg-white p-5 shadow-soft ring-1 ring-white/80 md:p-6">
+              <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#0f2447_0%,#0f3f8f_100%)] p-5 text-white shadow-card md:p-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm text-blue-100">Hoje no portal</p>

@@ -29,7 +29,7 @@ export function CreateContentModal({
   isSubmitting,
   onClose,
   onCreatePost,
-  onCreateStory
+  onCreateStory,
 }: CreateContentModalProps) {
   const { user } = useAuth();
   const [mode, setMode] = useState<CreateMode>('choice');
@@ -89,7 +89,7 @@ export function CreateContentModal({
         tipo: image ? StoryKind.IMAGE : StoryKind.TEXT,
         texto: trimmedText,
         fundo: storyBackground,
-        imagem: image
+        imagem: image,
       });
     }
 
@@ -97,7 +97,12 @@ export function CreateContentModal({
   }
 
   return (
-    <Modal className="max-w-xl" isOpen={isOpen} onClose={onClose} title={mode === 'choice' ? 'Criar' : 'Nova criacao'}>
+    <Modal
+      className="max-w-xl"
+      isOpen={isOpen}
+      onClose={onClose}
+      title={mode === 'choice' ? 'Criar' : 'Nova criacao'}
+    >
       {mode === 'choice' ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <button
@@ -107,7 +112,9 @@ export function CreateContentModal({
           >
             <Newspaper className="h-7 w-7 text-brand-blue" />
             <h3 className="mt-4 font-semibold text-brand-navy">Publicacao</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Texto, imagem ou os dois no feed da escola.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Texto, imagem ou os dois no feed da escola.
+            </p>
           </button>
           <button
             className="group rounded-[1.5rem] border border-slate-100 bg-slate-50 p-5 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-soft focus:outline-none focus:ring-4 focus:ring-blue-100"
@@ -116,16 +123,24 @@ export function CreateContentModal({
           >
             <Palette className="h-7 w-7 text-brand-blue" />
             <h3 className="mt-4 font-semibold text-brand-navy">Story</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Imagem ou texto colorido por 24 horas.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Imagem ou texto colorido por 24 horas.
+            </p>
           </button>
         </div>
       ) : (
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="flex items-center gap-3">
-            <Avatar className="h-11 w-11 ring-4 ring-blue-50" name={user?.nomeCompleto} src={getAssetUrl(user?.fotoPerfil)} />
+            <Avatar
+              className="h-11 w-11 ring-4 ring-blue-50"
+              name={user?.nomeCompleto}
+              src={getAssetUrl(user?.fotoPerfil)}
+            />
             <div>
               <p className="font-semibold text-brand-navy">{user?.nomeCompleto}</p>
-              <p className="text-sm text-slate-500">{mode === 'post' ? 'Publicacao no feed' : 'Story por 24 horas'}</p>
+              <p className="text-sm text-slate-500">
+                {mode === 'post' ? 'Publicacao no feed' : 'Story por 24 horas'}
+              </p>
             </div>
           </div>
           <textarea
@@ -152,15 +167,31 @@ export function CreateContentModal({
               <ImagePlus className="h-5 w-5 text-brand-blue" />
               {image ? image.name : 'Adicionar imagem'}
             </span>
-            <input accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" onChange={handleImageChange} type="file" />
+            <input
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="sr-only"
+              onChange={handleImageChange}
+              type="file"
+            />
           </label>
-          {localError || error ? <p className="text-sm font-medium text-red-600">{localError ?? error}</p> : null}
+          {localError || error ? (
+            <p className="text-sm font-medium text-red-600">{localError ?? error}</p>
+          ) : null}
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-            <Button disabled={isSubmitting} onClick={() => setMode('choice')} type="button" variant="secondary">
+            <Button
+              disabled={isSubmitting}
+              onClick={() => setMode('choice')}
+              type="button"
+              variant="secondary"
+            >
               Voltar
             </Button>
             <Button disabled={isSubmitting} type="submit">
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <SendHorizonal className="h-4 w-4" />
+              )}
               Publicar
             </Button>
           </div>

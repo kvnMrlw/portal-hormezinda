@@ -47,18 +47,26 @@ function getInitialState(notice?: Notice | null): NoticeFormState {
     dataInicio: toInputDate(notice?.dataInicio),
     dataFim: notice?.dataFim ? toInputDate(notice.dataFim) : '',
     fixado: notice?.fixado ?? false,
-    ativo: notice?.ativo ?? true
+    ativo: notice?.ativo ?? true,
   };
 }
 
-export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubmit }: NoticeModalProps) {
+export function NoticeModal({
+  isAdmin,
+  isOpen,
+  isSaving,
+  notice,
+  onClose,
+  onSubmit,
+}: NoticeModalProps) {
   const [formState, setFormState] = useState<NoticeFormState>(() => getInitialState(notice));
   const [files, setFiles] = useState<File[]>([]);
   const [removedAttachments, setRemovedAttachments] = useState<string[]>([]);
 
   const visibleAttachments = useMemo(
-    () => (notice?.anexos ?? []).filter((attachment) => !removedAttachments.includes(attachment.url)),
-    [notice?.anexos, removedAttachments]
+    () =>
+      (notice?.anexos ?? []).filter((attachment) => !removedAttachments.includes(attachment.url)),
+    [notice?.anexos, removedAttachments],
   );
 
   useEffect(() => {
@@ -76,7 +84,7 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
       ...formState,
       dataFim: formState.dataFim || (notice?.dataFim ? '' : undefined),
       anexos: files,
-      removerAnexos: removedAttachments
+      removerAnexos: removedAttachments,
     });
   }
 
@@ -102,7 +110,9 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
               label="Titulo"
               maxLength={120}
               name="titulo"
-              onChange={(event) => setFormState((current) => ({ ...current, titulo: event.target.value }))}
+              onChange={(event) =>
+                setFormState((current) => ({ ...current, titulo: event.target.value }))
+              }
               required
               value={formState.titulo}
             />
@@ -113,7 +123,9 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
               label="Descricao"
               maxLength={2000}
               name="descricao"
-              onChange={(event) => setFormState((current) => ({ ...current, descricao: event.target.value }))}
+              onChange={(event) =>
+                setFormState((current) => ({ ...current, descricao: event.target.value }))
+              }
               required
               rows={6}
               value={formState.descricao}
@@ -123,7 +135,12 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
           <Select
             label="Categoria"
             name="categoria"
-            onChange={(event) => setFormState((current) => ({ ...current, categoria: event.target.value as NoticeCategory }))}
+            onChange={(event) =>
+              setFormState((current) => ({
+                ...current,
+                categoria: event.target.value as NoticeCategory,
+              }))
+            }
             value={formState.categoria}
           >
             {categoryOptions.map((category) => (
@@ -136,7 +153,12 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
           <Select
             label="Prioridade"
             name="prioridade"
-            onChange={(event) => setFormState((current) => ({ ...current, prioridade: event.target.value as NoticePriority }))}
+            onChange={(event) =>
+              setFormState((current) => ({
+                ...current,
+                prioridade: event.target.value as NoticePriority,
+              }))
+            }
             value={formState.prioridade}
           >
             {priorityOptions.map((priority) => (
@@ -149,7 +171,9 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
           <Input
             label="Data inicial"
             name="dataInicio"
-            onChange={(event) => setFormState((current) => ({ ...current, dataInicio: event.target.value }))}
+            onChange={(event) =>
+              setFormState((current) => ({ ...current, dataInicio: event.target.value }))
+            }
             required
             type="date"
             value={formState.dataInicio}
@@ -158,7 +182,9 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
           <Input
             label="Data final"
             name="dataFim"
-            onChange={(event) => setFormState((current) => ({ ...current, dataFim: event.target.value }))}
+            onChange={(event) =>
+              setFormState((current) => ({ ...current, dataFim: event.target.value }))
+            }
             type="date"
             value={formState.dataFim}
           />
@@ -170,7 +196,9 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
               <input
                 checked={formState.fixado}
                 className="h-4 w-4 accent-brand-blue"
-                onChange={(event) => setFormState((current) => ({ ...current, fixado: event.target.checked }))}
+                onChange={(event) =>
+                  setFormState((current) => ({ ...current, fixado: event.target.checked }))
+                }
                 type="checkbox"
               />
               Fixado
@@ -179,7 +207,9 @@ export function NoticeModal({ isAdmin, isOpen, isSaving, notice, onClose, onSubm
               <input
                 checked={formState.ativo}
                 className="h-4 w-4 accent-brand-blue"
-                onChange={(event) => setFormState((current) => ({ ...current, ativo: event.target.checked }))}
+                onChange={(event) =>
+                  setFormState((current) => ({ ...current, ativo: event.target.checked }))
+                }
                 type="checkbox"
               />
               Ativo

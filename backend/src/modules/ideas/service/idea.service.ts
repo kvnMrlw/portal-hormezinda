@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../middlewares/error.middleware';
+import { runSafely } from '../../../utils/async';
 import { removeUploadedFiles } from '../../../utils/imageUpload';
 import { reactionEmojis, type ReactionEmoji } from '../../feed/types/feed.types';
 import { NotificationEntityType, NotificationType } from '../../notifications/types/notification.types';
@@ -124,7 +125,7 @@ export class IdeaService {
   async create(author: PublicUser, data: IdeaPayload, image?: IdeaImage): Promise<PublicIdea> {
     const idea = await this.ideaRepository.create(author.id, data, image);
 
-    void this.notificationService.notifyAllActive({
+    runSafely(this.notificationService.notifyAllActive({
       autorId: author.id,
       descricao: data.descricao.slice(0, 180),
       entidadeId: idea.id,
@@ -132,7 +133,7 @@ export class IdeaService {
       tipo: NotificationType.NEW_IDEA,
       titulo: `Nova ideia: ${data.titulo}`,
       url: `/ideias?ideia=${idea.id}`
-    });
+    }), 'ideas.create.notifyAllActive');
 
     return toPublicIdea(idea, author.id);
   }
@@ -173,7 +174,7 @@ export class IdeaService {
     const statusNotificationType = allowedData.status && allowedData.status !== previousStatus ? getStatusNotificationType(allowedData.status) : undefined;
 
     if (statusNotificationType) {
-      void this.notificationService.notifyUsers([authorId], {
+      runSafely(this.notificationService.notifyUsers([authorId], {
         autorId: responder.id,
         descricao: `Sua ideia "${idea.titulo}" teve o status atualizado.`,
         entidadeId: idea.id,
@@ -181,11 +182,11 @@ export class IdeaService {
         tipo: statusNotificationType,
         titulo: 'Atualizacao da sua ideia',
         url: `/ideias?ideia=${idea.id}`
-      });
+      }), 'ideas.updateAdmin.statusNotification');
     }
 
     if (allowedData.respostaOficial && !hadOfficialResponse) {
-      void this.notificationService.notifyUsers([authorId], {
+      runSafely(this.notificationService.notifyUsers([authorId], {
         autorId: responder.id,
         descricao: allowedData.respostaOficial.slice(0, 180),
         entidadeId: idea.id,
@@ -193,7 +194,7 @@ export class IdeaService {
         tipo: NotificationType.IDEA_RESPONSE,
         titulo: 'Resposta oficial em sua ideia',
         url: `/ideias?ideia=${idea.id}`
-      });
+      }), 'ideas.updateAdmin.responseNotification');
     }
 
     return toPublicIdea(idea, responder.id);
@@ -208,7 +209,7 @@ export class IdeaService {
     const authorId = getAuthorId(idea);
 
     if (isNowSupported && authorId !== viewer.id) {
-      void this.notificationService.notifyUsers([authorId], {
+      runSafely(this.notificationService.notifyUsers([authorId], {
         autorId: viewer.id,
         descricao: `${viewer.nomeCompleto} apoiou sua ideia "${idea.titulo}".`,
         entidadeId: idea.id,
@@ -216,7 +217,7 @@ export class IdeaService {
         tipo: NotificationType.IDEA_SUPPORT,
         titulo: 'Sua ideia recebeu apoio',
         url: `/ideias?ideia=${idea.id}`
-      });
+      }), 'ideas.toggleSupport.notifyUsers');
     }
 
     return toPublicIdea(idea, viewer.id);
@@ -230,7 +231,7 @@ export class IdeaService {
     const authorId = getAuthorId(idea);
 
     if (authorId !== viewer.id) {
-      void this.notificationService.notifyUsers([authorId], {
+      runSafely(this.notificationService.notifyUsers([authorId], {
         autorId: viewer.id,
         descricao: `${viewer.nomeCompleto} reagiu com ${emoji} na sua ideia.`,
         entidadeId: idea.id,
@@ -238,7 +239,7 @@ export class IdeaService {
         tipo: NotificationType.IDEA_REACTION,
         titulo: 'Nova reacao na sua ideia',
         url: `/ideias?ideia=${idea.id}`
-      });
+      }), 'ideas.react.notifyUsers');
     }
 
     return toPublicIdea(idea, viewer.id);

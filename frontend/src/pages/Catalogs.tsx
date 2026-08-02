@@ -20,10 +20,17 @@ import {
   listCatalogs,
   updateClassGroup,
   updateRoom,
-  updateSubject
+  updateSubject,
 } from '../services/catalogs';
 import { Cargo, Turno, type User } from '../types/auth';
-import type { ClassGroup, ClassGroupPayload, Room, RoomPayload, Subject, SubjectPayload } from '../types/catalogs';
+import type {
+  ClassGroup,
+  ClassGroupPayload,
+  Room,
+  RoomPayload,
+  Subject,
+  SubjectPayload,
+} from '../types/catalogs';
 import { subjectColors } from '../types/schedules';
 import { cn } from '../lib/utils';
 
@@ -33,7 +40,17 @@ type ModalState =
   | { tab: 'subjects'; item?: Subject }
   | { tab: 'rooms'; item?: Room };
 
-const iconOptions = ['BookOpen', 'Calculator', 'Languages', 'Landmark', 'Map', 'Palette', 'Dumbbell', 'FlaskConical', 'Coffee'];
+const iconOptions = [
+  'BookOpen',
+  'Calculator',
+  'Languages',
+  'Landmark',
+  'Map',
+  'Palette',
+  'Dumbbell',
+  'FlaskConical',
+  'Coffee',
+];
 
 function getErrorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'response' in error) {
@@ -57,7 +74,10 @@ export function Catalogs() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
-  const teachers = useMemo(() => users.filter((user) => user.cargo === Cargo.PROFESSOR && user.ativo), [users]);
+  const teachers = useMemo(
+    () => users.filter((user) => user.cargo === Cargo.PROFESSOR && user.ativo),
+    [users],
+  );
 
   useEffect(() => {
     void load();
@@ -107,11 +127,15 @@ export function Catalogs() {
   return (
     <AppShell>
       <div className="mx-auto max-w-7xl space-y-5">
-        <header className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+        <header className="rounded-3xl border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Administracao</p>
-              <h1 className="mt-1 text-3xl font-semibold tracking-normal text-brand-navy">Cadastros</h1>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                Administracao
+              </p>
+              <h1 className="mt-1 text-3xl font-semibold tracking-normal text-brand-navy">
+                Cadastros
+              </h1>
             </div>
             <Button onClick={() => setModalState({ tab: activeTab })} type="button">
               <Plus className="h-4 w-4" />
@@ -120,11 +144,11 @@ export function Catalogs() {
           </div>
         </header>
 
-        <div className="flex flex-wrap gap-2 rounded-3xl border border-slate-100 bg-white p-2 shadow-sm">
+        <div className="flex flex-wrap gap-2 rounded-3xl border border-slate-950/5 bg-white p-2 shadow-card ring-1 ring-white/80">
           {[
             { icon: GraduationCap, label: 'Turmas', value: 'classes' as const },
             { icon: BookOpen, label: 'Disciplinas', value: 'subjects' as const },
-            { icon: DoorOpen, label: 'Salas', value: 'rooms' as const }
+            { icon: DoorOpen, label: 'Salas', value: 'rooms' as const },
           ].map((tab) => {
             const Icon = tab.icon;
 
@@ -132,7 +156,9 @@ export function Catalogs() {
               <button
                 className={cn(
                   'inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-4 focus:ring-blue-100',
-                  activeTab === tab.value ? 'bg-brand-blue text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-navy'
+                  activeTab === tab.value
+                    ? 'bg-brand-blue text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-brand-navy',
                 )}
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
@@ -145,7 +171,11 @@ export function Catalogs() {
           })}
         </div>
 
-        {error ? <div className="rounded-3xl border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div> : null}
+        {error ? (
+          <div className="rounded-3xl border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">
+            {error}
+          </div>
+        ) : null}
         {isLoading ? <Loading className="min-h-64" /> : null}
         {!isLoading && activeTab === 'classes' ? (
           <CatalogList
@@ -214,28 +244,59 @@ type CatalogListProps<TItem> = {
   renderTitle: (item: TItem) => string;
 };
 
-function CatalogList<TItem extends { id: string }>({ emptyTitle, items, onDelete, onEdit, renderAccent, renderMeta, renderTitle }: CatalogListProps<TItem>) {
+function CatalogList<TItem extends { id: string }>({
+  emptyTitle,
+  items,
+  onDelete,
+  onEdit,
+  renderAccent,
+  renderMeta,
+  renderTitle,
+}: CatalogListProps<TItem>) {
   if (!items.length) {
-    return <EmptyState description="Use o botao de novo cadastro para adicionar o primeiro item." title={emptyTitle} />;
+    return (
+      <EmptyState
+        description="Use o botao de novo cadastro para adicionar o primeiro item."
+        title={emptyTitle}
+      />
+    );
   }
 
   return (
     <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {items.map((item) => (
-        <article className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm" key={item.id}>
+        <article
+          className="rounded-3xl border border-slate-950/5 bg-white p-4 shadow-card ring-1 ring-white/80"
+          key={item.id}
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                {renderAccent ? <span className="h-4 w-4 rounded-full" style={{ backgroundColor: renderAccent(item) }} /> : null}
-                <h2 className="truncate text-lg font-semibold text-brand-navy">{renderTitle(item)}</h2>
+                {renderAccent ? (
+                  <span
+                    className="h-4 w-4 rounded-full"
+                    style={{ backgroundColor: renderAccent(item) }}
+                  />
+                ) : null}
+                <h2 className="truncate text-lg font-semibold text-brand-navy">
+                  {renderTitle(item)}
+                </h2>
               </div>
               <p className="mt-1 text-sm font-medium text-slate-500">{renderMeta(item)}</p>
             </div>
             <div className="flex shrink-0 gap-1">
-              <button className="rounded-full p-2 text-slate-500 transition hover:bg-blue-50 hover:text-brand-blue" onClick={() => onEdit(item)} type="button">
+              <button
+                className="rounded-full p-2 text-slate-500 transition hover:bg-blue-50 hover:text-brand-blue"
+                onClick={() => onEdit(item)}
+                type="button"
+              >
                 <Edit3 className="h-4 w-4" />
               </button>
-              <button className="rounded-full p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600" onClick={() => onDelete(item)} type="button">
+              <button
+                className="rounded-full p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                onClick={() => onDelete(item)}
+                type="button"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
@@ -258,7 +319,17 @@ type CatalogModalProps = {
   teachers: User[];
 };
 
-function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, setError, setIsSaving, teachers }: CatalogModalProps) {
+function CatalogModal({
+  error,
+  isOpen,
+  isSaving,
+  modalState,
+  onClose,
+  reload,
+  setError,
+  setIsSaving,
+  teachers,
+}: CatalogModalProps) {
   const [form, setForm] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -274,7 +345,7 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
         ano: classGroup?.ano ?? '',
         nome: classGroup?.nome ?? '',
         observacoes: classGroup?.observacoes ?? '',
-        turno: classGroup?.turno ?? Turno.MATUTINO
+        turno: classGroup?.turno ?? Turno.MATUTINO,
       });
     }
 
@@ -284,7 +355,7 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
         cor: subject?.cor ?? subjectColors.Matematica,
         icone: subject?.icone ?? 'BookOpen',
         nome: subject?.nome ?? '',
-        professorIds: subject?.professores.map((teacher) => teacher.id).join(',') ?? ''
+        professorIds: subject?.professores.map((teacher) => teacher.id).join(',') ?? '',
       });
     }
 
@@ -294,7 +365,7 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
         bloco: room?.bloco ?? '',
         capacidade: String(room?.capacidade ?? 30),
         nome: room?.nome ?? '',
-        observacoes: room?.observacoes ?? ''
+        observacoes: room?.observacoes ?? '',
       });
     }
   }, [isOpen, modalState]);
@@ -315,9 +386,11 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
           ano: form.ano,
           nome: form.nome,
           observacoes: form.observacoes,
-          turno: form.turno as Turno
+          turno: form.turno as Turno,
         };
-        await (modalState.item ? updateClassGroup(modalState.item.id, payload) : createClassGroup(payload));
+        await (modalState.item
+          ? updateClassGroup(modalState.item.id, payload)
+          : createClassGroup(payload));
       }
 
       if (modalState.tab === 'subjects') {
@@ -325,9 +398,11 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
           cor: form.cor,
           icone: form.icone,
           nome: form.nome,
-          professorIds: form.professorIds ? form.professorIds.split(',').filter(Boolean) : []
+          professorIds: form.professorIds ? form.professorIds.split(',').filter(Boolean) : [],
         };
-        await (modalState.item ? updateSubject(modalState.item.id, payload) : createSubject(payload));
+        await (modalState.item
+          ? updateSubject(modalState.item.id, payload)
+          : createSubject(payload));
       }
 
       if (modalState.tab === 'rooms') {
@@ -335,7 +410,7 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
           bloco: form.bloco,
           capacidade: Number(form.capacidade),
           nome: form.nome,
-          observacoes: form.observacoes
+          observacoes: form.observacoes,
         };
         await (modalState.item ? updateRoom(modalState.item.id, payload) : createRoom(payload));
       }
@@ -352,30 +427,81 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
   return (
     <Modal className="max-w-2xl" isOpen={isOpen} onClose={onClose} title="Cadastro">
       <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
-        {error ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div> : null}
+        {error ? (
+          <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            {error}
+          </div>
+        ) : null}
 
         {modalState?.tab === 'classes' ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Nome" name="nome" onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))} required value={form.nome ?? ''} />
-            <Input label="Ano" name="ano" onChange={(event) => setForm((current) => ({ ...current, ano: event.target.value }))} required value={form.ano ?? ''} />
-            <Select label="Turno" name="turno" onChange={(event) => setForm((current) => ({ ...current, turno: event.target.value }))} value={form.turno ?? Turno.MATUTINO}>
+            <Input
+              label="Nome"
+              name="nome"
+              onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))}
+              required
+              value={form.nome ?? ''}
+            />
+            <Input
+              label="Ano"
+              name="ano"
+              onChange={(event) => setForm((current) => ({ ...current, ano: event.target.value }))}
+              required
+              value={form.ano ?? ''}
+            />
+            <Select
+              label="Turno"
+              name="turno"
+              onChange={(event) =>
+                setForm((current) => ({ ...current, turno: event.target.value }))
+              }
+              value={form.turno ?? Turno.MATUTINO}
+            >
               <option value={Turno.MATUTINO}>Matutino</option>
               <option value={Turno.VESPERTINO}>Vespertino</option>
             </Select>
             <div className="sm:col-span-2">
-              <Textarea label="Observacoes" name="observacoes" onChange={(event) => setForm((current) => ({ ...current, observacoes: event.target.value }))} value={form.observacoes ?? ''} />
+              <Textarea
+                label="Observacoes"
+                name="observacoes"
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, observacoes: event.target.value }))
+                }
+                value={form.observacoes ?? ''}
+              />
             </div>
           </div>
         ) : null}
 
         {modalState?.tab === 'subjects' ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Nome" name="nome" onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))} required value={form.nome ?? ''} />
+            <Input
+              label="Nome"
+              name="nome"
+              onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))}
+              required
+              value={form.nome ?? ''}
+            />
             <label className="block" htmlFor="cor">
               <span className="text-sm font-medium text-brand-navy">Cor</span>
-              <input className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white p-2" id="cor" onChange={(event) => setForm((current) => ({ ...current, cor: event.target.value }))} type="color" value={form.cor ?? '#2563eb'} />
+              <input
+                className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white p-2"
+                id="cor"
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, cor: event.target.value }))
+                }
+                type="color"
+                value={form.cor ?? '#2563eb'}
+              />
             </label>
-            <Select label="Icone" name="icone" onChange={(event) => setForm((current) => ({ ...current, icone: event.target.value }))} value={form.icone ?? 'BookOpen'}>
+            <Select
+              label="Icone"
+              name="icone"
+              onChange={(event) =>
+                setForm((current) => ({ ...current, icone: event.target.value }))
+              }
+              value={form.icone ?? 'BookOpen'}
+            >
               {iconOptions.map((icon) => (
                 <option key={icon} value={icon}>
                   {icon}
@@ -386,11 +512,16 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
               <legend className="px-1 text-sm font-semibold text-brand-navy">Professores</legend>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {teachers.map((teacher) => {
-                  const selectedIds = form.professorIds ? form.professorIds.split(',').filter(Boolean) : [];
+                  const selectedIds = form.professorIds
+                    ? form.professorIds.split(',').filter(Boolean)
+                    : [];
                   const checked = selectedIds.includes(teacher.id);
 
                   return (
-                    <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-100" key={teacher.id}>
+                    <label
+                      className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-100"
+                      key={teacher.id}
+                    >
                       <input
                         checked={checked}
                         className="h-4 w-4 accent-brand-blue"
@@ -413,11 +544,41 @@ function CatalogModal({ error, isOpen, isSaving, modalState, onClose, reload, se
 
         {modalState?.tab === 'rooms' ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Nome" name="nome" onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))} required value={form.nome ?? ''} />
-            <Input label="Bloco" name="bloco" onChange={(event) => setForm((current) => ({ ...current, bloco: event.target.value }))} value={form.bloco ?? ''} />
-            <Input label="Capacidade" min={1} name="capacidade" onChange={(event) => setForm((current) => ({ ...current, capacidade: event.target.value }))} required type="number" value={form.capacidade ?? '30'} />
+            <Input
+              label="Nome"
+              name="nome"
+              onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))}
+              required
+              value={form.nome ?? ''}
+            />
+            <Input
+              label="Bloco"
+              name="bloco"
+              onChange={(event) =>
+                setForm((current) => ({ ...current, bloco: event.target.value }))
+              }
+              value={form.bloco ?? ''}
+            />
+            <Input
+              label="Capacidade"
+              min={1}
+              name="capacidade"
+              onChange={(event) =>
+                setForm((current) => ({ ...current, capacidade: event.target.value }))
+              }
+              required
+              type="number"
+              value={form.capacidade ?? '30'}
+            />
             <div className="sm:col-span-2">
-              <Textarea label="Observacoes" name="observacoes" onChange={(event) => setForm((current) => ({ ...current, observacoes: event.target.value }))} value={form.observacoes ?? ''} />
+              <Textarea
+                label="Observacoes"
+                name="observacoes"
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, observacoes: event.target.value }))
+                }
+                value={form.observacoes ?? ''}
+              />
             </div>
           </div>
         ) : null}

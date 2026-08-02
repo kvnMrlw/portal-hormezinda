@@ -46,7 +46,9 @@ export function People() {
           return;
         }
 
-        setUsers((currentUsers) => (page === 1 ? response.usuarios : [...currentUsers, ...response.usuarios]));
+        setUsers((currentUsers) =>
+          page === 1 ? response.usuarios : [...currentUsers, ...response.usuarios],
+        );
         setPagination(response.paginacao);
       } catch {
         if (requestIdRef.current === requestId) {
@@ -74,21 +76,25 @@ export function People() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-5">
-        <header className="border-b border-slate-100 pb-5">
+        <header className="rounded-[1.75rem] border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-brand-blue ring-1 ring-blue-100">
+                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-blue-50 text-brand-blue shadow-sm ring-1 ring-blue-100">
                   <UsersRound className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Comunidade</p>
-                  <h1 className="text-2xl font-semibold tracking-normal text-brand-navy sm:text-3xl">Pessoas</h1>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Comunidade
+                  </p>
+                  <h1 className="text-2xl font-semibold tracking-normal text-brand-navy sm:text-3xl">
+                    Pessoas
+                  </h1>
                 </div>
               </div>
             </div>
             {totalLabel ? (
-              <span className="w-fit text-sm font-semibold text-slate-500">
+              <span className="w-fit rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-500 shadow-card ring-1 ring-slate-950/5">
                 {totalLabel}
               </span>
             ) : null}
@@ -97,7 +103,7 @@ export function People() {
           <div className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_14rem]">
             <label className="block" htmlFor="pesquisa-pessoas">
               <span className="sr-only">Pesquisar pessoas</span>
-              <div className="flex items-center rounded-full border border-slate-200 bg-white px-5 shadow-sm transition focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-blue-100">
+              <div className="flex items-center rounded-2xl border border-slate-950/10 bg-white px-5 shadow-card ring-1 ring-white/80 transition focus-within:border-brand-blue focus-within:bg-white focus-within:shadow-soft focus-within:ring-4 focus-within:ring-blue-100">
                 <Search className="h-5 w-5 shrink-0 text-slate-400" />
                 <input
                   className="h-14 w-full bg-transparent px-4 text-base font-medium text-brand-navy outline-none placeholder:text-slate-400"
@@ -108,39 +114,55 @@ export function People() {
                 />
               </div>
             </label>
-            <Select label="Ordenacao" name="peopleSort" onChange={(event) => setSort(event.target.value as typeof sort)} value={sort}>
+            <Select
+              label="Ordenacao"
+              name="peopleSort"
+              onChange={(event) => setSort(event.target.value as typeof sort)}
+              value={sort}
+            >
               <option value="az">A-Z</option>
               <option value="za">Z-A</option>
               <option value="recentes">Mais recentes</option>
               <option value="antigos">Mais antigos</option>
             </Select>
-            </div>
+          </div>
         </header>
 
         {isLoading ? <Loading className="min-h-64" /> : null}
         {!isLoading && hasError ? (
-          <EmptyState description="Tente novamente em alguns instantes." icon={Search} title="Nao foi possivel carregar as pessoas." />
+          <EmptyState
+            description="Tente novamente em alguns instantes."
+            icon={Search}
+            title="Nao foi possivel carregar as pessoas."
+          />
         ) : null}
         {!isLoading && !hasError && !users.length ? (
-          <EmptyState description="Ajuste a busca para encontrar outros perfis." icon={UsersRound} title="Nenhuma pessoa encontrada." />
+          <EmptyState
+            description="Ajuste a busca para encontrar outros perfis."
+            icon={UsersRound}
+            title="Nenhuma pessoa encontrada."
+          />
         ) : null}
         {!isLoading && !hasError && users.length ? (
           <>
-            <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" aria-label="Pessoas da escola">
+            <section
+              className="overflow-hidden rounded-[1.5rem] border border-slate-950/5 bg-portal-surface shadow-card ring-1 ring-white/80"
+              aria-label="Pessoas da escola"
+            >
               {users.map((user) => (
                 <motion.div
                   animate={{ opacity: 1, y: 0 }}
-                  className="border-b border-slate-100 last:border-b-0"
+                  className="border-b border-slate-100/80 last:border-b-0"
                   initial={{ opacity: 0, y: 8 }}
                   key={user.id}
                   transition={{ duration: 0.22, ease: 'easeOut' }}
                 >
                   <Link
-                    className="group grid gap-4 px-4 py-4 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-inset focus:ring-blue-100 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:px-5"
+                    className="group grid gap-4 px-4 py-4 transition hover:bg-white focus:outline-none focus:ring-4 focus:ring-inset focus:ring-blue-100 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:px-5"
                     to={`/pessoas/${user.id}`}
                   >
                     <div className="flex min-w-0 items-center gap-4">
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-blue-100 text-brand-blue ring-1 ring-slate-100 sm:h-[4.5rem] sm:w-[4.5rem]">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-blue-100 text-brand-blue shadow-sm ring-4 ring-white sm:h-[4.5rem] sm:w-[4.5rem]">
                         {user.fotoPerfil ? (
                           <img
                             alt={user.nomeCompleto}
@@ -157,24 +179,34 @@ export function People() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex min-w-0 items-center gap-2">
-                          <h2 className="truncate text-base font-semibold text-brand-navy sm:text-lg">{user.nomeCompleto}</h2>
+                          <h2 className="truncate text-base font-semibold text-brand-navy sm:text-lg">
+                            {user.nomeCompleto}
+                          </h2>
                           <CompactRoleIcon user={user} />
                         </div>
-                        <p className="mt-0.5 truncate text-sm font-medium text-slate-500">@{user.usuario}</p>
+                        <p className="mt-0.5 truncate text-sm font-medium text-slate-500">
+                          @{user.usuario}
+                        </p>
                       </div>
                     </div>
 
                     <div className="flex min-w-0 flex-wrap items-center gap-2 pl-20 sm:pl-0">
                       <RoleBadge user={user} />
-                      {user.turma ? <span className="text-sm font-medium text-slate-400">{user.turma}</span> : null}
-                      {user.materia ? <span className="text-sm font-medium text-slate-400">{user.materia}</span> : null}
+                      {user.turma ? (
+                        <span className="text-sm font-medium text-slate-400">{user.turma}</span>
+                      ) : null}
+                      {user.materia ? (
+                        <span className="text-sm font-medium text-slate-400">{user.materia}</span>
+                      ) : null}
                     </div>
 
                     <div className="flex items-center justify-end pl-20 sm:pl-0">
-                      <span className={cn(
-                        'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition',
-                        'bg-slate-50 text-brand-navy ring-1 ring-slate-100 group-hover:bg-brand-blue group-hover:text-white group-hover:ring-brand-blue'
-                      )}>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition',
+                          'bg-white text-brand-navy shadow-card ring-1 ring-slate-950/5 group-hover:bg-brand-blue group-hover:text-white group-hover:ring-brand-blue',
+                        )}
+                      >
                         Ver Perfil
                         <ArrowRight className="h-4 w-4" />
                       </span>
@@ -186,7 +218,12 @@ export function People() {
 
             {pagination?.hasMore ? (
               <div className="flex justify-center">
-                <Button disabled={isLoadingMore} onClick={() => setPage((currentPage) => currentPage + 1)} type="button" variant="secondary">
+                <Button
+                  disabled={isLoadingMore}
+                  onClick={() => setPage((currentPage) => currentPage + 1)}
+                  type="button"
+                  variant="secondary"
+                >
                   {isLoadingMore ? 'Carregando...' : 'Carregar mais'}
                 </Button>
               </div>

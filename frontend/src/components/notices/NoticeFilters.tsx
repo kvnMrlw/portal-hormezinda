@@ -12,7 +12,7 @@ type NoticeFiltersProps = {
 
 export function NoticeFilters({ filters, isAdmin, onChange }: NoticeFiltersProps) {
   return (
-    <section className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
+    <section className="rounded-3xl border border-slate-950/5 bg-white p-4 shadow-card ring-1 ring-white/80 sm:p-5">
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <label className="block" htmlFor="notice-search">
           <span className="text-sm font-medium text-brand-navy">Pesquisa</span>
@@ -31,7 +31,12 @@ export function NoticeFilters({ filters, isAdmin, onChange }: NoticeFiltersProps
 
         <Select
           label="Categoria"
-          onChange={(event) => onChange({ ...filters, categoria: event.target.value as NoticeFilterValues['categoria'] })}
+          onChange={(event) =>
+            onChange({
+              ...filters,
+              categoria: event.target.value as NoticeFilterValues['categoria'],
+            })
+          }
           value={filters.categoria ?? 'TODAS'}
         >
           <option value="TODAS">Todas</option>
@@ -44,7 +49,12 @@ export function NoticeFilters({ filters, isAdmin, onChange }: NoticeFiltersProps
 
         <Select
           label="Prioridade"
-          onChange={(event) => onChange({ ...filters, prioridade: event.target.value as NoticeFilterValues['prioridade'] })}
+          onChange={(event) =>
+            onChange({
+              ...filters,
+              prioridade: event.target.value as NoticeFilterValues['prioridade'],
+            })
+          }
           value={filters.prioridade ?? 'TODAS'}
         >
           <option value="TODAS">Todas</option>
@@ -57,7 +67,9 @@ export function NoticeFilters({ filters, isAdmin, onChange }: NoticeFiltersProps
 
         <Select
           label="Filtro"
-          onChange={(event) => onChange({ ...filters, status: event.target.value as NoticeFilterValues['status'] })}
+          onChange={(event) =>
+            onChange({ ...filters, status: event.target.value as NoticeFilterValues['status'] })
+          }
           value={filters.status ?? 'TODOS'}
         >
           <option value="TODOS">Todos</option>

@@ -9,10 +9,16 @@ import {
   Landmark,
   Map,
   Palette,
-  type LucideIcon
+  type LucideIcon,
 } from 'lucide-react';
 
-import { ScheduleEntryKind, Weekday, weekdayLabels, weekdays, type ScheduleEntry } from '../../types/schedules';
+import {
+  ScheduleEntryKind,
+  Weekday,
+  weekdayLabels,
+  weekdays,
+  type ScheduleEntry,
+} from '../../types/schedules';
 
 const subjectIcons: Array<[string, LucideIcon]> = [
   ['matematica', Calculator],
@@ -24,15 +30,20 @@ const subjectIcons: Array<[string, LucideIcon]> = [
   ['artes', Palette],
   ['arte', Palette],
   ['educacao fisica', Dumbbell],
-  ['fisica', FlaskConical]
+  ['fisica', FlaskConical],
 ];
 
-export function getSubjectIcon(subject: string | { nome: string }, kind: ScheduleEntryKind): LucideIcon {
+export function getSubjectIcon(
+  subject: string | { nome: string },
+  kind: ScheduleEntryKind,
+): LucideIcon {
   if (kind === ScheduleEntryKind.INTERVAL) {
     return Coffee;
   }
 
-  const normalizedSubject = normalizeText(typeof subject === 'string' ? subject : subject?.nome ?? '');
+  const normalizedSubject = normalizeText(
+    typeof subject === 'string' ? subject : (subject?.nome ?? ''),
+  );
   const match = subjectIcons.find(([name]) => normalizedSubject.includes(name));
 
   return match?.[1] ?? BookOpen;
@@ -52,10 +63,17 @@ export function timeToMinutes(time: string): number {
 }
 
 export function isScheduleHappening(schedule: ScheduleEntry, now = new Date()): boolean {
-  return getTodayWeekday(now) === schedule.diaSemana && timeToMinutes(toTime(now)) >= timeToMinutes(schedule.horarioInicio) && timeToMinutes(toTime(now)) < timeToMinutes(schedule.horarioFim);
+  return (
+    getTodayWeekday(now) === schedule.diaSemana &&
+    timeToMinutes(toTime(now)) >= timeToMinutes(schedule.horarioInicio) &&
+    timeToMinutes(toTime(now)) < timeToMinutes(schedule.horarioFim)
+  );
 }
 
-export function getNextSchedule(schedules: ScheduleEntry[], now = new Date()): ScheduleEntry | undefined {
+export function getNextSchedule(
+  schedules: ScheduleEntry[],
+  now = new Date(),
+): ScheduleEntry | undefined {
   const currentDayIndex = weekdays.indexOf(getTodayWeekday(now));
   const currentMinutes = timeToMinutes(toTime(now));
 
@@ -65,11 +83,12 @@ export function getNextSchedule(schedules: ScheduleEntry[], now = new Date()): S
       const scheduleDayIndex = weekdays.indexOf(schedule.diaSemana);
       const dayOffset = (scheduleDayIndex - currentDayIndex + weekdays.length) % weekdays.length;
       const startMinutes = timeToMinutes(schedule.horarioInicio);
-      const weekOffset = dayOffset === 0 && startMinutes <= currentMinutes ? weekdays.length : dayOffset;
+      const weekOffset =
+        dayOffset === 0 && startMinutes <= currentMinutes ? weekdays.length : dayOffset;
 
       return {
         distance: weekOffset * 24 * 60 + startMinutes,
-        schedule
+        schedule,
       };
     })
     .sort((first, second) => first.distance - second.distance)[0]?.schedule;
@@ -98,22 +117,33 @@ export function getTodayWeekday(date = new Date()): Weekday {
 }
 
 export function groupSchedulesByDay(schedules: ScheduleEntry[]): Record<Weekday, ScheduleEntry[]> {
-  return weekdays.reduce<Record<Weekday, ScheduleEntry[]>>((groups, weekday) => {
-    groups[weekday] = schedules
-      .filter((schedule) => schedule.diaSemana === weekday)
-      .sort((first, second) => (first.ordem ?? 0) - (second.ordem ?? 0) || timeToMinutes(first.horarioInicio) - timeToMinutes(second.horarioInicio));
+  return weekdays.reduce<Record<Weekday, ScheduleEntry[]>>(
+    (groups, weekday) => {
+      groups[weekday] = schedules
+        .filter((schedule) => schedule.diaSemana === weekday)
+        .sort(
+          (first, second) =>
+            (first.ordem ?? 0) - (second.ordem ?? 0) ||
+            timeToMinutes(first.horarioInicio) - timeToMinutes(second.horarioInicio),
+        );
 
-    return groups;
-  }, {} as Record<Weekday, ScheduleEntry[]>);
-}
-
-export function getScheduleSlots(schedules: ScheduleEntry[]): string[] {
-  return Array.from(new Set(schedules.map((schedule) => `${schedule.horarioInicio}-${schedule.horarioFim}`))).sort(
-    (first, second) => timeToMinutes(first.split('-')[0]) - timeToMinutes(second.split('-')[0])
+      return groups;
+    },
+    {} as Record<Weekday, ScheduleEntry[]>,
   );
 }
 
-export function formatTimeRange(schedule: Pick<ScheduleEntry, 'horarioFim' | 'horarioInicio'>): string {
+export function getScheduleSlots(schedules: ScheduleEntry[]): string[] {
+  return Array.from(
+    new Set(schedules.map((schedule) => `${schedule.horarioInicio}-${schedule.horarioFim}`)),
+  ).sort(
+    (first, second) => timeToMinutes(first.split('-')[0]) - timeToMinutes(second.split('-')[0]),
+  );
+}
+
+export function formatTimeRange(
+  schedule: Pick<ScheduleEntry, 'horarioFim' | 'horarioInicio'>,
+): string {
   return `${schedule.horarioInicio} - ${schedule.horarioFim}`;
 }
 

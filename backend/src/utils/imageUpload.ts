@@ -96,8 +96,6 @@ export function createFileUpload(folderName: string, options: UploadOptions = {}
         return callback(new AppError('Tipo de arquivo nao permitido', 400));
       }
 
-      void ensureUploadDirectory(folderName);
-
       return callback(null, true);
     }
   });

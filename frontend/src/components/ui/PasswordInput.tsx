@@ -17,7 +17,7 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
       <Input className={cn('pr-12', className)} type={isVisible ? 'text' : 'password'} {...props} />
       <button
         aria-label={isVisible ? 'Ocultar senha' : 'Mostrar senha'}
-        className="absolute right-3 top-10 rounded-full p-1 text-slate-500 transition hover:bg-slate-100 hover:text-brand-navy"
+        className="absolute right-3 top-10 rounded-full p-1 text-slate-500 transition hover:bg-blue-50 hover:text-brand-blue focus:outline-none focus:ring-4 focus:ring-blue-100"
         onClick={() => setIsVisible((current) => !current)}
         type="button"
       >

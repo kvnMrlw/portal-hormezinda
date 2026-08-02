@@ -26,11 +26,20 @@ export function ModulePlaceholder({ module }: ModulePlaceholderProps) {
 
         <Card className="overflow-hidden p-0 shadow-sm">
           <div className="p-6 sm:p-8">
-            <div className={cn('flex h-14 w-14 items-center justify-center rounded-3xl ring-1', module.accent)}>
+            <div
+              className={cn(
+                'flex h-14 w-14 items-center justify-center rounded-3xl ring-1',
+                module.accent,
+              )}
+            >
               <Icon className="h-7 w-7" />
             </div>
-            <h1 className="mt-6 text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">{module.title}</h1>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-500">{module.description}</p>
+            <h1 className="mt-6 text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">
+              {module.title}
+            </h1>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-500">
+              {module.description}
+            </p>
           </div>
           <div className="border-t border-slate-100 bg-slate-50 p-6 sm:p-8">
             <p className="text-sm font-semibold text-brand-navy">Conteudo em preparacao</p>

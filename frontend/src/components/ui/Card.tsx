@@ -6,10 +6,15 @@ type CardProps = HTMLAttributes<HTMLElement> & {
   children: ReactNode;
 };
 
-// Superficie reutilizavel para agrupar conteudo de formulario.
 export function Card({ children, className, ...props }: CardProps) {
   return (
-    <section className={cn('rounded-3xl border border-white/80 bg-white/90 p-6 shadow-soft backdrop-blur', className)} {...props}>
+    <section
+      className={cn(
+        'rounded-[1.5rem] border border-slate-950/5 bg-portal-surface p-6 shadow-card ring-1 ring-white/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-hover',
+        className,
+      )}
+      {...props}
+    >
       {children}
     </section>
   );

@@ -44,15 +44,19 @@ export function Notifications() {
   return (
     <AppShell>
       <div className="mx-auto max-w-5xl space-y-5">
-        <header className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+        <header className="rounded-[2rem] border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-blue-50 text-brand-blue ring-1 ring-blue-100">
                 <Bell className="h-7 w-7" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Central</p>
-                <h1 className="mt-1 text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">Notificacoes</h1>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                  Central
+                </p>
+                <h1 className="mt-1 text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">
+                  Notificacoes
+                </h1>
                 <p className="mt-2 text-sm font-semibold text-slate-500">{unreadCount} nao lidas</p>
               </div>
             </div>
@@ -61,7 +65,11 @@ export function Notifications() {
                 <RefreshCcw className="h-4 w-4" />
                 Atualizar
               </Button>
-              <Button disabled={!unreadCount} onClick={() => void handleMarkAllAsRead()} type="button">
+              <Button
+                disabled={!unreadCount}
+                onClick={() => void handleMarkAllAsRead()}
+                type="button"
+              >
                 <CheckCheck className="h-4 w-4" />
                 Marcar lidas
               </Button>
@@ -69,7 +77,11 @@ export function Notifications() {
           </div>
         </header>
 
-        {error ? <div className="rounded-3xl border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div> : null}
+        {error ? (
+          <div className="rounded-3xl border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">
+            {error}
+          </div>
+        ) : null}
         {isLoading ? <Loading className="min-h-64" /> : null}
         {!isLoading && notifications.length ? (
           <section className="space-y-3">
@@ -78,14 +90,20 @@ export function Notifications() {
                 key={notification.id}
                 notification={notification}
                 onRead={(updatedNotification) => {
-                  setNotifications((current) => current.map((item) => (item.id === updatedNotification.id ? updatedNotification : item)));
+                  setNotifications((current) =>
+                    current.map((item) =>
+                      item.id === updatedNotification.id ? updatedNotification : item,
+                    ),
+                  );
                   setUnreadCount((current) => Math.max(0, current - (notification.lida ? 0 : 1)));
                 }}
               />
             ))}
           </section>
         ) : null}
-        {!isLoading && !notifications.length ? <EmptyState description="Tudo certo por aqui." icon={Bell} title="Nenhuma notificacao." /> : null}
+        {!isLoading && !notifications.length ? (
+          <EmptyState description="Tudo certo por aqui." icon={Bell} title="Nenhuma notificacao." />
+        ) : null}
       </div>
     </AppShell>
   );

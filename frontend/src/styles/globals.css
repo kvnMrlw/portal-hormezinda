@@ -9,6 +9,25 @@
   font-family: Inter, system-ui, sans-serif;
   background: var(--color-brand-light-gray);
   color: var(--color-text);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+
+@keyframes portal-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes portal-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes birthday-confetti-fall {
@@ -37,6 +56,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  background-color: #f5f7fb;
+  color: var(--color-text);
 }
 
 html,
@@ -51,4 +72,17 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+  color: var(--color-brand-navy);
 }

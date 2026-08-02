@@ -2,7 +2,11 @@ import { Filter, Search } from 'lucide-react';
 
 import { Cargo, type User } from '../../types/auth';
 import type { ClassGroup, Room, Subject } from '../../types/catalogs';
-import { Weekday, weekdayLabels, type ScheduleFilters as ScheduleFilterValues } from '../../types/schedules';
+import {
+  Weekday,
+  weekdayLabels,
+  type ScheduleFilters as ScheduleFilterValues,
+} from '../../types/schedules';
 import { Select } from '../ui/Select';
 
 type ScheduleFiltersProps = {
@@ -17,13 +21,24 @@ type ScheduleFiltersProps = {
 
 const weekdayOptions = Object.values(Weekday);
 
-export function ScheduleFilters({ classes, currentUser, filters, onChange, rooms, subjects, teachers }: ScheduleFiltersProps) {
-  const canFilterAll = currentUser?.cargo === Cargo.ADMIN || currentUser?.cargo === Cargo.DIRETOR || currentUser?.cargo === Cargo.COORDENADOR;
+export function ScheduleFilters({
+  classes,
+  currentUser,
+  filters,
+  onChange,
+  rooms,
+  subjects,
+  teachers,
+}: ScheduleFiltersProps) {
+  const canFilterAll =
+    currentUser?.cargo === Cargo.ADMIN ||
+    currentUser?.cargo === Cargo.DIRETOR ||
+    currentUser?.cargo === Cargo.COORDENADOR;
   const isProfessor = currentUser?.cargo === Cargo.PROFESSOR;
   const currentUserClass = classes.find((classGroup) => classGroup.nome === currentUser?.turma);
 
   return (
-    <section className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+    <section className="rounded-3xl border border-slate-950/5 bg-white p-4 shadow-card ring-1 ring-white/80">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-brand-navy">
         <Filter className="h-4 w-4 text-brand-blue" />
         Filtros
@@ -48,7 +63,7 @@ export function ScheduleFilters({ classes, currentUser, filters, onChange, rooms
           label="Turma"
           name="turmaId"
           onChange={(event) => onChange({ ...filters, turmaId: event.target.value })}
-          value={canFilterAll ? filters.turmaId ?? '' : currentUserClass?.id ?? ''}
+          value={canFilterAll ? (filters.turmaId ?? '') : (currentUserClass?.id ?? '')}
         >
           <option value="">Todas</option>
           {classes.map((classGroup) => (
@@ -63,7 +78,13 @@ export function ScheduleFilters({ classes, currentUser, filters, onChange, rooms
           label="Professor"
           name="professorId"
           onChange={(event) => onChange({ ...filters, professorId: event.target.value })}
-          value={canFilterAll && !isProfessor ? filters.professorId ?? '' : currentUser?.cargo === Cargo.PROFESSOR ? currentUser.id : ''}
+          value={
+            canFilterAll && !isProfessor
+              ? (filters.professorId ?? '')
+              : currentUser?.cargo === Cargo.PROFESSOR
+                ? currentUser.id
+                : ''
+          }
         >
           <option value="">Todos</option>
           {teachers.map((teacher) => (
@@ -76,7 +97,9 @@ export function ScheduleFilters({ classes, currentUser, filters, onChange, rooms
         <Select
           label="Dia"
           name="diaSemana"
-          onChange={(event) => onChange({ ...filters, diaSemana: event.target.value as Weekday | '' })}
+          onChange={(event) =>
+            onChange({ ...filters, diaSemana: event.target.value as Weekday | '' })
+          }
           value={filters.diaSemana ?? ''}
         >
           <option value="">Todos</option>

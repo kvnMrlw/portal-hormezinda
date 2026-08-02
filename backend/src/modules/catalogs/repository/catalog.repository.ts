@@ -80,6 +80,13 @@ export class CatalogRepository {
     await SubjectModel.findByIdAndDelete(id);
   }
 
+  async removeTeacherReferences(teacherId: string): Promise<void> {
+    await Promise.all([
+      SubjectModel.updateMany({}, { $pull: { professores: teacherId } }),
+      SubjectModel.updateMany({ professorPadrao: teacherId }, { $unset: { professorPadrao: '' } })
+    ]);
+  }
+
   async listRooms(): Promise<RoomDocument[]> {
     return RoomModel.find().sort({ bloco: 1, nome: 1 });
   }

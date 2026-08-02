@@ -25,7 +25,7 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-brand-lightGray">
+    <div className="relative flex min-h-screen overflow-x-hidden bg-transparent">
       <Sidebar
         collapsed={collapsed}
         isMobileOpen={isMobileOpen}

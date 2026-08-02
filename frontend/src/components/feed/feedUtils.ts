@@ -17,7 +17,7 @@ const postAuthorRoles = new Set<Cargo>([
   Cargo.DIRETOR,
   Cargo.COORDENADOR,
   Cargo.PROFESSOR,
-  Cargo.GREMIO
+  Cargo.GREMIO,
 ]);
 
 export function canCreateFeedPost(role?: Cargo, user?: Pick<User, 'pertenceGremio'>): boolean {
@@ -28,11 +28,19 @@ export function canPinFeedPost(role?: Cargo): boolean {
   return role === Cargo.ADMIN || role === Cargo.DIRETOR || role === Cargo.COORDENADOR;
 }
 
-export function canDeleteFeedPost(currentUserId: string | undefined, currentUserRole: Cargo | undefined, authorId: string): boolean {
+export function canDeleteFeedPost(
+  currentUserId: string | undefined,
+  currentUserRole: Cargo | undefined,
+  authorId: string,
+): boolean {
   return currentUserRole === Cargo.ADMIN || currentUserId === authorId;
 }
 
-export function canDeleteFeedStory(currentUserId: string | undefined, currentUserRole: Cargo | undefined, authorId: string): boolean {
+export function canDeleteFeedStory(
+  currentUserId: string | undefined,
+  currentUserRole: Cargo | undefined,
+  authorId: string,
+): boolean {
   return currentUserRole === Cargo.ADMIN || currentUserId === authorId;
 }
 
@@ -75,7 +83,7 @@ export function groupStories(stories: FeedStory[]): StoryGroup[] {
       authorName: story.autor.nomeCompleto,
       avatar: story.autor.fotoPerfil,
       hasUnseen: !story.vistoPeloUsuario,
-      stories: [story]
+      stories: [story],
     });
 
     return groups;
@@ -94,7 +102,7 @@ export function formatRelativeDate(value: string): string {
     ['day', 60 * 60 * 24],
     ['hour', 60 * 60],
     ['minute', 60],
-    ['second', 1]
+    ['second', 1],
   ];
 
   for (const [unit, seconds] of ranges) {

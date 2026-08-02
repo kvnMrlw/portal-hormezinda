@@ -1,5 +1,6 @@
 import { Types, type PopulateOptions } from 'mongoose';
 
+import { removeUploadedFiles } from '../../../utils/imageUpload';
 import { AcademicTaskModel, type AcademicTaskDocument } from '../models/academic-task.model';
 import { AttendanceModel, type AttendanceDocument } from '../models/attendance.model';
 import { DiaryEntryModel, type DiaryEntryDocument } from '../models/diary-entry.model';
@@ -212,13 +213,75 @@ export class AcademicRepository {
 
   async deleteBySubject(subjectId: string): Promise<void> {
     const tasks = await AcademicTaskModel.find({ disciplina: subjectId }).select('_id');
+    const contents = await LessonContentModel.find({ disciplina: subjectId }).select('arquivos');
+    const submissions = await TaskSubmissionModel.find({ tarefa: { $in: tasks.map((task) => task._id) } }).select('arquivo');
+    const fileUrls = [
+      ...contents.flatMap((content) => (content.arquivos ?? []).map((file) => file.url)),
+      ...tasks.map((task) => task.arquivo?.url),
+      ...submissions.map((submission) => submission.arquivo?.url)
+    ];
+
     await Promise.all([
       AttendanceModel.deleteMany({ disciplina: subjectId }),
       LessonContentModel.deleteMany({ disciplina: subjectId }),
       DiaryEntryModel.deleteMany({ disciplina: subjectId }),
       AcademicObservationModel.deleteMany({ disciplina: subjectId }),
       AcademicTaskModel.deleteMany({ disciplina: subjectId }),
-      TaskSubmissionModel.deleteMany({ tarefa: { $in: tasks.map((task) => task._id) } })
+      TaskSubmissionModel.deleteMany({ tarefa: { $in: tasks.map((task) => task._id) } }),
+      removeUploadedFiles(fileUrls)
+    ]);
+  }
+
+  async deleteByClass(classGroupId: string): Promise<void> {
+    const tasks = await AcademicTaskModel.find({ turma: classGroupId }).select('_id arquivo');
+    const contents = await LessonContentModel.find({ turma: classGroupId }).select('arquivos');
+    const submissions = await TaskSubmissionModel.find({ tarefa: { $in: tasks.map((task) => task._id) } }).select('arquivo');
+    const fileUrls = [
+      ...contents.flatMap((content) => (content.arquivos ?? []).map((file) => file.url)),
+      ...tasks.map((task) => task.arquivo?.url),
+      ...submissions.map((submission) => submission.arquivo?.url)
+    ];
+
+    await Promise.all([
+      AttendanceModel.deleteMany({ turma: classGroupId }),
+      LessonContentModel.deleteMany({ turma: classGroupId }),
+      DiaryEntryModel.deleteMany({ turma: classGroupId }),
+      AcademicObservationModel.deleteMany({ turma: classGroupId }),
+      AcademicTaskModel.deleteMany({ turma: classGroupId }),
+      TaskSubmissionModel.deleteMany({ tarefa: { $in: tasks.map((task) => task._id) } }),
+      removeUploadedFiles(fileUrls)
+    ]);
+  }
+
+  async deleteByProfessor(professorId: string): Promise<void> {
+    const tasks = await AcademicTaskModel.find({ professor: professorId }).select('_id arquivo');
+    const contents = await LessonContentModel.find({ professor: professorId }).select('arquivos');
+    const submissions = await TaskSubmissionModel.find({ tarefa: { $in: tasks.map((task) => task._id) } }).select('arquivo');
+    const fileUrls = [
+      ...contents.flatMap((content) => (content.arquivos ?? []).map((file) => file.url)),
+      ...tasks.map((task) => task.arquivo?.url),
+      ...submissions.map((submission) => submission.arquivo?.url)
+    ];
+
+    await Promise.all([
+      AttendanceModel.deleteMany({ professor: professorId }),
+      LessonContentModel.deleteMany({ professor: professorId }),
+      DiaryEntryModel.deleteMany({ professor: professorId }),
+      AcademicObservationModel.deleteMany({ professor: professorId }),
+      AcademicTaskModel.deleteMany({ professor: professorId }),
+      TaskSubmissionModel.deleteMany({ tarefa: { $in: tasks.map((task) => task._id) } }),
+      removeUploadedFiles(fileUrls)
+    ]);
+  }
+
+  async removeStudentReferences(studentId: string): Promise<void> {
+    const submissions = await TaskSubmissionModel.find({ aluno: studentId }).select('arquivo');
+
+    await Promise.all([
+      AttendanceModel.updateMany({}, { $pull: { registros: { aluno: studentId } } }),
+      AcademicObservationModel.updateMany({ aluno: studentId }, { $unset: { aluno: '' } }),
+      TaskSubmissionModel.deleteMany({ aluno: studentId }),
+      removeUploadedFiles(submissions.map((submission) => submission.arquivo?.url))
     ]);
   }
 }

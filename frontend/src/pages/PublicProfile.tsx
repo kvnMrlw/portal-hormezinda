@@ -29,7 +29,10 @@ export function PublicProfile() {
       try {
         setIsLoading(true);
         setHasError(false);
-        const [loadedProfile, loadedIdeas] = await Promise.all([getPublicProfile(id), listUserIdeas(id)]);
+        const [loadedProfile, loadedIdeas] = await Promise.all([
+          getPublicProfile(id),
+          listUserIdeas(id),
+        ]);
         setProfile(loadedProfile);
         setIdeas(loadedIdeas);
       } catch {
@@ -57,7 +60,10 @@ export function PublicProfile() {
         />
       ) : null}
       {!isLoading && hasError ? (
-        <EmptyState description="Nao foi possivel carregar este perfil." title="Perfil indisponivel." />
+        <EmptyState
+          description="Nao foi possivel carregar este perfil."
+          title="Perfil indisponivel."
+        />
       ) : null}
     </AppShell>
   );

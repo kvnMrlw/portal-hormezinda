@@ -13,11 +13,21 @@ export function Avatar({ className, name, src }: AvatarProps) {
   const initial = name?.trim().charAt(0).toUpperCase();
 
   return (
-    <div className={cn('flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-brand-blue', className)}>
+    <div
+      className={cn(
+        'flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-brand-blue',
+        className,
+      )}
+    >
       {src ? (
-        <img alt={name ?? 'Avatar'} className="h-full w-full object-cover" loading="lazy" src={src} />
+        <img
+          alt={name ?? 'Avatar'}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          src={src}
+        />
       ) : (
-        initial ?? <UserRound className="h-5 w-5" />
+        (initial ?? <UserRound className="h-5 w-5" />)
       )}
     </div>
   );

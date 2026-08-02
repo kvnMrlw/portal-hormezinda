@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   Trash2,
   UserCog,
-  UsersRound
+  UsersRound,
 } from 'lucide-react';
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react';
 
@@ -30,9 +30,17 @@ import {
   deleteAdminUser,
   listAdminUsers,
   promoteUserToGremio,
-  updateAdminUser
+  updateAdminUser,
 } from '../services/users';
-import { Cargo, Sexo, Turma, Turno, turmasPorTurno, type AdminUserPayload, type User } from '../types/auth';
+import {
+  Cargo,
+  Sexo,
+  Turma,
+  Turno,
+  turmasPorTurno,
+  type AdminUserPayload,
+  type User,
+} from '../types/auth';
 
 type RoleFilter = 'TODOS' | Cargo;
 type SortMode = 'recentes' | 'antigos' | 'nome-az' | 'nome-za';
@@ -64,7 +72,7 @@ const emptyForm: UserFormState = {
   materia: '',
   turno: '',
   turma: '',
-  ativo: true
+  ativo: true,
 };
 
 const roleFilters: { label: string; value: RoleFilter }[] = [
@@ -74,17 +82,24 @@ const roleFilters: { label: string; value: RoleFilter }[] = [
   { label: 'Coordenador', value: Cargo.COORDENADOR },
   { label: 'Diretor', value: Cargo.DIRETOR },
   { label: 'Administrador', value: Cargo.ADMIN },
-  { label: 'Gremio', value: Cargo.GREMIO }
+  { label: 'Gremio', value: Cargo.GREMIO },
 ];
 
 const sortOptions: { label: string; value: SortMode }[] = [
   { label: 'Mais recentes', value: 'recentes' },
   { label: 'Mais antigos', value: 'antigos' },
   { label: 'Nome A-Z', value: 'nome-az' },
-  { label: 'Nome Z-A', value: 'nome-za' }
+  { label: 'Nome Z-A', value: 'nome-za' },
 ];
 
-const roleOptions = [Cargo.ALUNO, Cargo.PROFESSOR, Cargo.COORDENADOR, Cargo.DIRETOR, Cargo.GREMIO, Cargo.ADMIN];
+const roleOptions = [
+  Cargo.ALUNO,
+  Cargo.PROFESSOR,
+  Cargo.COORDENADOR,
+  Cargo.DIRETOR,
+  Cargo.GREMIO,
+  Cargo.ADMIN,
+];
 
 const subjects = [
   'Matematica',
@@ -98,7 +113,7 @@ const subjects = [
   'Educacao Fisica',
   'Arte',
   'Filosofia',
-  'Sociologia'
+  'Sociologia',
 ];
 
 const usernameRegex = /^(?=.*[a-z])(?=.*\.)[a-z0-9.]{8,}$/;
@@ -116,7 +131,7 @@ function userToForm(user: User): UserFormState {
     materia: user.materia ?? '',
     turno: user.turno ?? '',
     turma: user.turma ?? '',
-    ativo: user.ativo
+    ativo: user.ativo,
   };
 }
 
@@ -127,11 +142,18 @@ function buildPayload(form: UserFormState, editingUser?: User): AdminUserPayload
     ativo: form.ativo,
     dataNascimento: form.dataNascimento || undefined,
     materia: form.cargo === Cargo.PROFESSOR ? form.materia : undefined,
-    pertenceGremio: (form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO) && form.pertenceGremio,
-    turno: form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO ? form.turno || undefined : undefined,
-    turma: form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO ? form.turma || undefined : undefined,
+    pertenceGremio:
+      (form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO) && form.pertenceGremio,
+    turno:
+      form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO
+        ? form.turno || undefined
+        : undefined,
+    turma:
+      form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO
+        ? form.turma || undefined
+        : undefined,
     fotoPerfil: form.fotoPerfil,
-    bannerPerfil: form.bannerPerfil
+    bannerPerfil: form.bannerPerfil,
   };
 
   if (!editingUser || editingUser.cargo !== form.cargo || form.cargo !== Cargo.GREMIO) {
@@ -170,7 +192,9 @@ function validateForm(form: UserFormState, users: User[], editingUser?: User): s
     return 'O username precisa ter 8 caracteres, letras e ponto.';
   }
 
-  const duplicatedUser = users.find((user) => user.usuario === form.usuario.trim().toLowerCase() && user.id !== editingUser?.id);
+  const duplicatedUser = users.find(
+    (user) => user.usuario === form.usuario.trim().toLowerCase() && user.id !== editingUser?.id,
+  );
 
   if (duplicatedUser) {
     return 'Este username ja esta em uso.';
@@ -270,7 +294,9 @@ export function Users() {
   }, [query, roleFilter, sortMode, users]);
 
   const totalActive = users.filter((user) => user.ativo).length;
-  const totalGremio = users.filter((user) => user.cargo === Cargo.GREMIO || user.pertenceGremio).length;
+  const totalGremio = users.filter(
+    (user) => user.cargo === Cargo.GREMIO || user.pertenceGremio,
+  ).length;
 
   function openCreateModal() {
     setEditingUser(undefined);
@@ -319,7 +345,10 @@ export function Users() {
     });
   }
 
-  function handleFileChange(key: 'fotoPerfil' | 'bannerPerfil', event: ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(
+    key: 'fotoPerfil' | 'bannerPerfil',
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
     updateForm(key, event.target.files?.[0]);
   }
 
@@ -336,12 +365,14 @@ export function Users() {
       setIsSaving(true);
       setFormError('');
       const payload = buildPayload(form, editingUser);
-      const savedUser = editingUser ? await updateAdminUser(editingUser.id, payload) : await createAdminUser(payload);
+      const savedUser = editingUser
+        ? await updateAdminUser(editingUser.id, payload)
+        : await createAdminUser(payload);
 
       setUsers((currentUsers) =>
         editingUser
           ? currentUsers.map((user) => (user.id === savedUser.id ? savedUser : user))
-          : [savedUser, ...currentUsers]
+          : [savedUser, ...currentUsers],
       );
       closeModal();
     } catch (error) {
@@ -369,7 +400,11 @@ export function Users() {
     try {
       setActionUserId(user.id);
       const promotedUser = await promoteUserToGremio(user.id);
-      setUsers((currentUsers) => currentUsers.map((currentUser) => (currentUser.id === promotedUser.id ? promotedUser : currentUser)));
+      setUsers((currentUsers) =>
+        currentUsers.map((currentUser) =>
+          currentUser.id === promotedUser.id ? promotedUser : currentUser,
+        ),
+      );
     } finally {
       setActionUserId(null);
     }
@@ -378,15 +413,19 @@ export function Users() {
   return (
     <AppShell>
       <div className="space-y-5">
-        <header className="overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/80 p-5 shadow-soft backdrop-blur-xl sm:p-6">
+        <header className="overflow-hidden rounded-[1.75rem] border border-slate-950/5 bg-portal-surface p-5 shadow-soft ring-1 ring-white/80 sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue ring-1 ring-blue-100">
                 <UserCog className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Administracao</p>
-                <h1 className="mt-1 text-2xl font-semibold tracking-normal text-brand-navy sm:text-3xl">Usuarios</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Administracao
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold tracking-normal text-brand-navy sm:text-3xl">
+                  Usuarios
+                </h1>
               </div>
             </div>
             <Button className="w-full sm:w-auto" onClick={openCreateModal} type="button">
@@ -396,26 +435,26 @@ export function Users() {
           </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl bg-slate-50/90 p-4 ring-1 ring-slate-100">
+            <div className="rounded-2xl bg-slate-50 p-4 shadow-inner ring-1 ring-slate-950/5">
               <p className="text-xs font-semibold text-slate-500">Total</p>
               <strong className="mt-1 block text-2xl text-brand-navy">{users.length}</strong>
             </div>
-            <div className="rounded-2xl bg-emerald-50/80 p-4 ring-1 ring-emerald-100">
+            <div className="rounded-2xl bg-emerald-50 p-4 shadow-inner ring-1 ring-emerald-100">
               <p className="text-xs font-semibold text-emerald-700">Ativos</p>
               <strong className="mt-1 block text-2xl text-emerald-700">{totalActive}</strong>
             </div>
-            <div className="rounded-2xl bg-blue-50/80 p-4 ring-1 ring-blue-100">
+            <div className="rounded-2xl bg-blue-50 p-4 shadow-inner ring-1 ring-blue-100">
               <p className="text-xs font-semibold text-brand-blue">Gremio</p>
               <strong className="mt-1 block text-2xl text-brand-blue">{totalGremio}</strong>
             </div>
           </div>
         </header>
 
-        <section className="rounded-[1.75rem] border border-white/80 bg-white/80 p-4 shadow-sm backdrop-blur-xl">
+        <section className="rounded-[1.75rem] border border-slate-950/5 bg-white p-4 shadow-card ring-1 ring-white/80">
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_14rem]">
             <label className="block" htmlFor="pesquisa-usuarios">
               <span className="text-sm font-medium text-brand-navy">Pesquisa</span>
-              <div className="mt-2 flex items-center rounded-2xl border border-slate-200 bg-white px-4 transition focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-blue-100">
+              <div className="mt-2 flex items-center rounded-2xl border border-slate-950/10 bg-white px-4 shadow-sm ring-1 ring-white/80 transition focus-within:border-brand-blue focus-within:shadow-card focus-within:ring-4 focus-within:ring-blue-100">
                 <Search className="h-4 w-4 text-slate-400" />
                 <input
                   className="w-full bg-transparent px-3 py-3 text-sm text-brand-navy outline-none placeholder:text-slate-400"
@@ -426,7 +465,12 @@ export function Users() {
                 />
               </div>
             </label>
-            <Select label="Ordenacao" name="ordenacao" onChange={(event) => setSortMode(event.target.value as SortMode)} value={sortMode}>
+            <Select
+              label="Ordenacao"
+              name="ordenacao"
+              onChange={(event) => setSortMode(event.target.value as SortMode)}
+              value={sortMode}
+            >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -442,7 +486,7 @@ export function Users() {
                   'inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-100',
                   roleFilter === filter.value
                     ? 'bg-brand-navy text-white shadow-sm'
-                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:text-brand-blue hover:ring-blue-100'
+                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:text-brand-blue hover:ring-blue-100',
                 )}
                 key={filter.value}
                 onClick={() => setRoleFilter(filter.value)}
@@ -457,42 +501,70 @@ export function Users() {
 
         {isLoading ? <Loading className="min-h-64" /> : null}
         {!isLoading && hasError ? (
-          <EmptyState description="Tente novamente em alguns instantes." icon={Search} title="Nao foi possivel carregar os usuarios." />
+          <EmptyState
+            description="Tente novamente em alguns instantes."
+            icon={Search}
+            title="Nao foi possivel carregar os usuarios."
+          />
         ) : null}
         {!isLoading && !hasError && !visibleUsers.length ? (
-          <EmptyState description="Ajuste a busca ou os filtros para encontrar outros usuarios." icon={UsersRound} title="Nenhum usuario encontrado." />
+          <EmptyState
+            description="Ajuste a busca ou os filtros para encontrar outros usuarios."
+            icon={UsersRound}
+            title="Nenhum usuario encontrado."
+          />
         ) : null}
         {!isLoading && !hasError && visibleUsers.length ? (
-          <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3" aria-label="Lista administrativa de usuarios">
+          <section
+            className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3"
+            aria-label="Lista administrativa de usuarios"
+          >
             {visibleUsers.map((user) => (
               <article
-                className="group overflow-hidden rounded-[1.5rem] border border-white/80 bg-white/85 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-soft"
+                className="group overflow-hidden rounded-[1.5rem] border border-slate-950/5 bg-white shadow-card ring-1 ring-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-hover"
                 key={user.id}
               >
                 <div className="h-20 bg-slate-100">
                   {user.bannerPerfil ? (
-                    <img alt="" className="h-full w-full object-cover" src={getAssetUrl(user.bannerPerfil)} />
+                    <img
+                      alt=""
+                      className="h-full w-full object-cover"
+                      src={getAssetUrl(user.bannerPerfil)}
+                    />
                   ) : (
-                    <div className="h-full w-full bg-[linear-gradient(135deg,#dbeafe,#f8fafc_48%,#dcfce7)]" />
+                    <div className="h-full w-full bg-slate-100" />
                   )}
                 </div>
 
                 <div className="px-4 pb-4">
                   <div className="-mt-8 flex items-end justify-between gap-3">
-                    <Avatar className="h-16 w-16 border-4 border-white shadow-sm" name={user.nomeCompleto} src={getAssetUrl(user.fotoPerfil)} />
-                    <Badge variant={user.ativo ? 'success' : 'error'}>{user.ativo ? 'Ativo' : 'Inativo'}</Badge>
+                    <Avatar
+                      className="h-16 w-16 border-4 border-white shadow-card"
+                      name={user.nomeCompleto}
+                      src={getAssetUrl(user.fotoPerfil)}
+                    />
+                    <Badge variant={user.ativo ? 'success' : 'error'}>
+                      {user.ativo ? 'Ativo' : 'Inativo'}
+                    </Badge>
                   </div>
 
                   <div className="mt-4 min-w-0">
                     <div className="flex min-w-0 items-center gap-2">
-                      <h2 className="truncate text-lg font-semibold text-brand-navy">{user.nomeCompleto}</h2>
+                      <h2 className="truncate text-lg font-semibold text-brand-navy">
+                        {user.nomeCompleto}
+                      </h2>
                       {user.cargo === Cargo.GREMIO || user.pertenceGremio ? (
-                        <span aria-label="Selo do Gremio" className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-blue text-white">
+                        <span
+                          aria-label="Selo do Gremio"
+                          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-blue text-white"
+                        >
                           <CheckCircle2 className="h-4 w-4" />
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-1 truncate text-sm font-medium text-slate-500">@{user.usuario}</p>
+                    <p className="mt-1 truncate text-sm font-medium text-slate-500">
+                      @{user.usuario}
+                    </p>
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -548,7 +620,11 @@ export function Users() {
         title={editingUser ? 'Editar usuario' : 'Novo usuario'}
       >
         <form className="space-y-5" onSubmit={(event) => void handleSubmit(event)}>
-          {formError ? <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{formError}</div> : null}
+          {formError ? (
+            <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+              {formError}
+            </div>
+          ) : null}
 
           <div className="grid gap-4 md:grid-cols-2">
             {!editingUser ? (
@@ -583,20 +659,37 @@ export function Users() {
               type="password"
               value={form.senha}
             />
-            <Select label="Cargo" name="cargo" onChange={(event) => updateForm('cargo', event.target.value as Cargo)} value={form.cargo}>
+            <Select
+              label="Cargo"
+              name="cargo"
+              onChange={(event) => updateForm('cargo', event.target.value as Cargo)}
+              value={form.cargo}
+            >
               {roleOptions.map((role) => (
                 <option key={role} value={role}>
                   {getRoleLabel(role)}
                 </option>
               ))}
             </Select>
-            <Select label="Sexo" name="sexo" onChange={(event) => updateForm('sexo', event.target.value as Sexo)} required value={form.sexo}>
+            <Select
+              label="Sexo"
+              name="sexo"
+              onChange={(event) => updateForm('sexo', event.target.value as Sexo)}
+              required
+              value={form.sexo}
+            >
               <option value="">Selecione</option>
               <option value={Sexo.MASCULINO}>Masculino</option>
               <option value={Sexo.FEMININO}>Feminino</option>
             </Select>
             {form.cargo === Cargo.PROFESSOR ? (
-              <Select label="Materia" name="materia" onChange={(event) => updateForm('materia', event.target.value)} required value={form.materia}>
+              <Select
+                label="Materia"
+                name="materia"
+                onChange={(event) => updateForm('materia', event.target.value)}
+                required
+                value={form.materia}
+              >
                 <option value="">Selecione</option>
                 {subjects.map((subject) => (
                   <option key={subject} value={subject}>
@@ -607,7 +700,13 @@ export function Users() {
             ) : null}
             {form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO ? (
               <>
-                <Select label="Turno" name="turno" onChange={(event) => updateForm('turno', event.target.value as Turno)} required value={form.turno}>
+                <Select
+                  label="Turno"
+                  name="turno"
+                  onChange={(event) => updateForm('turno', event.target.value as Turno)}
+                  required
+                  value={form.turno}
+                >
                   <option value="">Selecione</option>
                   {Object.values(Turno).map((turno) => (
                     <option key={turno} value={turno}>
@@ -615,7 +714,13 @@ export function Users() {
                     </option>
                   ))}
                 </Select>
-                <Select label="Turma" name="turma" onChange={(event) => updateForm('turma', event.target.value as Turma)} required value={form.turma}>
+                <Select
+                  label="Turma"
+                  name="turma"
+                  onChange={(event) => updateForm('turma', event.target.value as Turma)}
+                  required
+                  value={form.turma}
+                >
                   <option value="">Selecione</option>
                   {(form.turno ? turmasPorTurno[form.turno] : Object.values(Turma)).map((turma) => (
                     <option key={turma} value={turma}>
@@ -638,7 +743,9 @@ export function Users() {
 
           {form.cargo === Cargo.ALUNO || form.cargo === Cargo.GREMIO ? (
             <fieldset className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <legend className="px-1 text-sm font-semibold text-brand-navy">Gremio Estudantil</legend>
+              <legend className="px-1 text-sm font-semibold text-brand-navy">
+                Gremio Estudantil
+              </legend>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 <label className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-100">
                   <input
@@ -666,18 +773,40 @@ export function Users() {
             <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm font-semibold text-brand-navy transition hover:border-blue-200 hover:bg-blue-50">
               <ImagePlus className="h-5 w-5 text-brand-blue" />
               Foto
-              <input accept="image/*" className="sr-only" name="fotoPerfil" onChange={(event) => handleFileChange('fotoPerfil', event)} type="file" />
-              {form.fotoPerfil ? <span className="ml-auto max-w-32 truncate text-xs text-slate-500">{form.fotoPerfil.name}</span> : null}
+              <input
+                accept="image/*"
+                className="sr-only"
+                name="fotoPerfil"
+                onChange={(event) => handleFileChange('fotoPerfil', event)}
+                type="file"
+              />
+              {form.fotoPerfil ? (
+                <span className="ml-auto max-w-32 truncate text-xs text-slate-500">
+                  {form.fotoPerfil.name}
+                </span>
+              ) : null}
             </label>
             <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm font-semibold text-brand-navy transition hover:border-blue-200 hover:bg-blue-50">
               <ImagePlus className="h-5 w-5 text-brand-blue" />
               Banner
-              <input accept="image/*" className="sr-only" name="bannerPerfil" onChange={(event) => handleFileChange('bannerPerfil', event)} type="file" />
-              {form.bannerPerfil ? <span className="ml-auto max-w-32 truncate text-xs text-slate-500">{form.bannerPerfil.name}</span> : null}
+              <input
+                accept="image/*"
+                className="sr-only"
+                name="bannerPerfil"
+                onChange={(event) => handleFileChange('bannerPerfil', event)}
+                type="file"
+              />
+              {form.bannerPerfil ? (
+                <span className="ml-auto max-w-32 truncate text-xs text-slate-500">
+                  {form.bannerPerfil.name}
+                </span>
+              ) : null}
             </label>
           </div>
 
-          {form.cargo === Cargo.PROFESSOR || form.cargo === Cargo.DIRETOR || form.cargo === Cargo.COORDENADOR ? (
+          {form.cargo === Cargo.PROFESSOR ||
+          form.cargo === Cargo.DIRETOR ||
+          form.cargo === Cargo.COORDENADOR ? (
             <div className="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-brand-blue">
               <ShieldCheck className="mr-2 inline h-4 w-4" />
               Exibicao: {getDisplayRoleLabel({ cargo: form.cargo, sexo: form.sexo || undefined })}

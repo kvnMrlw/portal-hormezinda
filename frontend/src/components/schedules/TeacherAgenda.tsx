@@ -2,7 +2,12 @@ import { CalendarClock, DoorOpen } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { formatClassName } from '../../lib/classes';
-import { ScheduleEntryKind, weekdays, weekdayLabels, type ScheduleEntry } from '../../types/schedules';
+import {
+  ScheduleEntryKind,
+  weekdays,
+  weekdayLabels,
+  type ScheduleEntry,
+} from '../../types/schedules';
 import { formatTimeRange, getTodayWeekday, timeToMinutes } from './scheduleUtils';
 
 type TeacherAgendaProps = {
@@ -23,33 +28,43 @@ export function TeacherAgenda({ schedules }: TeacherAgendaProps) {
         .sort((first, second) => {
           const dayDiff = weekdays.indexOf(first.diaSemana) - weekdays.indexOf(second.diaSemana);
 
-          return dayDiff || timeToMinutes(first.horarioInicio) - timeToMinutes(second.horarioInicio);
+          return (
+            dayDiff || timeToMinutes(first.horarioInicio) - timeToMinutes(second.horarioInicio)
+          );
         }),
-    [schedules]
+    [schedules],
   );
   const today = getTodayWeekday();
   const nowMinutes = getNowMinutes();
-  const todayNext = lessons.find((lesson) => lesson.diaSemana === today && timeToMinutes(lesson.horarioInicio) >= nowMinutes);
+  const todayNext = lessons.find(
+    (lesson) => lesson.diaSemana === today && timeToMinutes(lesson.horarioInicio) >= nowMinutes,
+  );
   const groupedLessons = weekdays
     .map((weekday) => ({
       lessons: lessons.filter((lesson) => lesson.diaSemana === weekday),
-      weekday
+      weekday,
     }))
     .filter((group) => group.lessons.length);
 
   return (
     <div className="space-y-4">
-      <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80">
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue ring-1 ring-blue-100">
             <CalendarClock className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Sua proxima aula</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+              Sua proxima aula
+            </p>
             {todayNext ? (
               <>
-                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-brand-navy">{todayNext.horarioInicio}</h2>
-                <p className="mt-1 text-sm font-semibold text-slate-600">{todayNext.disciplina?.nome}</p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-brand-navy">
+                  {todayNext.horarioInicio}
+                </h2>
+                <p className="mt-1 text-sm font-semibold text-slate-600">
+                  {todayNext.disciplina?.nome}
+                </p>
                 {todayNext.sala ? (
                   <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-600">
                     <DoorOpen className="h-4 w-4 text-brand-blue" />
@@ -58,27 +73,48 @@ export function TeacherAgenda({ schedules }: TeacherAgendaProps) {
                 ) : null}
               </>
             ) : (
-              <p className="mt-2 text-sm font-semibold text-slate-500">Nenhuma aula restante hoje.</p>
+              <p className="mt-2 text-sm font-semibold text-slate-500">
+                Nenhuma aula restante hoje.
+              </p>
             )}
           </div>
         </div>
       </section>
 
       {groupedLessons.map((group) => (
-        <section className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm" key={group.weekday}>
+        <section
+          className="rounded-3xl border border-slate-950/5 bg-white p-4 shadow-card ring-1 ring-white/80"
+          key={group.weekday}
+        >
           <h2 className="text-lg font-semibold text-brand-navy">{weekdayLabels[group.weekday]}</h2>
           <div className="mt-3 divide-y divide-slate-100">
             {group.lessons.map((lesson) => (
-              <article className="grid gap-2 py-3 sm:grid-cols-[9rem_minmax(0,1fr)_8rem]" key={lesson.id}>
+              <article
+                className="grid gap-2 py-3 sm:grid-cols-[9rem_minmax(0,1fr)_8rem]"
+                key={lesson.id}
+              >
                 <p className="text-sm font-bold text-brand-navy">{formatTimeRange(lesson)}</p>
                 <div className="min-w-0">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: lesson.disciplina?.cor ?? '#2563eb' }} />
-                    <h3 className="truncate font-semibold text-brand-navy">{lesson.disciplina?.nome}</h3>
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: lesson.disciplina?.cor ?? '#2563eb' }}
+                    />
+                    <h3 className="truncate font-semibold text-brand-navy">
+                      {lesson.disciplina?.nome}
+                    </h3>
                   </div>
-                  {lesson.turma ? <p className="mt-1 text-sm font-medium text-slate-500">{formatClassName(lesson.turma)}</p> : null}
+                  {lesson.turma ? (
+                    <p className="mt-1 text-sm font-medium text-slate-500">
+                      {formatClassName(lesson.turma)}
+                    </p>
+                  ) : null}
                 </div>
-                {lesson.sala ? <p className="text-sm font-semibold text-slate-600 sm:text-right">{lesson.sala.nome}</p> : null}
+                {lesson.sala ? (
+                  <p className="text-sm font-semibold text-slate-600 sm:text-right">
+                    {lesson.sala.nome}
+                  </p>
+                ) : null}
               </article>
             ))}
           </div>

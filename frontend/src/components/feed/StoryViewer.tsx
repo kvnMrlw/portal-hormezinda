@@ -22,7 +22,7 @@ export function StoryViewer({
   initialGroupIndex,
   onClose,
   onDelete,
-  onView
+  onView,
 }: StoryViewerProps) {
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
@@ -131,7 +131,9 @@ export function StoryViewer({
               <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/30" key={item.id}>
                 <span
                   className="block h-full rounded-full bg-white transition-all"
-                  style={{ width: `${index < storyIndex ? 100 : index === storyIndex ? progress : 0}%` }}
+                  style={{
+                    width: `${index < storyIndex ? 100 : index === storyIndex ? progress : 0}%`,
+                  }}
                 />
               </span>
             ))}
@@ -142,7 +144,9 @@ export function StoryViewer({
               <p className="flex items-center gap-1 text-xs text-white/70">
                 Story
                 {story.visualizacoesQuantidade !== undefined ? (
-                  <span className="inline-flex items-center gap-1">· <Eye className="h-3.5 w-3.5" /> {story.visualizacoesQuantidade}</span>
+                  <span className="inline-flex items-center gap-1">
+                    · <Eye className="h-3.5 w-3.5" /> {story.visualizacoesQuantidade}
+                  </span>
                 ) : null}
               </p>
             </div>
@@ -150,29 +154,57 @@ export function StoryViewer({
               {canDeleteStory?.(story) ? (
                 <button
                   aria-label="Excluir Story"
-                  className="rounded-full bg-white/10 p-2 backdrop-blur transition hover:bg-red-500/80 disabled:opacity-60"
+                  className="rounded-full bg-white/15 p-2 shadow-card transition hover:bg-red-500/80 disabled:opacity-60"
                   disabled={deletingStoryId === story.id}
                   onClick={() => onDelete?.(story.id)}
                   type="button"
                 >
-                  {deletingStoryId === story.id ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+                  {deletingStoryId === story.id ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-5 w-5" />
+                  )}
                 </button>
               ) : null}
-              <button className="rounded-full bg-white/10 p-2 backdrop-blur transition hover:bg-white/20" onClick={onClose} type="button">
+              <button
+                className="rounded-full bg-white/15 p-2 shadow-card transition hover:bg-white/25"
+                onClick={onClose}
+                type="button"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
           </div>
         </div>
         {story.tipo === StoryKind.IMAGE && story.imagem ? (
-          <img alt={story.imagem.alt ?? 'Story'} className="h-full w-full object-cover" decoding="async" src={getAssetUrl(story.imagem.url)} />
+          <img
+            alt={story.imagem.alt ?? 'Story'}
+            className="h-full w-full object-cover"
+            decoding="async"
+            src={getAssetUrl(story.imagem.url)}
+          />
         ) : (
-          <div className="flex h-full items-center justify-center px-8 text-center" style={{ background: story.fundo }}>
-            <p className="whitespace-pre-wrap break-words text-3xl font-semibold leading-tight text-white">{story.texto}</p>
+          <div
+            className="flex h-full items-center justify-center px-8 text-center"
+            style={{ background: story.fundo }}
+          >
+            <p className="whitespace-pre-wrap break-words text-3xl font-semibold leading-tight text-white">
+              {story.texto}
+            </p>
           </div>
         )}
-        <button aria-label="Story anterior" className="absolute bottom-0 left-0 top-24 z-10 w-1/2" onClick={goPrevious} type="button" />
-        <button aria-label="Proximo story" className="absolute bottom-0 right-0 top-24 z-10 w-1/2" onClick={goNext} type="button" />
+        <button
+          aria-label="Story anterior"
+          className="absolute bottom-0 left-0 top-24 z-10 w-1/2"
+          onClick={goPrevious}
+          type="button"
+        />
+        <button
+          aria-label="Proximo story"
+          className="absolute bottom-0 right-0 top-24 z-10 w-1/2"
+          onClick={goNext}
+          type="button"
+        />
       </motion.div>
     </div>
   );

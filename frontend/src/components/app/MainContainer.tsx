@@ -8,5 +8,7 @@ type MainContainerProps = {
 };
 
 export function MainContainer({ children, className }: MainContainerProps) {
-  return <main className={cn('min-h-screen min-w-0 flex-1 bg-brand-lightGray', className)}>{children}</main>;
+  return (
+    <main className={cn('min-h-screen min-w-0 flex-1 bg-transparent', className)}>{children}</main>
+  );
 }

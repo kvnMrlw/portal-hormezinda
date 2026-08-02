@@ -10,7 +10,7 @@ import {
   Rocket,
   ThumbsUp,
   UserRound,
-  XCircle
+  XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -46,7 +46,7 @@ const notificationIcons = {
   [NotificationType.ACADEMIC_SUBJECT_UPDATED]: BookOpenCheck,
   [NotificationType.BIRTHDAY_TODAY]: Gift,
   [NotificationType.BIRTHDAY_MESSAGE]: Gift,
-  [NotificationType.FUTURE_COMMENT]: MessageSquareText
+  [NotificationType.FUTURE_COMMENT]: MessageSquareText,
 };
 
 function formatDate(value: string): string {
@@ -54,18 +54,26 @@ function formatDate(value: string): string {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    month: 'short'
+    month: 'short',
   }).format(new Date(value));
 }
 
-export function NotificationItem({ notification, onRead }: { notification: Notification; onRead?: (notification: Notification) => void }) {
+export function NotificationItem({
+  notification,
+  onRead,
+}: {
+  notification: Notification;
+  onRead?: (notification: Notification) => void;
+}) {
   const navigate = useNavigate();
   const [isBirthdayMessageOpen, setIsBirthdayMessageOpen] = useState(false);
   const Icon = notificationIcons[notification.tipo] ?? Bell;
   const isBirthdayNotification = notification.tipo === NotificationType.BIRTHDAY_TODAY;
 
   async function openNotification(): Promise<void> {
-    const nextNotification = notification.lida ? notification : await markNotificationAsRead(notification.id);
+    const nextNotification = notification.lida
+      ? notification
+      : await markNotificationAsRead(notification.id);
     onRead?.(nextNotification);
     navigate(notification.url);
   }
@@ -79,38 +87,63 @@ export function NotificationItem({ notification, onRead }: { notification: Notif
     <>
       <article
         className={cn(
-          'grid gap-4 rounded-3xl border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft sm:grid-cols-[auto_1fr_auto] sm:items-center',
-          notification.lida ? 'border-slate-100' : 'border-blue-100 bg-blue-50/30'
+          'grid gap-4 rounded-3xl border bg-white p-4 shadow-card ring-1 ring-white/80 transition hover:-translate-y-0.5 hover:shadow-hover sm:grid-cols-[auto_1fr_auto] sm:items-center',
+          notification.lida ? 'border-slate-950/5' : 'border-blue-100 bg-blue-50/50',
         )}
       >
         <div className="flex items-center gap-3">
           <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue ring-1 ring-blue-100">
             <Icon className="h-5 w-5" />
-            {!notification.lida ? <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-brand-blue ring-2 ring-white" /> : null}
+            {!notification.lida ? (
+              <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-brand-blue ring-2 ring-white" />
+            ) : null}
           </span>
-          {notification.autor ? <Avatar className="h-10 w-10" name={notification.autor.nomeCompleto} src={getAssetUrl(notification.autor.fotoPerfil)} /> : null}
+          {notification.autor ? (
+            <Avatar
+              className="h-10 w-10"
+              name={notification.autor.nomeCompleto}
+              src={getAssetUrl(notification.autor.fotoPerfil)}
+            />
+          ) : null}
         </div>
         <div className="min-w-0">
           <h3 className="font-semibold text-brand-navy">{notification.titulo}</h3>
-          <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">{notification.descricao}</p>
+          <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
+            {notification.descricao}
+          </p>
           <p className="mt-2 text-xs font-semibold text-slate-400">
-            {notification.autor?.nomeCompleto ?? 'Portal Hormezinda'} - {formatDate(notification.criadaEm)}
+            {notification.autor?.nomeCompleto ?? 'Portal Hormezinda'} -{' '}
+            {formatDate(notification.criadaEm)}
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           {isBirthdayNotification ? (
-            <Button className="w-full sm:w-auto" onClick={() => setIsBirthdayMessageOpen(true)} type="button" variant="secondary">
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => setIsBirthdayMessageOpen(true)}
+              type="button"
+              variant="secondary"
+            >
               <Gift className="h-4 w-4" />
               Enviar Parabens
             </Button>
           ) : null}
-          <Button className="w-full sm:w-auto" onClick={() => void openNotification()} type="button" variant={notification.lida ? 'secondary' : 'primary'}>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => void openNotification()}
+            type="button"
+            variant={notification.lida ? 'secondary' : 'primary'}
+          >
             Abrir
           </Button>
         </div>
       </article>
 
-      <Modal isOpen={isBirthdayMessageOpen} onClose={() => setIsBirthdayMessageOpen(false)} title="Enviar Parabens">
+      <Modal
+        isOpen={isBirthdayMessageOpen}
+        onClose={() => setIsBirthdayMessageOpen(false)}
+        title="Enviar Parabens"
+      >
         <div className="grid gap-2">
           {birthdayMessages.map((message) => (
             <button

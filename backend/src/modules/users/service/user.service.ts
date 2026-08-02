@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 
 import { AppError } from '../../../middlewares/error.middleware';
 import { removeUploadedFiles } from '../../../utils/imageUpload';
+import { AcademicRepository } from '../../academic/repository/academic.repository';
 import { UserRepository } from '../repository/user.repository';
 import { Cargo, type AdminCreateUserData, type AdminUpdateUserData, type PublicUser, type UpdateProfileData } from '../types/user.types';
 import type { UserDocument } from '../models/user.model';
@@ -81,7 +82,8 @@ export class UserService {
     private readonly noticeRepository = new NoticeRepository(),
     private readonly catalogRepository = new CatalogRepository(),
     private readonly scheduleRepository = new ScheduleRepository(),
-    private readonly socialService = new SocialService()
+    private readonly socialService = new SocialService(),
+    private readonly academicRepository = new AcademicRepository()
   ) {}
 
   async adminListUsers(): Promise<PublicUser[]> {
@@ -170,6 +172,9 @@ export class UserService {
       this.feedService.removeUserActivity(id),
       this.ideaService.deleteByAuthor(id),
       this.notificationService.deleteByUser(id),
+      user.cargo === Cargo.PROFESSOR ? this.academicRepository.deleteByProfessor(id) : this.academicRepository.removeStudentReferences(id),
+      user.cargo === Cargo.PROFESSOR ? this.scheduleRepository.deleteByProfessor(id) : Promise.resolve(),
+      user.cargo === Cargo.PROFESSOR ? this.catalogRepository.removeTeacherReferences(id) : Promise.resolve(),
       this.socialService.deleteByUser(id),
       this.userRepository.delete(id)
     ]);

@@ -86,6 +86,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, clearSession);
   }, []);
 
+  useEffect(() => {
+    function syncSession(event: StorageEvent) {
+      if (![TOKEN_KEY, REFRESH_TOKEN_KEY, USER_KEY].includes(event.key ?? '')) {
+        return;
+      }
+
+      const storedToken = localStorage.getItem(TOKEN_KEY);
+      setToken(storedToken);
+      setUser(readStoredUser());
+      setIsLoading(false);
+    }
+
+    window.addEventListener('storage', syncSession);
+
+    return () => window.removeEventListener('storage', syncSession);
+  }, []);
+
   async function login(credentials: LoginCredentials): Promise<void> {
     const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
     persistSession(response.data.data);

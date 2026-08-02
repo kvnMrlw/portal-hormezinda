@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 
 import { AppError } from '../../../middlewares/error.middleware';
 import { AcademicRepository } from '../../academic/repository/academic.repository';
+import { ScheduleRepository } from '../../schedules/repository/schedule.repository';
 import { NotificationService } from '../../notifications/service/notification.service';
 import { NotificationEntityType, NotificationType } from '../../notifications/types/notification.types';
 import type { UserDocument } from '../../users/models/user.model';
@@ -69,7 +70,8 @@ export class CatalogService {
     private readonly catalogRepository = new CatalogRepository(),
     private readonly userRepository = new UserRepository(),
     private readonly notificationService = new NotificationService(),
-    private readonly academicRepository = new AcademicRepository()
+    private readonly academicRepository = new AcademicRepository(),
+    private readonly scheduleRepository = new ScheduleRepository()
   ) {}
 
   async listAll() {
@@ -105,7 +107,11 @@ export class CatalogService {
       return false;
     }
 
-    await this.catalogRepository.deleteClass(id);
+    await Promise.all([
+      this.academicRepository.deleteByClass(id),
+      this.scheduleRepository.deleteByClass(id),
+      this.catalogRepository.deleteClass(id)
+    ]);
 
     return true;
   }
@@ -153,7 +159,11 @@ export class CatalogService {
       return false;
     }
 
-    await Promise.all([this.academicRepository.deleteBySubject(id), this.catalogRepository.deleteSubject(id)]);
+    await Promise.all([
+      this.academicRepository.deleteBySubject(id),
+      this.scheduleRepository.deleteBySubject(id),
+      this.catalogRepository.deleteSubject(id)
+    ]);
 
     return true;
   }
@@ -177,7 +187,7 @@ export class CatalogService {
       return false;
     }
 
-    await this.catalogRepository.deleteRoom(id);
+    await Promise.all([this.scheduleRepository.deleteByRoom(id), this.catalogRepository.deleteRoom(id)]);
 
     return true;
   }

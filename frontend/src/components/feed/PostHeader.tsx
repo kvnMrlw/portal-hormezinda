@@ -14,7 +14,11 @@ type PostHeaderProps = {
 export const PostHeader = memo(function PostHeader({ author, date }: PostHeaderProps) {
   return (
     <header className="flex items-start gap-3">
-      <Avatar className="h-12 w-12 shrink-0 ring-4 ring-slate-50" name={author.nomeCompleto} src={getAssetUrl(author.fotoPerfil)} />
+      <Avatar
+        className="h-12 w-12 shrink-0 ring-4 ring-slate-50"
+        name={author.nomeCompleto}
+        src={getAssetUrl(author.fotoPerfil)}
+      />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="truncate font-semibold text-brand-navy">{author.nomeCompleto}</h3>

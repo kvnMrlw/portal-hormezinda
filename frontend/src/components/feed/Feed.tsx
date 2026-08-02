@@ -3,7 +3,13 @@ import { AlertCircle } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { useAuth } from '../../contexts/useAuth';
-import { canCreateFeedPost, canDeleteFeedPost, canDeleteFeedStory, canPinFeedPost, groupStories } from './feedUtils';
+import {
+  canCreateFeedPost,
+  canDeleteFeedPost,
+  canDeleteFeedStory,
+  canPinFeedPost,
+  groupStories,
+} from './feedUtils';
 import {
   createFeedPost,
   createFeedStory,
@@ -13,9 +19,15 @@ import {
   listFeedStories,
   markFeedStoryAsViewed,
   reactToFeedPost,
-  setFeedPostPinned
+  setFeedPostPinned,
 } from '../../services/feed';
-import type { CreatePostPayload, CreateStoryPayload, FeedResponse, FeedStory, ReactionEmoji } from '../../types/feed';
+import type {
+  CreatePostPayload,
+  CreateStoryPayload,
+  FeedResponse,
+  FeedStory,
+  ReactionEmoji,
+} from '../../types/feed';
 import { CreateContentButton, CreateContentModal } from './CreateContentModal';
 import { DeletePostDialog } from './DeletePostDialog';
 import { EmptyFeed } from './EmptyFeed';
@@ -35,8 +47,12 @@ function FeedError() {
           <AlertCircle className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="font-semibold text-brand-navy">Nao foi possivel carregar as publicacoes.</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">Tente novamente em alguns instantes.</p>
+          <h2 className="font-semibold text-brand-navy">
+            Nao foi possivel carregar as publicacoes.
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Tente novamente em alguns instantes.
+          </p>
         </div>
       </div>
     </section>
@@ -58,12 +74,12 @@ export function Feed() {
 
   const feedQuery = useQuery({
     queryKey: feedQueryKey,
-    queryFn: () => listFeedPosts({ limit: 10, page: 1 })
+    queryFn: () => listFeedPosts({ limit: 10, page: 1 }),
   });
 
   const storiesQuery = useQuery({
     queryKey: storiesQueryKey,
-    queryFn: listFeedStories
+    queryFn: listFeedStories,
   });
 
   const createPostMutation = useMutation({
@@ -72,7 +88,7 @@ export function Feed() {
     onMutate: () => setCreateError(undefined),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: feedQueryKey });
-    }
+    },
   });
 
   const createStoryMutation = useMutation({
@@ -81,11 +97,12 @@ export function Feed() {
     onMutate: () => setCreateError(undefined),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: storiesQueryKey });
-    }
+    },
   });
 
   const reactionMutation = useMutation({
-    mutationFn: ({ emoji, postId }: { emoji: ReactionEmoji; postId: string }) => reactToFeedPost(postId, emoji),
+    mutationFn: ({ emoji, postId }: { emoji: ReactionEmoji; postId: string }) =>
+      reactToFeedPost(postId, emoji),
     onMutate: ({ postId }) => setReactingPostId(postId),
     onSettled: () => setReactingPostId(undefined),
     onSuccess: (updatedPost) => {
@@ -96,19 +113,22 @@ export function Feed() {
 
         return {
           ...current,
-          publicacoes: current.publicacoes.map((post) => (post.id === updatedPost.id ? updatedPost : post))
+          publicacoes: current.publicacoes.map((post) =>
+            post.id === updatedPost.id ? updatedPost : post,
+          ),
         };
       });
-    }
+    },
   });
 
   const pinMutation = useMutation({
-    mutationFn: ({ pinned, postId }: { pinned: boolean; postId: string }) => setFeedPostPinned(postId, pinned),
+    mutationFn: ({ pinned, postId }: { pinned: boolean; postId: string }) =>
+      setFeedPostPinned(postId, pinned),
     onMutate: ({ postId }) => setPinningPostId(postId),
     onSettled: () => setPinningPostId(undefined),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: feedQueryKey });
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -127,8 +147,8 @@ export function Feed() {
           publicacoes: current.publicacoes.filter((post) => post.id !== postId),
           paginacao: {
             ...current.paginacao,
-            total: Math.max(current.paginacao.total - 1, 0)
-          }
+            total: Math.max(current.paginacao.total - 1, 0),
+          },
         };
       });
 
@@ -143,7 +163,7 @@ export function Feed() {
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: feedQueryKey });
-    }
+    },
   });
 
   const deleteStoryMutation = useMutation({
@@ -153,7 +173,9 @@ export function Feed() {
       await queryClient.cancelQueries({ queryKey: storiesQueryKey });
       const previousStories = queryClient.getQueryData<FeedStory[]>(storiesQueryKey);
 
-      queryClient.setQueryData<FeedStory[]>(storiesQueryKey, (current) => current?.filter((story) => story.id !== storyId));
+      queryClient.setQueryData<FeedStory[]>(storiesQueryKey, (current) =>
+        current?.filter((story) => story.id !== storyId),
+      );
 
       return { previousStories };
     },
@@ -165,16 +187,16 @@ export function Feed() {
     onSettled: async () => {
       setDeletingStoryId(undefined);
       await queryClient.invalidateQueries({ queryKey: storiesQueryKey });
-    }
+    },
   });
 
   const viewStoryMutation = useMutation({
     mutationFn: markFeedStoryAsViewed,
     onSuccess: (updatedStory) => {
       queryClient.setQueryData<FeedStory[]>(storiesQueryKey, (current) =>
-        current?.map((story) => (story.id === updatedStory.id ? updatedStory : story))
+        current?.map((story) => (story.id === updatedStory.id ? updatedStory : story)),
       );
-    }
+    },
   });
 
   const posts = useMemo(() => feedQuery.data?.publicacoes ?? [], [feedQuery.data?.publicacoes]);
@@ -184,14 +206,14 @@ export function Feed() {
     async (payload: CreatePostPayload) => {
       await createPostMutation.mutateAsync(payload);
     },
-    [createPostMutation]
+    [createPostMutation],
   );
 
   const handleCreateStory = useCallback(
     async (payload: CreateStoryPayload) => {
       await createStoryMutation.mutateAsync(payload);
     },
-    [createStoryMutation]
+    [createStoryMutation],
   );
 
   const handleReact = useCallback(
@@ -200,7 +222,7 @@ export function Feed() {
         reactionMutation.mutate({ postId, emoji });
       }
     },
-    [reactionMutation]
+    [reactionMutation],
   );
 
   const handlePin = useCallback(
@@ -209,14 +231,14 @@ export function Feed() {
         pinMutation.mutate({ postId, pinned });
       }
     },
-    [pinMutation]
+    [pinMutation],
   );
 
   const handleViewStory = useCallback(
     (storyId: string) => {
       viewStoryMutation.mutate(storyId);
     },
-    [viewStoryMutation]
+    [viewStoryMutation],
   );
 
   const handleDeleteStory = useCallback(
@@ -227,7 +249,7 @@ export function Feed() {
         deleteStoryMutation.mutate(storyId);
       }
     },
-    [deleteStoryMutation]
+    [deleteStoryMutation],
   );
 
   const handleConfirmDelete = useCallback(() => {
@@ -238,7 +260,11 @@ export function Feed() {
 
   return (
     <section aria-label="Feed social" className="mx-auto w-full max-w-5xl space-y-5">
-      <StoriesBar groups={storyGroups} isLoading={storiesQuery.isLoading} onOpen={setViewerGroupIndex} />
+      <StoriesBar
+        groups={storyGroups}
+        isLoading={storiesQuery.isLoading}
+        onOpen={setViewerGroupIndex}
+      />
       {canCreate ? (
         <div className="flex justify-end">
           <CreateContentButton onClick={() => setIsCreateOpen(true)} />
@@ -246,7 +272,9 @@ export function Feed() {
       ) : null}
       <div>
         <h1 className="text-2xl font-semibold tracking-normal text-brand-navy sm:text-3xl">Feed</h1>
-        <p className="mt-1 text-sm text-slate-500">Novidades, avisos e momentos da comunidade escolar.</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Novidades, avisos e momentos da comunidade escolar.
+        </p>
       </div>
       {feedQuery.isLoading ? <LoadingFeed /> : null}
       {feedQuery.isError ? <FeedError /> : null}

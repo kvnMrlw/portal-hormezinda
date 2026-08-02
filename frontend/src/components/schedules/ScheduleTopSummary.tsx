@@ -12,13 +12,15 @@ export function ScheduleTopSummary({ schedules }: ScheduleTopSummaryProps) {
 
   return (
     <section className="grid gap-4 md:grid-cols-[minmax(0,1fr)_20rem]">
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue ring-1 ring-blue-100">
             <CalendarClock className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Proxima aula</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+              Proxima aula
+            </p>
             <h2 className="mt-1 text-2xl font-semibold tracking-normal text-brand-navy">
               {nextSchedule?.disciplina?.nome ?? 'Sem aulas programadas'}
             </h2>
@@ -42,15 +44,19 @@ export function ScheduleTopSummary({ schedules }: ScheduleTopSummaryProps) {
         ) : null}
       </div>
 
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Resumo</p>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div>
-            <p className="text-2xl font-semibold text-brand-navy">{schedules.filter((schedule) => schedule.tipo === ScheduleEntryKind.LESSON).length}</p>
+            <p className="text-2xl font-semibold text-brand-navy">
+              {schedules.filter((schedule) => schedule.tipo === ScheduleEntryKind.LESSON).length}
+            </p>
             <p className="text-sm font-medium text-slate-500">aulas</p>
           </div>
           <div>
-            <p className="text-2xl font-semibold text-brand-navy">{schedules.filter((schedule) => schedule.tipo === ScheduleEntryKind.INTERVAL).length}</p>
+            <p className="text-2xl font-semibold text-brand-navy">
+              {schedules.filter((schedule) => schedule.tipo === ScheduleEntryKind.INTERVAL).length}
+            </p>
             <p className="text-sm font-medium text-slate-500">intervalos</p>
           </div>
         </div>

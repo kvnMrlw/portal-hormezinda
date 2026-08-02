@@ -147,6 +147,18 @@ export class ScheduleRepository {
     await ScheduleModel.deleteMany({ turma: classGroupId });
   }
 
+  async deleteByProfessor(professorId: string): Promise<void> {
+    await ScheduleModel.deleteMany({ professor: professorId });
+  }
+
+  async deleteByRoom(roomId: string): Promise<void> {
+    await ScheduleModel.deleteMany({ sala: roomId });
+  }
+
+  async deleteBySubject(subjectId: string): Promise<void> {
+    await ScheduleModel.deleteMany({ disciplina: subjectId });
+  }
+
   async getNextOrder(classGroupId: string, diaSemana: Weekday): Promise<number> {
     const lastSchedule = await ScheduleModel.findOne({ diaSemana, turma: classGroupId }).sort({ ordem: -1, horarioInicio: -1 });
 

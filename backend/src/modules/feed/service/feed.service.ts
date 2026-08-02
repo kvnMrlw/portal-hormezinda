@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../middlewares/error.middleware';
+import { runSafely } from '../../../utils/async';
 import { removeUploadedFiles } from '../../../utils/imageUpload';
 import { toPublicUser } from '../../users/service/user.service';
 import { Cargo } from '../../users/types/user.types';
@@ -151,7 +152,7 @@ export class FeedService {
   async createPost(authorId: string, data: Omit<Parameters<FeedRepository['create']>[0], 'autor'>): Promise<FeedPost> {
     const post = await this.feedRepository.create({ autor: authorId, ...data });
 
-    void this.notificationService.notifyAllActive({
+    runSafely(this.notificationService.notifyAllActive({
       autorId: authorId,
       descricao: data.texto?.slice(0, 180) || 'Nova imagem publicada no feed.',
       entidadeId: post.id,
@@ -159,7 +160,7 @@ export class FeedService {
       tipo: NotificationType.NEW_POST,
       titulo: 'Nova publicacao no feed',
       url: `/home?post=${post.id}`
-    });
+    }), 'feed.createPost.notifyAllActive');
 
     return toFeedPost(post, authorId);
   }
@@ -168,7 +169,7 @@ export class FeedService {
     const post = await this.feedRepository.react(postId, viewerId, emoji);
 
     if (post && isUserDocument(post.autor) && post.autor.id !== viewerId) {
-      void this.notificationService.notifyUsers([post.autor.id], {
+      runSafely(this.notificationService.notifyUsers([post.autor.id], {
         autorId: viewerId,
         descricao: `Sua publicacao recebeu uma reacao ${emoji}.`,
         entidadeId: post.id,
@@ -176,7 +177,7 @@ export class FeedService {
         tipo: NotificationType.POST_REACTION,
         titulo: 'Nova reacao na sua publicacao',
         url: `/home?post=${post.id}`
-      });
+      }), 'feed.reactToPost.notifyUsers');
     }
 
     return post ? toFeedPost(post, viewerId) : null;
@@ -266,7 +267,7 @@ export class FeedService {
   async createStory(authorId: string, data: Omit<CreateStoryData, 'autor'>): Promise<FeedStory> {
     const story = await this.feedRepository.createStory({ autor: authorId, ...data });
 
-    void this.notificationService.notifyAllActive({
+    runSafely(this.notificationService.notifyAllActive({
       autorId: authorId,
       descricao: data.texto?.slice(0, 180) || 'Novo story publicado.',
       entidadeId: story.id,
@@ -274,7 +275,7 @@ export class FeedService {
       tipo: NotificationType.NEW_STORY,
       titulo: 'Novo story',
       url: `/home?story=${story.id}`
-    });
+    }), 'feed.createStory.notifyAllActive');
 
     return toFeedStory(story, authorId);
   }

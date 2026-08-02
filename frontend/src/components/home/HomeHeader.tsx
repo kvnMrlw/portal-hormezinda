@@ -25,7 +25,7 @@ export function HomeHeader() {
   const { user } = useAuth();
 
   return (
-    <header className="flex flex-col gap-4 rounded-[2rem] bg-white/80 p-5 shadow-sm ring-1 ring-white sm:p-6 lg:flex-row lg:items-end lg:justify-between">
+    <header className="flex flex-col gap-4 rounded-[2rem] border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0">
         <Badge className="gap-2 bg-blue-50 text-brand-blue" variant="info">
           <Sparkles className="h-3.5 w-3.5" />

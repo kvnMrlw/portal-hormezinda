@@ -10,15 +10,29 @@ type ScheduleTableProps = {
   schedules: ScheduleEntry[];
 };
 
-export function ScheduleTable({ canManage, onDelete, onDuplicate, onEdit, schedules }: ScheduleTableProps) {
+export function ScheduleTable({
+  canManage,
+  onDelete,
+  onDuplicate,
+  onEdit,
+  schedules,
+}: ScheduleTableProps) {
   const slots = getScheduleSlots(schedules);
 
   return (
-    <section className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm lg:block" aria-label="Tabela semanal">
+    <section
+      className="hidden overflow-hidden rounded-3xl border border-slate-950/5 bg-portal-surface shadow-card ring-1 ring-white/80 lg:block"
+      aria-label="Tabela semanal"
+    >
       <div className="grid grid-cols-[8.5rem_repeat(5,minmax(0,1fr))] border-b border-slate-100 bg-slate-50">
-        <div className="px-4 py-4 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Horario</div>
+        <div className="px-4 py-4 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+          Horario
+        </div>
         {weekdays.map((weekday) => (
-          <div className="border-l border-slate-100 px-4 py-4 text-sm font-semibold text-brand-navy" key={weekday}>
+          <div
+            className="border-l border-slate-100 px-4 py-4 text-sm font-bold text-brand-navy"
+            key={weekday}
+          >
             {weekdayLabels[weekday]}
           </div>
         ))}
@@ -29,18 +43,27 @@ export function ScheduleTable({ canManage, onDelete, onDuplicate, onEdit, schedu
           const [start, end] = slot.split('-');
 
           return (
-            <div className="grid grid-cols-[8.5rem_repeat(5,minmax(0,1fr))] border-b border-slate-100 last:border-b-0" key={slot}>
+            <div
+              className="grid grid-cols-[8.5rem_repeat(5,minmax(0,1fr))] border-b border-slate-100/80 transition hover:bg-white last:border-b-0"
+              key={slot}
+            >
               <div className="bg-white px-4 py-4">
                 <p className="text-lg font-semibold text-brand-navy">{start}</p>
                 <p className="mt-1 text-xs font-semibold text-slate-400">{end}</p>
               </div>
               {weekdays.map((weekday) => {
                 const daySchedules = schedules.filter(
-                  (schedule) => schedule.diaSemana === weekday && schedule.horarioInicio === start && schedule.horarioFim === end
+                  (schedule) =>
+                    schedule.diaSemana === weekday &&
+                    schedule.horarioInicio === start &&
+                    schedule.horarioFim === end,
                 );
 
                 return (
-                  <div className="min-h-[7.5rem] border-l border-slate-100 p-2" key={`${weekday}-${slot}`}>
+                  <div
+                    className="min-h-[7.5rem] border-l border-slate-100/80 p-2"
+                    key={`${weekday}-${slot}`}
+                  >
                     <div className="space-y-2">
                       {daySchedules.map((schedule) => (
                         <ScheduleLessonCard
@@ -61,7 +84,9 @@ export function ScheduleTable({ canManage, onDelete, onDuplicate, onEdit, schedu
           );
         })
       ) : (
-        <div className="p-10 text-center text-sm font-semibold text-slate-500">Nenhum horario encontrado.</div>
+        <div className="p-10 text-center text-sm font-semibold text-slate-500">
+          Nenhum horario encontrado.
+        </div>
       )}
     </section>
   );

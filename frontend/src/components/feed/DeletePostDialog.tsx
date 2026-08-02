@@ -10,7 +10,12 @@ type DeletePostDialogProps = {
   onConfirm: () => void;
 };
 
-export function DeletePostDialog({ isDeleting, isOpen, onClose, onConfirm }: DeletePostDialogProps) {
+export function DeletePostDialog({
+  isDeleting,
+  isOpen,
+  onClose,
+  onConfirm,
+}: DeletePostDialogProps) {
   return (
     <Modal className="max-w-md" isOpen={isOpen} onClose={onClose} title="Excluir publicacao">
       <div className="space-y-5">
@@ -20,7 +25,9 @@ export function DeletePostDialog({ isDeleting, isOpen, onClose, onConfirm }: Del
           </div>
           <div>
             <p className="font-semibold text-brand-navy">Deseja excluir esta publicacao?</p>
-            <p className="mt-1 text-sm leading-6 text-slate-500">Essa acao remove o item do feed imediatamente.</p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              Essa acao remove o item do feed imediatamente.
+            </p>
           </div>
         </div>
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -33,7 +40,11 @@ export function DeletePostDialog({ isDeleting, isOpen, onClose, onConfirm }: Del
             onClick={onConfirm}
             type="button"
           >
-            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
             Excluir
           </Button>
         </div>

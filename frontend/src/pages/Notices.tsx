@@ -17,7 +17,7 @@ const initialFilters: NoticeFilterValues = {
   categoria: 'TODAS',
   prioridade: 'TODAS',
   search: '',
-  status: 'TODOS'
+  status: 'TODOS',
 };
 
 export function Notices() {
@@ -132,7 +132,7 @@ export function Notices() {
           Voltar
         </Link>
 
-        <section className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-950/5 bg-white shadow-card ring-1 ring-white/80">
           <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="flex items-start gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-amber-50 text-amber-600 ring-1 ring-amber-100">
@@ -140,7 +140,9 @@ export function Notices() {
               </div>
               <div>
                 <h1 className="text-4xl font-semibold tracking-normal text-brand-navy">Avisos</h1>
-                <p className="mt-2 max-w-2xl text-base leading-7 text-slate-500">Comunicados oficiais da escola</p>
+                <p className="mt-2 max-w-2xl text-base leading-7 text-slate-500">
+                  Comunicados oficiais da escola
+                </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
                     <BellRing className="h-4 w-4" />
@@ -175,7 +177,7 @@ export function Notices() {
         ) : null}
 
         {isLoading ? (
-          <div className="flex min-h-64 items-center justify-center rounded-3xl border border-slate-100 bg-white">
+          <div className="flex min-h-64 items-center justify-center rounded-3xl border border-slate-950/5 bg-white shadow-card ring-1 ring-white/80">
             <Spinner />
           </div>
         ) : notices.length ? (
@@ -194,11 +196,13 @@ export function Notices() {
             ))}
           </div>
         ) : (
-          <div className="rounded-3xl border border-slate-100 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-slate-950/5 bg-white p-10 text-center shadow-card ring-1 ring-white/80">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-50 text-brand-blue">
               <Megaphone className="h-8 w-8" />
             </div>
-            <h2 className="mt-5 text-xl font-semibold tracking-normal text-brand-navy">Nenhum aviso encontrado</h2>
+            <h2 className="mt-5 text-xl font-semibold tracking-normal text-brand-navy">
+              Nenhum aviso encontrado
+            </h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
               Ajuste a pesquisa ou os filtros para consultar os comunicados disponiveis.
             </p>

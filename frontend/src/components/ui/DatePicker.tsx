@@ -108,7 +108,9 @@ export function DatePicker({ error, label, name, onChange, value }: DatePickerPr
         <input
           className={cn(
             'w-full rounded-2xl border bg-white px-4 py-3 text-sm text-brand-navy outline-none transition placeholder:text-slate-400 focus:ring-4',
-            displayedError ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
+            displayedError
+              ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+              : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100',
           )}
           inputMode="numeric"
           maxLength={10}
@@ -123,7 +125,9 @@ export function DatePicker({ error, label, name, onChange, value }: DatePickerPr
             aria-label={label}
             className={cn(
               'w-full rounded-2xl border bg-white py-3 pl-11 pr-4 text-sm text-brand-navy outline-none transition focus:ring-4 sm:w-48',
-              displayedError ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
+              displayedError
+                ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100',
             )}
             max={today}
             onChange={(event) => handleCalendarChange(event.target.value)}
@@ -132,7 +136,9 @@ export function DatePicker({ error, label, name, onChange, value }: DatePickerPr
           />
         </span>
       </div>
-      {displayedError ? <span className="mt-2 block text-sm text-red-600">{displayedError}</span> : null}
+      {displayedError ? (
+        <span className="mt-2 block text-sm text-red-600">{displayedError}</span>
+      ) : null}
     </label>
   );
 }

@@ -21,7 +21,11 @@ export function Modal({ children, className, isOpen, onClose, title }: ModalProp
       <section className={cn('w-full max-w-lg rounded-3xl bg-white p-6 shadow-soft', className)}>
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-semibold text-brand-navy">{title}</h2>
-          <button className="rounded-full p-2 text-slate-500 hover:bg-slate-100" onClick={onClose} type="button">
+          <button
+            className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+            onClick={onClose}
+            type="button"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>

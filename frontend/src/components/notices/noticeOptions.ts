@@ -6,7 +6,7 @@ import {
   PenTool,
   ShieldCheck,
   Soup,
-  Wrench
+  Wrench,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -20,13 +20,13 @@ export const categoryLabels: Record<NoticeCategory, string> = {
   [NoticeCategory.BIBLIOTECA]: 'Biblioteca',
   [NoticeCategory.TRANSPORTE]: 'Transporte',
   [NoticeCategory.GREMIO]: 'Gremio',
-  [NoticeCategory.MANUTENCAO]: 'Manutencao'
+  [NoticeCategory.MANUTENCAO]: 'Manutencao',
 };
 
 export const priorityLabels: Record<NoticePriority, string> = {
   [NoticePriority.URGENTE]: 'Urgente',
   [NoticePriority.IMPORTANTE]: 'Importante',
-  [NoticePriority.INFORMATIVO]: 'Informativo'
+  [NoticePriority.INFORMATIVO]: 'Informativo',
 };
 
 export const categoryIcons: Record<NoticeCategory, LucideIcon> = {
@@ -37,13 +37,13 @@ export const categoryIcons: Record<NoticeCategory, LucideIcon> = {
   [NoticeCategory.BIBLIOTECA]: BookOpen,
   [NoticeCategory.TRANSPORTE]: Bus,
   [NoticeCategory.GREMIO]: ShieldCheck,
-  [NoticeCategory.MANUTENCAO]: Wrench
+  [NoticeCategory.MANUTENCAO]: Wrench,
 };
 
 export const priorityStyles: Record<NoticePriority, string> = {
   [NoticePriority.URGENTE]: 'bg-red-50 text-red-700 ring-red-100',
   [NoticePriority.IMPORTANTE]: 'bg-orange-50 text-orange-700 ring-orange-100',
-  [NoticePriority.INFORMATIVO]: 'bg-blue-50 text-blue-700 ring-blue-100'
+  [NoticePriority.INFORMATIVO]: 'bg-blue-50 text-blue-700 ring-blue-100',
 };
 
 export const categoryOptions = Object.values(NoticeCategory);

@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 
 import { AppError } from '../../../middlewares/error.middleware';
 import { removeUploadedFiles } from '../../../utils/imageUpload';
+import { runSafely } from '../../../utils/async';
 import type { UserDocument } from '../../users/models/user.model';
 import { toPublicUser } from '../../users/service/user.service';
 import { Cargo, type PublicUser } from '../../users/types/user.types';
@@ -62,7 +63,7 @@ export class NoticeService {
       autor: authorId
     });
 
-    void this.notificationService.notifyAllActive({
+    runSafely(this.notificationService.notifyAllActive({
       autorId: authorId,
       descricao: data.descricao.slice(0, 180),
       entidadeId: notice.id,
@@ -70,7 +71,7 @@ export class NoticeService {
       tipo: NotificationType.NEW_NOTICE,
       titulo: `Novo aviso: ${data.titulo}`,
       url: `/avisos?aviso=${notice.id}`
-    });
+    }), 'notices.create.notifyAllActive');
 
     return toPublicNotice(notice);
   }

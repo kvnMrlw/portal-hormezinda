@@ -1,4 +1,15 @@
-import { ArrowLeft, CalendarDays, Coffee, Copy, Pencil, Plus, Printer, RefreshCcw, Trash2, UsersRound } from 'lucide-react';
+import {
+  ArrowLeft,
+  CalendarDays,
+  Coffee,
+  Copy,
+  Pencil,
+  Plus,
+  Printer,
+  RefreshCcw,
+  Trash2,
+  UsersRound,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
@@ -15,10 +26,23 @@ import { useAuth } from '../contexts/useAuth';
 import { formatClassName, formatStudentClassName, getClassSortValue } from '../lib/classes';
 import { isAdminRole } from '../lib/roles';
 import { listCatalogs } from '../services/catalogs';
-import { copyWeekSchedules, createSchedule, deleteSchedule, listSchedules, updateSchedule } from '../services/schedules';
+import {
+  copyWeekSchedules,
+  createSchedule,
+  deleteSchedule,
+  listSchedules,
+  updateSchedule,
+} from '../services/schedules';
 import { Cargo } from '../types/auth';
 import type { ClassGroup, Room, Subject } from '../types/catalogs';
-import { ScheduleEntryKind, Weekday, weekdayLabels, weekdays, type ScheduleEntry, type SchedulePayload } from '../types/schedules';
+import {
+  ScheduleEntryKind,
+  Weekday,
+  weekdayLabels,
+  weekdays,
+  type ScheduleEntry,
+  type SchedulePayload,
+} from '../types/schedules';
 
 type ModalState = {
   mode: 'create' | 'edit';
@@ -40,9 +64,15 @@ function getErrorMessage(error: unknown): string {
   return 'Nao foi possivel concluir a solicitacao.';
 }
 
-function getScheduleSlots(schedules: ScheduleEntry[]): Array<{ end: string; key: string; start: string }> {
-  return Array.from(new Set(schedules.map((schedule) => `${schedule.horarioInicio}-${schedule.horarioFim}`)))
-    .sort((first, second) => timeToMinutes(first.split('-')[0]) - timeToMinutes(second.split('-')[0]))
+function getScheduleSlots(
+  schedules: ScheduleEntry[],
+): Array<{ end: string; key: string; start: string }> {
+  return Array.from(
+    new Set(schedules.map((schedule) => `${schedule.horarioInicio}-${schedule.horarioFim}`)),
+  )
+    .sort(
+      (first, second) => timeToMinutes(first.split('-')[0]) - timeToMinutes(second.split('-')[0]),
+    )
     .map((slot) => {
       const [start, end] = slot.split('-');
       return { end, key: slot, start };
@@ -68,10 +98,10 @@ export function Schedules() {
   const [error, setError] = useState('');
 
   const selectedClass = classes.find((classGroup) => classGroup.id === classId);
-  const activeClassId = isAdmin ? classId ?? '' : isTeacher ? '' : schedules[0]?.turma.id ?? '';
+  const activeClassId = isAdmin ? (classId ?? '') : isTeacher ? '' : (schedules[0]?.turma.id ?? '');
   const visibleSchedules = useMemo(
     () => schedules.filter((schedule) => !activeClassId || schedule.turma.id === activeClassId),
-    [activeClassId, schedules]
+    [activeClassId, schedules],
   );
 
   const loadBaseData = useCallback(async () => {
@@ -123,7 +153,7 @@ export function Schedules() {
       const nextPayload = {
         ...payload,
         diaSemana: modalState?.schedule?.diaSemana ?? modalState?.day ?? payload.diaSemana,
-        turmaId: payload.turmaId || activeClassId
+        turmaId: payload.turmaId || activeClassId,
       };
 
       if (modalState?.mode === 'edit' && modalState.schedule) {
@@ -142,7 +172,10 @@ export function Schedules() {
   }
 
   async function handleDelete(schedule: ScheduleEntry): Promise<void> {
-    const label = schedule.tipo === ScheduleEntryKind.INTERVAL ? 'Intervalo' : schedule.disciplina?.nome ?? 'horario';
+    const label =
+      schedule.tipo === ScheduleEntryKind.INTERVAL
+        ? 'Intervalo'
+        : (schedule.disciplina?.nome ?? 'horario');
 
     if (!window.confirm(`Excluir "${label}"?`)) return;
 
@@ -163,7 +196,7 @@ export function Schedules() {
       await copyWeekSchedules({
         destinoTurmaId: copyTargetId,
         origemTurmaId: classId,
-        sobrescrever: copyOverwrite
+        sobrescrever: copyOverwrite,
       });
       setIsCopyOpen(false);
       await loadSchedules();
@@ -186,19 +219,25 @@ export function Schedules() {
       </style>
 
       <div className="mx-auto max-w-7xl space-y-5">
-        <header className="schedule-no-print rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+        <header className="schedule-no-print rounded-3xl border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80 sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-blue-50 text-brand-blue ring-1 ring-blue-100">
                 <CalendarDays className="h-7 w-7" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Grade semanal</p>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                  Grade semanal
+                </p>
                 <h1 className="mt-1 text-3xl font-semibold tracking-normal text-brand-navy sm:text-4xl">
                   {isAdmin && selectedClass ? formatClassName(selectedClass) : 'Horarios'}
                 </h1>
                 <p className="mt-2 text-sm font-medium text-slate-500">
-                  {isTeacher ? 'Suas aulas da semana.' : isAdmin ? 'Tabela semanal por turma.' : `Horario da turma ${formatStudentClassName(user?.turma)}.`}
+                  {isTeacher
+                    ? 'Suas aulas da semana.'
+                    : isAdmin
+                      ? 'Tabela semanal por turma.'
+                      : `Horario da turma ${formatStudentClassName(user?.turma)}.`}
                 </p>
               </div>
             </div>
@@ -252,7 +291,9 @@ export function Schedules() {
             schedules={visibleSchedules}
           />
         ) : null}
-        {!isLoading && !isTeacher && !isAdmin ? <WeeklyScheduleTable schedules={visibleSchedules} /> : null}
+        {!isLoading && !isTeacher && !isAdmin ? (
+          <WeeklyScheduleTable schedules={visibleSchedules} />
+        ) : null}
       </div>
 
       <ScheduleModal
@@ -277,22 +318,51 @@ export function Schedules() {
         subjects={subjects}
       />
 
-      <Modal className="max-w-xl" isOpen={isCopyOpen} onClose={() => setIsCopyOpen(false)} title="Copiar semana">
+      <Modal
+        className="max-w-xl"
+        isOpen={isCopyOpen}
+        onClose={() => setIsCopyOpen(false)}
+        title="Copiar semana"
+      >
         <div className="space-y-4">
-          <p className="text-sm font-medium text-slate-500">Copiar todos os horarios de {formatClassName(selectedClass)} para outra sala.</p>
-          <Select label="Sala destino" name="copyTarget" onChange={(event) => setCopyTargetId(event.target.value)} value={copyTargetId}>
+          <p className="text-sm font-medium text-slate-500">
+            Copiar todos os horarios de {formatClassName(selectedClass)} para outra sala.
+          </p>
+          <Select
+            label="Sala destino"
+            name="copyTarget"
+            onChange={(event) => setCopyTargetId(event.target.value)}
+            value={copyTargetId}
+          >
             <option value="">Selecione</option>
-            {classes.filter((classGroup) => classGroup.id !== classId).map((classGroup) => (
-              <option key={classGroup.id} value={classGroup.id}>{formatClassName(classGroup)}</option>
-            ))}
+            {classes
+              .filter((classGroup) => classGroup.id !== classId)
+              .map((classGroup) => (
+                <option key={classGroup.id} value={classGroup.id}>
+                  {formatClassName(classGroup)}
+                </option>
+              ))}
           </Select>
           <label className="inline-flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-100">
-            <input checked={copyOverwrite} className="h-4 w-4 accent-brand-blue" onChange={(event) => setCopyOverwrite(event.target.checked)} type="checkbox" />
+            <input
+              checked={copyOverwrite}
+              className="h-4 w-4 accent-brand-blue"
+              onChange={(event) => setCopyOverwrite(event.target.checked)}
+              type="checkbox"
+            />
             Sobrescrever horarios existentes
           </label>
           <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
-            <Button onClick={() => setIsCopyOpen(false)} type="button" variant="secondary">Cancelar</Button>
-            <Button disabled={!copyTargetId || isSaving} onClick={() => void handleCopyWeek()} type="button">Copiar</Button>
+            <Button onClick={() => setIsCopyOpen(false)} type="button" variant="secondary">
+              Cancelar
+            </Button>
+            <Button
+              disabled={!copyTargetId || isSaving}
+              onClick={() => void handleCopyWeek()}
+              type="button"
+            >
+              Copiar
+            </Button>
           </div>
         </div>
       </Modal>
@@ -302,21 +372,37 @@ export function Schedules() {
 
 function ClassGrid({ classes }: { classes: ClassGroup[] }) {
   if (!classes.length) {
-    return <EmptyState description="Cadastre salas em Cadastros para montar a grade." icon={UsersRound} title="Nenhuma sala cadastrada." />;
+    return (
+      <EmptyState
+        description="Cadastre salas em Cadastros para montar a grade."
+        icon={UsersRound}
+        title="Nenhuma sala cadastrada."
+      />
+    );
   }
 
-  const sortedClasses = [...classes].sort((first, second) => getClassSortValue(first).localeCompare(getClassSortValue(second), 'pt-BR'));
+  const sortedClasses = [...classes].sort((first, second) =>
+    getClassSortValue(first).localeCompare(getClassSortValue(second), 'pt-BR'),
+  );
 
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {sortedClasses.map((classGroup) => (
-        <Link className="group rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-soft" key={classGroup.id} to={`/horarios/turma/${classGroup.id}`}>
+        <Link
+          className="group rounded-3xl border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80 transition duration-200 hover:-translate-y-0.5 hover:shadow-soft"
+          key={classGroup.id}
+          to={`/horarios/turma/${classGroup.id}`}
+        >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue ring-1 ring-blue-100">
             <UsersRound className="h-6 w-6" />
           </div>
-          <h2 className="mt-5 text-2xl font-semibold tracking-normal text-brand-navy">{formatClassName(classGroup)}</h2>
+          <h2 className="mt-5 text-2xl font-semibold tracking-normal text-brand-navy">
+            {formatClassName(classGroup)}
+          </h2>
           <p className="mt-2 text-sm font-semibold text-slate-500">{classGroup.turno}</p>
-          <span className="mt-5 inline-flex text-sm font-bold text-brand-blue">Abrir tabela semanal</span>
+          <span className="mt-5 inline-flex text-sm font-bold text-brand-blue">
+            Abrir tabela semanal
+          </span>
         </Link>
       ))}
     </section>
@@ -328,7 +414,7 @@ function WeeklyScheduleTable({
   onCreate,
   onDelete,
   onEdit,
-  schedules
+  schedules,
 }: {
   canManage?: boolean;
   onCreate?: (day: Weekday, start?: string, end?: string) => void;
@@ -340,31 +426,52 @@ function WeeklyScheduleTable({
 
   if (!slots.length) {
     return (
-      <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-        <EmptyState description={canManage ? 'Crie o primeiro horario livremente, sem grade fixa.' : 'Sem horarios cadastrados para esta semana.'} icon={CalendarDays} title="Tabela semanal vazia." />
+      <section className="rounded-3xl border border-slate-950/5 bg-white p-6 shadow-card ring-1 ring-white/80">
+        <EmptyState
+          description={
+            canManage
+              ? 'Crie o primeiro horario livremente, sem grade fixa.'
+              : 'Sem horarios cadastrados para esta semana.'
+          }
+          icon={CalendarDays}
+          title="Tabela semanal vazia."
+        />
       </section>
     );
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+    <section className="overflow-hidden rounded-3xl border border-slate-950/5 bg-white shadow-card ring-1 ring-white/80">
       <div className="hidden lg:block">
         <div className="grid grid-cols-[8rem_repeat(5,minmax(0,1fr))] border-b border-slate-100 bg-slate-50">
-          <div className="px-4 py-4 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Horario</div>
+          <div className="px-4 py-4 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+            Horario
+          </div>
           {weekdays.map((weekday) => (
-            <div className="border-l border-slate-100 px-4 py-4 text-sm font-semibold text-brand-navy" key={weekday}>
+            <div
+              className="border-l border-slate-100 px-4 py-4 text-sm font-semibold text-brand-navy"
+              key={weekday}
+            >
               {weekdayLabels[weekday]}
             </div>
           ))}
         </div>
         {slots.map((slot) => (
-          <div className="grid grid-cols-[8rem_repeat(5,minmax(0,1fr))] border-b border-slate-100 last:border-b-0" key={slot.key}>
+          <div
+            className="grid grid-cols-[8rem_repeat(5,minmax(0,1fr))] border-b border-slate-100 last:border-b-0"
+            key={slot.key}
+          >
             <div className="px-4 py-4 text-sm font-bold text-brand-navy">
               <p>{slot.start}</p>
               <p className="text-xs text-slate-400">{slot.end}</p>
             </div>
             {weekdays.map((weekday) => {
-              const schedule = schedules.find((item) => item.diaSemana === weekday && item.horarioInicio === slot.start && item.horarioFim === slot.end);
+              const schedule = schedules.find(
+                (item) =>
+                  item.diaSemana === weekday &&
+                  item.horarioInicio === slot.start &&
+                  item.horarioFim === slot.end,
+              );
 
               return (
                 <ScheduleCell
@@ -385,23 +492,35 @@ function WeeklyScheduleTable({
         {weekdays.map((weekday) => {
           const daySchedules = schedules
             .filter((schedule) => schedule.diaSemana === weekday)
-            .sort((first, second) => timeToMinutes(first.horarioInicio) - timeToMinutes(second.horarioInicio));
+            .sort(
+              (first, second) =>
+                timeToMinutes(first.horarioInicio) - timeToMinutes(second.horarioInicio),
+            );
 
           return (
-            <div className="rounded-3xl border border-slate-100 bg-white p-3 shadow-sm" key={weekday}>
-              <h2 className="px-1 text-sm font-bold uppercase tracking-[0.12em] text-slate-400">{weekdayLabels[weekday]}</h2>
+            <div
+              className="rounded-3xl border border-slate-950/5 bg-white p-3 shadow-card ring-1 ring-white/80"
+              key={weekday}
+            >
+              <h2 className="px-1 text-sm font-bold uppercase tracking-[0.12em] text-slate-400">
+                {weekdayLabels[weekday]}
+              </h2>
               <div className="mt-3 space-y-2">
-                {daySchedules.length ? daySchedules.map((schedule) => (
-                  <ScheduleCell
-                    canManage={canManage}
-                    compact
-                    key={schedule.id}
-                    onDelete={onDelete}
-                    onEdit={onEdit}
-                    schedule={schedule}
-                  />
-                )) : (
-                  <p className="rounded-2xl bg-slate-50 p-3 text-sm font-semibold text-slate-500">Sem horario disponivel.</p>
+                {daySchedules.length ? (
+                  daySchedules.map((schedule) => (
+                    <ScheduleCell
+                      canManage={canManage}
+                      compact
+                      key={schedule.id}
+                      onDelete={onDelete}
+                      onEdit={onEdit}
+                      schedule={schedule}
+                    />
+                  ))
+                ) : (
+                  <p className="rounded-2xl bg-slate-50 p-3 text-sm font-semibold text-slate-500">
+                    Sem horario disponivel.
+                  </p>
                 )}
               </div>
             </div>
@@ -418,7 +537,7 @@ function ScheduleCell({
   onCreate,
   onDelete,
   onEdit,
-  schedule
+  schedule,
 }: {
   canManage: boolean;
   compact?: boolean;
@@ -435,7 +554,11 @@ function ScheduleCell({
         onClick={onCreate}
         type="button"
       >
-        {canManage ? <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">Adicionar</span> : null}
+        {canManage ? (
+          <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">
+            Adicionar
+          </span>
+        ) : null}
       </button>
     );
   }
@@ -451,19 +574,41 @@ function ScheduleCell({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[0.68rem] font-bold uppercase tracking-[0.12em]" style={{ color: subtleTextColor }}>
+          <p
+            className="text-[0.68rem] font-bold uppercase tracking-[0.12em]"
+            style={{ color: subtleTextColor }}
+          >
             {isInterval ? 'Pausa' : 'Aula'}
           </p>
-          <h3 className="mt-1 break-words text-sm font-bold leading-snug" style={{ color: textColor }}>
+          <h3
+            className="mt-1 break-words text-sm font-bold leading-snug"
+            style={{ color: textColor }}
+          >
             {isInterval ? 'Intervalo' : schedule.disciplina?.nome}
           </h3>
         </div>
         {canManage ? (
           <div className="flex gap-1">
-            <button aria-label="Editar horario" className="rounded-lg bg-slate-50 p-1.5 text-slate-500 hover:text-brand-blue" onClick={(event) => { event.stopPropagation(); onEdit?.(schedule); }} type="button">
+            <button
+              aria-label="Editar horario"
+              className="rounded-lg bg-slate-50 p-1.5 text-slate-500 hover:text-brand-blue"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit?.(schedule);
+              }}
+              type="button"
+            >
               <Pencil className="h-3.5 w-3.5" />
             </button>
-            <button aria-label="Excluir horario" className="rounded-lg bg-red-50 p-1.5 text-red-600" onClick={(event) => { event.stopPropagation(); onDelete?.(schedule); }} type="button">
+            <button
+              aria-label="Excluir horario"
+              className="rounded-lg bg-red-50 p-1.5 text-red-600"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete?.(schedule);
+              }}
+              type="button"
+            >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -476,20 +621,43 @@ function ScheduleCell({
         </div>
       ) : (
         <>
-          <p className="mt-2 truncate text-xs font-semibold opacity-90" style={{ color: textColor }}>
-            {schedule.professor ? `Prof. ${schedule.professor.nomeCompleto}` : 'Professor nao definido'}
+          <p
+            className="mt-2 truncate text-xs font-semibold opacity-90"
+            style={{ color: textColor }}
+          >
+            {schedule.professor
+              ? `Prof. ${schedule.professor.nomeCompleto}`
+              : 'Professor nao definido'}
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="rounded-xl bg-white/20 px-2 py-1.5 ring-1 ring-white/20">
-              <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] opacity-75" style={{ color: textColor }}>Inicio</p>
-              <p className="text-sm font-bold" style={{ color: textColor }}>{schedule.horarioInicio}</p>
+              <p
+                className="text-[0.62rem] font-bold uppercase tracking-[0.12em] opacity-75"
+                style={{ color: textColor }}
+              >
+                Inicio
+              </p>
+              <p className="text-sm font-bold" style={{ color: textColor }}>
+                {schedule.horarioInicio}
+              </p>
             </div>
             <div className="rounded-xl bg-white/20 px-2 py-1.5 ring-1 ring-white/20">
-              <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] opacity-75" style={{ color: textColor }}>Termino</p>
-              <p className="text-sm font-bold" style={{ color: textColor }}>{schedule.horarioFim}</p>
+              <p
+                className="text-[0.62rem] font-bold uppercase tracking-[0.12em] opacity-75"
+                style={{ color: textColor }}
+              >
+                Termino
+              </p>
+              <p className="text-sm font-bold" style={{ color: textColor }}>
+                {schedule.horarioFim}
+              </p>
             </div>
           </div>
-          {schedule.sala ? <p className="mt-2 truncate text-xs font-bold opacity-80" style={{ color: textColor }}>{schedule.sala.nome}</p> : null}
+          {schedule.sala ? (
+            <p className="mt-2 truncate text-xs font-bold opacity-80" style={{ color: textColor }}>
+              {schedule.sala.nome}
+            </p>
+          ) : null}
         </>
       )}
     </article>
@@ -498,7 +666,11 @@ function ScheduleCell({
   if (!canManage) return <div className="border-l border-slate-100 p-2">{content}</div>;
 
   return (
-    <button className="border-l border-slate-100 p-2 text-left transition hover:bg-blue-50/40" onClick={() => onEdit?.(schedule)} type="button">
+    <button
+      className="border-l border-slate-100 p-2 text-left transition hover:bg-blue-50/40"
+      onClick={() => onEdit?.(schedule)}
+      type="button"
+    >
       {content}
     </button>
   );
