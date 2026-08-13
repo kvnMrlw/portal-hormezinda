@@ -1,0 +1,183 @@
+import { z } from 'zod';
+
+import { Cargo, Sexo, Turma, Turno, turmasPorTurno } from '../types/user.types';
+
+const usuarioRegex = /^(?=.*[a-z])(?=.*\.)[a-z0-9.]{8,}$/;
+const senhaRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+const adminAssignableCargoSchema = z.nativeEnum(Cargo);
+
+function parseBirthDate(value?: string): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (!isoDateRegex.test(value)) {
+    return undefined;
+  }
+
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day ||
+    date > today
+  ) {
+    return undefined;
+  }
+
+  return date;
+}
+
+function parseBoolean(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (value === 'true') {
+    return true;
+  }
+
+  if (value === 'false') {
+    return false;
+  }
+
+  return undefined;
+}
+
+const birthDateSchema = z
+  .string()
+  .optional()
+  .transform((value) => parseBirthDate(value));
+
+export const userIdParamSchema = z.object({
+  id: z.string().regex(/^[a-f\d]{24}$/i, 'Id do usuario e obrigatorio')
+});
+
+export const listPeopleQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(30).default(18),
+  page: z.coerce.number().int().min(1).default(1),
+  search: z.string().trim().max(80).optional(),
+  sort: z.enum(['az', 'za', 'recentes', 'antigos']).default('az')
+});
+
+export const publicProfileQuerySchema = z.object({
+  postsLimit: z.coerce.number().int().min(1).max(18).default(12),
+  postsPage: z.coerce.number().int().min(1).default(1)
+});
+
+export const updateProfileSchema = z.object({
+  bio: z.string().trim().max(280, 'A bio deve ter no maximo 280 caracteres').optional(),
+  telefone: z.string().trim().max(24, 'Telefone deve ter no maximo 24 caracteres').optional(),
+  redeSocial: z.string().trim().max(120, 'A rede social deve ter no maximo 120 caracteres').optional(),
+  privacidade: z
+    .object({
+      mostrarAniversario: z.preprocess(parseBoolean, z.boolean()).optional(),
+      mostrarBanner: z.preprocess(parseBoolean, z.boolean()).optional(),
+      mostrarBio: z.preprocess(parseBoolean, z.boolean()).optional(),
+      mostrarTelefone: z.preprocess(parseBoolean, z.boolean()).optional()
+    })
+    .optional(),
+  notificacoes: z
+    .object({
+      aniversarios: z.preprocess(parseBoolean, z.boolean()).optional(),
+      avisos: z.preprocess(parseBoolean, z.boolean()).optional(),
+      cursos: z.preprocess(parseBoolean, z.boolean()).optional(),
+      ideias: z.preprocess(parseBoolean, z.boolean()).optional(),
+      publicacoes: z.preprocess(parseBoolean, z.boolean()).optional(),
+      stories: z.preprocess(parseBoolean, z.boolean()).optional()
+    })
+    .optional(),
+  senhaAtual: z.string().optional(),
+  novaSenha: z
+    .string()
+    .regex(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/, 'Senha deve ter minimo 8 caracteres, com pelo menos 1 letra e 1 numero')
+    .optional(),
+  confirmarSenha: z.string().optional()
+});
+
+export const adminCreateUserSchema = z
+  .object({
+    nomeCompleto: z.string().trim().min(3, 'Informe o nome completo'),
+    dataNascimento: z
+      .string()
+      .optional()
+      .transform((value) => parseBirthDate(value)),
+    usuario: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(usuarioRegex, 'Usuario deve ter minimo 8 caracteres, letras e ponto'),
+    senha: z.string().regex(senhaRegex, 'Senha deve ter minimo 8 caracteres, com letras e numeros'),
+    cargo: adminAssignableCargoSchema,
+    sexo: z.nativeEnum(Sexo),
+    materia: z.string().trim().max(80).optional(),
+    pertenceGremio: z.preprocess(parseBoolean, z.boolean().optional()),
+    turno: z.nativeEnum(Turno).optional(),
+    turma: z.nativeEnum(Turma).optional()
+  })
+  .superRefine((data, context) => {
+    if (data.cargo === Cargo.PROFESSOR && !data.materia) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Informe a materia do professor',
+        path: ['materia']
+      });
+    }
+
+    if (data.cargo === Cargo.ALUNO && (!data.turno || !data.turma)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Informe turno e turma do aluno',
+        path: ['turma']
+      });
+    }
+
+    if (data.turno && data.turma && !turmasPorTurno[data.turno].includes(data.turma)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Turma nao pertence ao turno selecionado',
+        path: ['turma']
+      });
+    }
+  });
+
+export const adminUpdateUserSchema = z
+  .object({
+    usuario: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(usuarioRegex, 'Usuario deve ter minimo 8 caracteres, letras e ponto')
+      .optional(),
+    senha: z.string().regex(senhaRegex, 'Senha deve ter minimo 8 caracteres, com letras e numeros').optional(),
+    cargo: adminAssignableCargoSchema.optional(),
+    sexo: z.nativeEnum(Sexo).optional(),
+    materia: z.string().trim().max(80).optional(),
+    pertenceGremio: z.preprocess(parseBoolean, z.boolean().optional()),
+    ativo: z.preprocess(parseBoolean, z.boolean().optional()),
+    dataNascimento: birthDateSchema,
+    turno: z.nativeEnum(Turno).optional(),
+    turma: z.nativeEnum(Turma).optional()
+  })
+  .superRefine((data, context) => {
+    if (data.cargo === Cargo.PROFESSOR && data.materia === '') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Informe a materia do professor',
+        path: ['materia']
+      });
+    }
+
+    if (data.turno && data.turma && !turmasPorTurno[data.turno].includes(data.turma)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Turma nao pertence ao turno selecionado',
+        path: ['turma']
+      });
+    }
+  });

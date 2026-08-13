@@ -1,0 +1,147 @@
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
+
+import { AUTH_SESSION_EXPIRED_EVENT, REFRESH_TOKEN_KEY, TOKEN_KEY, USER_KEY, api, clearStoredSession } from '../services/api';
+import { updateMyProfile } from '../services/users';
+import type { ApiResponse, AuthResponse, ProfileUpdatePayload, User } from '../types/auth';
+import { AuthContext, type LoginCredentials, type RegisterPayload } from './auth-context';
+
+function persistSession(authResponse: AuthResponse): void {
+  localStorage.setItem(TOKEN_KEY, authResponse.token);
+  localStorage.setItem(REFRESH_TOKEN_KEY, authResponse.refreshToken);
+  localStorage.setItem(USER_KEY, JSON.stringify(authResponse.usuario));
+}
+
+function readStoredUser(): User | null {
+  const storedUser = localStorage.getItem(USER_KEY);
+
+  if (!storedUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedUser) as User;
+  } catch {
+    localStorage.removeItem(USER_KEY);
+    return null;
+  }
+}
+
+// Provedor global do estado de autenticacao do frontend.
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [user, setUser] = useState<User | null>(() => readStoredUser());
+  const [isLoading, setIsLoading] = useState(() => Boolean(localStorage.getItem(TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY)));
+
+  useEffect(() => {
+    async function loadCurrentUser() {
+      if (!token) {
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+        if (refreshToken) {
+          try {
+            const response = await api.post<ApiResponse<AuthResponse>>('/auth/refresh', { refreshToken });
+            persistSession(response.data.data);
+            setToken(response.data.data.token);
+            setUser(response.data.data.usuario);
+          } catch {
+            clearStoredSession();
+            setToken(null);
+            setUser(null);
+            setIsLoading(false);
+          }
+
+          return;
+        }
+
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await api.get<ApiResponse<{ usuario: User }>>('/auth/me');
+        setUser(response.data.data.usuario);
+        setToken(localStorage.getItem(TOKEN_KEY));
+        localStorage.setItem(USER_KEY, JSON.stringify(response.data.data.usuario));
+      } catch {
+        clearStoredSession();
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadCurrentUser();
+  }, [token]);
+
+  useEffect(() => {
+    function clearSession() {
+      setToken(null);
+      setUser(null);
+      setIsLoading(false);
+    }
+
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, clearSession);
+
+    return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, clearSession);
+  }, []);
+
+  useEffect(() => {
+    function syncSession(event: StorageEvent) {
+      if (![TOKEN_KEY, REFRESH_TOKEN_KEY, USER_KEY].includes(event.key ?? '')) {
+        return;
+      }
+
+      const storedToken = localStorage.getItem(TOKEN_KEY);
+      setToken(storedToken);
+      setUser(readStoredUser());
+      setIsLoading(false);
+    }
+
+    window.addEventListener('storage', syncSession);
+
+    return () => window.removeEventListener('storage', syncSession);
+  }, []);
+
+  async function login(credentials: LoginCredentials): Promise<void> {
+    const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
+    persistSession(response.data.data);
+    setToken(response.data.data.token);
+    setUser(response.data.data.usuario);
+  }
+
+  async function register(payload: RegisterPayload): Promise<void> {
+    const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', payload);
+    persistSession(response.data.data);
+    setToken(response.data.data.token);
+    setUser(response.data.data.usuario);
+  }
+
+  async function updateProfile(payload: ProfileUpdatePayload): Promise<void> {
+    const updatedUser = await updateMyProfile(payload);
+    localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  }
+
+  function logout(): void {
+    clearStoredSession();
+    setToken(null);
+    setUser(null);
+  }
+
+  const value = useMemo(
+    () => ({
+      user,
+      token,
+      isAuthenticated: Boolean(token && user),
+      isLoading,
+      login,
+      register,
+      updateProfile,
+      logout
+    }),
+    [isLoading, token, user]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
