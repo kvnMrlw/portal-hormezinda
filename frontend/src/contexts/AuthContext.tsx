@@ -111,10 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function register(payload: RegisterPayload): Promise<void> {
-    const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', payload);
-    persistSession(response.data.data);
-    setToken(response.data.data.token);
-    setUser(response.data.data.usuario);
+    await api.post('/auth/register', payload);
   }
 
   async function updateProfile(payload: ProfileUpdatePayload): Promise<void> {

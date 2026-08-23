@@ -28,3 +28,6 @@ backups/
 
 # Pacotes/arquivos temporarios locais
 *.zip
+
+# Configuracao local do reCAPTCHA
+frontend/.env.local

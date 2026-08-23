@@ -51,6 +51,10 @@ const registerBaseSchema = z.object({
     .refine(isValidBirthDate, 'Informe uma data valida, sem datas futuras'),
   turno: z.nativeEnum(Turno, { required_error: 'Selecione seu turno' }),
   turma: z.nativeEnum(Turma, { required_error: 'Selecione sua turma' }),
+  email: z
+    .string()
+    .trim()
+    .email('Informe um e-mail válido'),
   usuario: z
     .string()
     .trim()
@@ -82,7 +86,8 @@ export const registerSchema = registerBaseSchema
 
 export const registerStepOneSchema = registerBaseSchema.pick({
   nomeCompleto: true,
-  dataNascimento: true
+  dataNascimento: true,
+  email: true
 });
 
 export const registerStepTwoSchema = registerBaseSchema.pick({

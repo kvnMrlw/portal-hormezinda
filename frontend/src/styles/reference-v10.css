@@ -864,3 +864,120 @@ div[class*="rounded-3xl"][class*="p-4"][class*="bg-white"]{
     box-shadow:0 12px 28px rgba(37,78,107,.075) !important;
   }
 }
+
+/* V33 - CAMADAS MOBILE + MODAIS MAIS LEGIVEIS */
+
+/* MOBILE: dropdown do perfil deve ficar ACIMA da pesquisa. */
+@media (max-width:1023px){
+  .portal-topbar,
+  header:has(.portal-topbar-brand-zone){
+    z-index:800 !important;
+    overflow:visible !important;
+  }
+
+  .portal-topbar [class*="absolute"],
+  .portal-topbar [class*="fixed"],
+  header:has(.portal-topbar-brand-zone) [class*="absolute"],
+  header:has(.portal-topbar-brand-zone) [class*="fixed"]{
+    z-index:900 !important;
+  }
+
+  .portal-main [class*="search"],
+  .portal-main [class*="Search"],
+  .portal-search,
+  .portal-search-shell{
+    z-index:30 !important;
+  }
+}
+
+/* MODAIS: preserva transparencia, aumentando blur e contraste. */
+:where(
+  div[class*="fixed"][class*="inset-0"][class*="z-"],
+  section[class*="fixed"][class*="inset-0"][class*="z-"]
+){
+  backdrop-filter:blur(5px) saturate(108%);
+  -webkit-backdrop-filter:blur(5px) saturate(108%);
+}
+
+:where([role="dialog"], [aria-modal="true"]){
+  background-color:rgba(247,251,254,.90) !important;
+  border-color:rgba(255,255,255,.72) !important;
+  box-shadow:
+    0 28px 80px rgba(10,25,49,.22),
+    0 8px 24px rgba(26,61,99,.10) !important;
+  backdrop-filter:blur(20px) saturate(118%) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(118%) !important;
+}
+
+:where(
+  div[class*="fixed"][class*="inset-0"][class*="z-"],
+  section[class*="fixed"][class*="inset-0"][class*="z-"]
+)
+> :where(div,section,form)[class*="rounded"]{
+  background-color:rgba(247,251,254,.88) !important;
+  border-color:rgba(255,255,255,.72) !important;
+  box-shadow:
+    0 28px 80px rgba(10,25,49,.20),
+    0 8px 24px rgba(26,61,99,.09) !important;
+  backdrop-filter:blur(18px) saturate(116%) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(116%) !important;
+}
+
+:where(
+  div[class*="fixed"][class*="inset-0"][class*="z-"],
+  section[class*="fixed"][class*="inset-0"][class*="z-"]
+)
+> :where(div,section,form)[class*="overflow"]{
+  background-color:rgba(247,251,254,.86) !important;
+  backdrop-filter:blur(16px) saturate(114%) !important;
+  -webkit-backdrop-filter:blur(16px) saturate(114%) !important;
+}
+
+:where(
+  [role="dialog"],
+  [aria-modal="true"],
+  div[class*="fixed"][class*="inset-0"][class*="z-"],
+  section[class*="fixed"][class*="inset-0"][class*="z-"]
+) :where(h1,h2,h3,h4,label){
+  text-shadow:0 1px 1px rgba(255,255,255,.58);
+}
+
+@media (max-width:720px){
+  :where(
+    div[class*="fixed"][class*="inset-0"][class*="z-"],
+    section[class*="fixed"][class*="inset-0"][class*="z-"]
+  ){
+    backdrop-filter:blur(4px) saturate(106%);
+    -webkit-backdrop-filter:blur(4px) saturate(106%);
+  }
+}
+
+/* V35 - PERFIL MOBILE ACIMA DA BUSCA */
+@media (max-width: 1023px) {
+  .portal-topbar-inner {
+    position: relative;
+    z-index: 120 !important;
+    overflow: visible !important;
+  }
+
+  .portal-topbar-actions {
+    position: relative;
+    z-index: 130 !important;
+    overflow: visible !important;
+  }
+
+  .portal-topbar-actions > div {
+    position: relative;
+    overflow: visible !important;
+  }
+
+  .portal-user-menu {
+    position: absolute;
+    z-index: 160 !important;
+  }
+
+  .portal-mobile-search {
+    position: relative;
+    z-index: 20 !important;
+  }
+}
