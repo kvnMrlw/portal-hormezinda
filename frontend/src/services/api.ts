@@ -10,10 +10,11 @@ export { REFRESH_TOKEN_KEY, TOKEN_KEY, USER_KEY };
 // Isso evita CORS quando o portal e acessado por IP da rede (ex.: 10.x.x.x:5173).
 // Em producao, VITE_API_URL continua tendo prioridade.
 const apiBaseUrl = import.meta.env.VITE_API_URL?.trim() || '/api';
+const apiTimeout = import.meta.env.PROD ? 60000 : 20000;
 
 export const api = axios.create({
   baseURL: apiBaseUrl,
-  timeout: 15000,
+  timeout: apiTimeout,
 });
 
 type RefreshResponse = {
@@ -26,9 +27,30 @@ type RefreshResponse = {
   };
 };
 
-type RetryableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
+type RetryableRequest = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+  _transientRetry?: boolean;
+};
 
 let refreshPromise: Promise<string | null> | null = null;
+
+const retryableMethods = new Set(['get', 'head', 'options']);
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function isTransientRequestFailure(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  if (!error.response) {
+    return true;
+  }
+
+  return error.response.status >= 500 && error.response.status <= 599;
+}
 
 export function clearStoredSession(): void {
   localStorage.removeItem(TOKEN_KEY);
@@ -65,6 +87,22 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (axios.isAxiosError(error)) {
+      const originalRequest = error.config as RetryableRequest | undefined;
+      const method = originalRequest?.method?.toLowerCase() ?? '';
+
+      if (
+        originalRequest &&
+        !originalRequest._transientRetry &&
+        retryableMethods.has(method) &&
+        isTransientRequestFailure(error)
+      ) {
+        originalRequest._transientRetry = true;
+        await wait(900);
+        return api(originalRequest);
+      }
+    }
+
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       const originalRequest = error.config as RetryableRequest | undefined;
       const requestUrl = originalRequest?.url ?? '';

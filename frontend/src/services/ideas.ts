@@ -37,17 +37,19 @@ export async function listUserIdeas(userId: string): Promise<Idea[]> {
 }
 
 export async function createIdea(payload: IdeaPayload): Promise<Idea> {
-  const response = await api.post<ApiResponse<{ ideia: Idea }>>('/ideas', toFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.post<ApiResponse<{ ideia: Idea }>>(
+    '/ideas',
+    toFormData(payload),
+  );
 
   return response.data.data.ideia;
 }
 
 export async function updateIdea(id: string, payload: Partial<IdeaPayload>): Promise<Idea> {
-  const response = await api.patch<ApiResponse<{ ideia: Idea }>>(`/ideas/${id}`, toFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.patch<ApiResponse<{ ideia: Idea }>>(
+    `/ideas/${id}`,
+    toFormData(payload),
+  );
 
   return response.data.data.ideia;
 }

@@ -170,7 +170,7 @@ export function Ideas() {
   }, [loadIdeas]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => void loadIdeas(true), 15000);
+    const interval = window.setInterval(() => void loadIdeas(true), 60000);
 
     return () => window.clearInterval(interval);
   }, [loadIdeas]);

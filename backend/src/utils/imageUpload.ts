@@ -2,13 +2,16 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import sharp, { type FitEnum } from 'sharp';
 
+import { env } from '../config/env';
 import { AppError } from '../middlewares/error.middleware';
 
 const uploadsRoot = path.resolve(process.cwd(), 'src/uploads');
 const allowedImageMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const cloudinaryFolderRoot = 'portal-hormezinda';
 
 type UploadOptions = {
   allowedTypes?: Set<string>;
@@ -30,7 +33,22 @@ export type SavedUploadedFile = {
   size: number;
 };
 
-const imageSettings: Record<ImageVariant, { fit: keyof FitEnum; height?: number; quality: number; width: number }> = {
+type PreparedFile = {
+  buffer: Buffer;
+  filename: string;
+  mimeType: string;
+};
+
+type CloudinaryResult = {
+  bytes: number;
+  publicId: string;
+  secureUrl: string;
+};
+
+const imageSettings: Record<
+  ImageVariant,
+  { fit: keyof FitEnum; height?: number; quality: number; width: number }
+> = {
   avatar: { fit: 'cover', height: 512, quality: 82, width: 512 },
   banner: { fit: 'cover', height: 720, quality: 82, width: 1600 },
   feed: { fit: 'inside', quality: 84, width: 1440 },
@@ -38,6 +56,21 @@ const imageSettings: Record<ImageVariant, { fit: keyof FitEnum; height?: number;
   menuThumb: { fit: 'cover', height: 360, quality: 78, width: 480 },
   notice: { fit: 'inside', quality: 82, width: 1440 }
 };
+
+const hasCloudinaryConfig = Boolean(
+  env.CLOUDINARY_CLOUD_NAME &&
+    env.CLOUDINARY_API_KEY &&
+    env.CLOUDINARY_API_SECRET
+);
+
+if (hasCloudinaryConfig) {
+  cloudinary.config({
+    cloud_name: env.CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+    secure: true
+  });
+}
 
 function isImageMimeType(mimeType: string): boolean {
   return allowedImageMimeTypes.has(mimeType);
@@ -58,9 +91,12 @@ async function ensureUploadDirectory(folderName: string): Promise<string> {
   return uploadDirectory;
 }
 
-async function optimizeImage(file: Express.Multer.File, variant: ImageVariant): Promise<{ buffer: Buffer; filename: string; mimeType: string }> {
+async function optimizeImage(
+  file: Express.Multer.File,
+  variant: ImageVariant
+): Promise<PreparedFile> {
   const settings = imageSettings[variant];
-  const image = sharp(file.buffer, { animated: false, failOn: 'none' })
+  const image = sharp(file.buffer, { animated: false, failOn: 'none', limitInputPixels: 40_000_000 })
     .rotate()
     .resize({
       fit: settings.fit,
@@ -83,6 +119,104 @@ function getSafeOriginalFilename(file: Express.Multer.File): string {
   return `${Date.now()}-${randomUUID()}${extension}`;
 }
 
+async function prepareFile(
+  file: Express.Multer.File,
+  imageVariant?: ImageVariant
+): Promise<PreparedFile> {
+  if (isImageMimeType(file.mimetype)) {
+    return optimizeImage(file, imageVariant ?? 'feed');
+  }
+
+  return {
+    buffer: file.buffer,
+    filename: getSafeOriginalFilename(file),
+    mimeType: file.mimetype
+  };
+}
+
+async function saveToCloudinary(
+  prepared: PreparedFile,
+  originalName: string,
+  folderName: string
+): Promise<CloudinaryResult> {
+  const isImage = isImageMimeType(prepared.mimeType);
+  const extension = isImage ? '' : path.extname(originalName).toLowerCase();
+  const publicId = `${Date.now()}-${randomUUID()}${extension}`;
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: `${cloudinaryFolderRoot}/${folderName}`,
+        public_id: publicId,
+        resource_type: isImage ? 'image' : 'raw',
+        overwrite: false
+      },
+      (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error('Cloudinary nao retornou resultado'));
+          return;
+        }
+
+        resolve({
+          bytes: result.bytes,
+          publicId: result.public_id,
+          secureUrl: result.secure_url
+        });
+      }
+    );
+
+    stream.end(prepared.buffer);
+  });
+}
+
+function parseCloudinaryAsset(
+  publicUrl: string
+): { publicId: string; resourceType: 'image' | 'raw' | 'video' } | undefined {
+  try {
+    const parsedUrl = new URL(publicUrl);
+
+    if (parsedUrl.hostname !== 'res.cloudinary.com') {
+      return undefined;
+    }
+
+    const parts = parsedUrl.pathname.split('/').filter(Boolean);
+    const uploadIndex = parts.indexOf('upload');
+
+    if (uploadIndex < 2 || uploadIndex >= parts.length - 1) {
+      return undefined;
+    }
+
+    const rawResourceType = parts[uploadIndex - 1];
+
+    if (!['image', 'raw', 'video'].includes(rawResourceType)) {
+      return undefined;
+    }
+
+    const assetParts = parts.slice(uploadIndex + 1);
+
+    if (assetParts[0] && /^v\d+$/.test(assetParts[0])) {
+      assetParts.shift();
+    }
+
+    if (!assetParts.length) {
+      return undefined;
+    }
+
+    let publicId = decodeURIComponent(assetParts.join('/'));
+
+    if (rawResourceType !== 'raw') {
+      publicId = publicId.replace(/\.[a-zA-Z0-9]+$/, '');
+    }
+
+    return {
+      publicId,
+      resourceType: rawResourceType as 'image' | 'raw' | 'video'
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 export function createFileUpload(folderName: string, options: UploadOptions = {}) {
   const fileTypes = options.allowedTypes ?? allowedImageMimeTypes;
 
@@ -101,35 +235,70 @@ export function createFileUpload(folderName: string, options: UploadOptions = {}
   });
 }
 
-export function createImageUpload(folderName: string) {
-  return createFileUpload(folderName, { allowedTypes: allowedImageMimeTypes });
+export function createImageUpload(
+  folderName: string,
+  options: Omit<UploadOptions, 'allowedTypes'> = {}
+) {
+  return createFileUpload(folderName, {
+    ...options,
+    allowedTypes: allowedImageMimeTypes
+  });
 }
 
-export async function saveUploadedFile(file: Express.Multer.File, options: SaveUploadedFileOptions): Promise<SavedUploadedFile> {
-  const uploadDirectory = await ensureUploadDirectory(options.folderName);
-  const shouldOptimize = isImageMimeType(file.mimetype);
-  const optimized = shouldOptimize
-    ? await optimizeImage(file, options.imageVariant ?? 'feed')
-    : {
-        buffer: file.buffer,
-        filename: getSafeOriginalFilename(file),
-        mimeType: file.mimetype
-      };
-  const filePath = path.join(uploadDirectory, optimized.filename);
+export async function saveUploadedFile(
+  file: Express.Multer.File,
+  options: SaveUploadedFileOptions
+): Promise<SavedUploadedFile> {
+  const prepared = await prepareFile(file, options.imageVariant);
 
-  await fs.writeFile(filePath, optimized.buffer);
+  if (hasCloudinaryConfig) {
+    const uploaded = await saveToCloudinary(prepared, file.originalname, options.folderName);
+
+    return {
+      filename: uploaded.publicId.split('/').pop() ?? prepared.filename,
+      mimeType: prepared.mimeType,
+      originalName: file.originalname,
+      publicUrl: uploaded.secureUrl,
+      size: uploaded.bytes || prepared.buffer.length
+    };
+  }
+
+  const uploadDirectory = await ensureUploadDirectory(options.folderName);
+  const filePath = path.join(uploadDirectory, prepared.filename);
+  await fs.writeFile(filePath, prepared.buffer);
 
   return {
-    filename: optimized.filename,
-    mimeType: optimized.mimeType,
+    filename: prepared.filename,
+    mimeType: prepared.mimeType,
     originalName: file.originalname,
-    publicUrl: getPublicUrl(options.folderName, optimized.filename),
-    size: optimized.buffer.length
+    publicUrl: getPublicUrl(options.folderName, prepared.filename),
+    size: prepared.buffer.length
   };
 }
 
 export async function removeUploadedFile(publicUrl?: string): Promise<void> {
-  if (!publicUrl || !publicUrl.startsWith('/uploads/')) {
+  if (!publicUrl) {
+    return;
+  }
+
+  if (hasCloudinaryConfig) {
+    const cloudAsset = parseCloudinaryAsset(publicUrl);
+
+    if (cloudAsset) {
+      try {
+        await cloudinary.uploader.destroy(cloudAsset.publicId, {
+          resource_type: cloudAsset.resourceType,
+          invalidate: true
+        });
+      } catch {
+        // Falha de limpeza remota nao deve derrubar a operacao principal.
+      }
+
+      return;
+    }
+  }
+
+  if (!publicUrl.startsWith('/uploads/')) {
     return;
   }
 
@@ -147,7 +316,9 @@ export async function removeUploadedFile(publicUrl?: string): Promise<void> {
   }
 }
 
-export async function removeUploadedFiles(publicUrls: Array<string | undefined>): Promise<void> {
+export async function removeUploadedFiles(
+  publicUrls: Array<string | undefined>
+): Promise<void> {
   await Promise.all(publicUrls.map((publicUrl) => removeUploadedFile(publicUrl)));
 }
 

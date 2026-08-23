@@ -31,3 +31,6 @@ backups/
 
 # Configuracao local do reCAPTCHA
 frontend/.env.local
+
+# Evita copia completa do projeto dentro do proprio repositorio
+/portal-hormezinda/

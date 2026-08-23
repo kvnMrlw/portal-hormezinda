@@ -276,28 +276,29 @@ export async function getUserById(request: AuthenticatedRequest, response: Respo
   }
 }
 
-export async function updateCurrentUserProfile(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+
+export async function updateCurrentUserProfileMedia(
+  request: AuthenticatedRequest,
+  response: Response,
+  next: NextFunction
+) {
   try {
     if (!request.user) {
       throw new AppError('Usuario nao autenticado', 401);
     }
 
-    const parsedBody = updateProfileSchema.safeParse({
-      ...request.body,
-      notificacoes: parseJsonField(request.body.notificacoes),
-      privacidade: parseJsonField(request.body.privacidade)
-    });
+    const files = request.files as ProfileFiles | undefined;
+    const hasPhoto = Boolean(files?.fotoPerfil?.[0]);
+    const hasBanner = Boolean(files?.bannerPerfil?.[0]);
 
-    if (!parsedBody.success) {
-      throw new AppError('Nao foi possivel atualizar o perfil', 400);
+    if (!hasPhoto && !hasBanner) {
+      throw new AppError('Selecione uma foto ou banner para enviar', 400);
     }
 
-    const files = request.files as ProfileFiles | undefined;
     const { bannerPerfil, fotoPerfil } = await getSavedProfileFiles(files);
 
     try {
       const user = await userService.updateProfile(request.user.id, {
-        ...parsedBody.data,
         ...(fotoPerfil ? { fotoPerfil } : {}),
         ...(bannerPerfil ? { bannerPerfil } : {})
       });
@@ -306,11 +307,44 @@ export async function updateCurrentUserProfile(request: AuthenticatedRequest, re
         throw new AppError('Usuario nao encontrado', 404);
       }
 
-      return response.status(200).json(apiResponse({ usuario: user }, { message: 'Perfil atualizado com sucesso' }));
+      return response.status(200).json(
+        apiResponse(
+          { usuario: user },
+          { message: 'Imagens do perfil atualizadas com sucesso' }
+        )
+      );
     } catch (error) {
       await removeUploadedFiles([fotoPerfil, bannerPerfil]);
       throw error;
     }
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateCurrentUserProfile(request: AuthenticatedRequest, response: Response, next: NextFunction) {
+  try {
+    if (!request.user) {
+      throw new AppError('Usuario nao autenticado', 401);
+    }
+
+    const parsedBody = updateProfileSchema.safeParse({
+      ...request.body,
+      notificacoes: parseJsonField(request.body?.notificacoes),
+      privacidade: parseJsonField(request.body?.privacidade)
+    });
+
+    if (!parsedBody.success) {
+      throw new AppError('Nao foi possivel atualizar o perfil', 400);
+    }
+
+    const user = await userService.updateProfile(request.user.id, parsedBody.data);
+
+    if (!user) {
+      throw new AppError('Usuario nao encontrado', 404);
+    }
+
+    return response.status(200).json(apiResponse({ usuario: user }, { message: 'Perfil atualizado com sucesso' }));
   } catch (error) {
     return next(error);
   }

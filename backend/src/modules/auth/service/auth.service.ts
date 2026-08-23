@@ -12,8 +12,8 @@ import type { UserDocument } from '../../users/models/user.model';
 import { toPublicUser } from '../../users/service/user.service';
 
 const PASSWORD_SALT_ROUNDS = 10;
-const JWT_EXPIRES_IN = '1d';
-const REFRESH_TOKEN_EXPIRES_IN = '30d';
+const JWT_EXPIRES_IN = '15m';
+const REFRESH_TOKEN_EXPIRES_IN = '7d';
 const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$.{53}$/;
 
 function normalizeUsuario(usuario: string): string {
@@ -32,8 +32,11 @@ function createToken(user: UserDocument, tipo: 'access' | 'refresh' = 'access'):
       cargo: user.cargo,
       tipo
     },
-    env.JWT_SECRET,
+    tipo === 'refresh' ? env.JWT_REFRESH_SECRET : env.JWT_SECRET,
     {
+      algorithm: 'HS256',
+      audience: 'portal-hormezinda-web',
+      issuer: 'portal-hormezinda-api',
       expiresIn: tipo === 'refresh' ? REFRESH_TOKEN_EXPIRES_IN : JWT_EXPIRES_IN
     }
   );
@@ -121,7 +124,11 @@ export class AuthService {
 
   async refresh(refreshToken: string): Promise<AuthResult> {
     try {
-      const payload = jwt.verify(refreshToken, env.JWT_SECRET) as JwtPayload;
+      const payload = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET, {
+        algorithms: ['HS256'],
+        audience: 'portal-hormezinda-web',
+        issuer: 'portal-hormezinda-api'
+      }) as JwtPayload;
 
       if (payload.tipo !== 'refresh') {
         throw new AppError('Refresh token invalido', 401);

@@ -6,6 +6,7 @@ import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Loading } from '../components/ui/Loading';
 import { Modal } from '../components/ui/Modal';
+import { getApiErrorMessage } from '../lib/apiError';
 import { getAssetUrl } from '../lib/assets';
 import { formatClassName } from '../lib/classes';
 import { getAcademicSubject, listAcademicSubjects } from '../services/academic';
@@ -28,10 +29,11 @@ export function MySubjects() {
   useEffect(() => {
     async function loadSubjects() {
       try {
+        setError('');
         setIsLoading(true);
         setSubjects(await listAcademicSubjects());
-      } catch {
-        setError('Nao foi possivel carregar as disciplinas.');
+      } catch (error) {
+        setError(getApiErrorMessage(error, 'Nao foi possivel carregar as disciplinas.'));
       } finally {
         setIsLoading(false);
       }
@@ -42,10 +44,13 @@ export function MySubjects() {
 
   async function openDetails(subjectId: string): Promise<void> {
     try {
+      setError('');
       setIsDetailsLoading(true);
       setSelectedSubject(await getAcademicSubject(subjectId));
-    } catch {
-      setError('Nao foi possivel abrir os detalhes da disciplina.');
+    } catch (error) {
+      setError(
+        getApiErrorMessage(error, 'Nao foi possivel abrir os detalhes da disciplina.'),
+      );
     } finally {
       setIsDetailsLoading(false);
     }
@@ -79,7 +84,7 @@ export function MySubjects() {
           </div>
         ) : null}
         {isLoading ? <Loading className="min-h-64" /> : null}
-        {!isLoading && !subjects.length ? (
+        {!isLoading && !error && !subjects.length ? (
           <EmptyState
             description="Assim que houver aulas cadastradas, as disciplinas aparecem aqui."
             icon={BookOpen}

@@ -3,9 +3,7 @@ import {
   Bell,
   ExternalLink,
   BookOpen,
-  CheckCircle2,
   Grid3X3,
-  Heart,
   KeyRound,
   Lightbulb,
   Link as LinkIcon,
@@ -17,6 +15,7 @@ import {
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '../../contexts/useAuth';
+import { getApiErrorMessage } from '../../lib/apiError';
 import { getAssetUrl } from '../../lib/assets';
 import { calculateAge, getProfileDetails, getProfileHeadline } from '../../lib/profile';
 import { getDisplayRoleLabel, isAdminRole } from '../../lib/roles';
@@ -82,7 +81,13 @@ type ProfileFormData = {
   senhaAtual: string;
 };
 
-const maxImageSize = 5 * 1024 * 1024;
+const maxImageSize = 12 * 1024 * 1024;
+const allowedProfileImageTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
 
 export function ProfileView({
   academicSummary,
@@ -98,6 +103,7 @@ export function ProfileView({
   const { updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPasswordChangeOpen, setIsPasswordChangeOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState<ProfileFormData>({
     bio: user.bio ?? '',
@@ -156,17 +162,20 @@ export function ProfileView({
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
-      setMessage('Selecione uma imagem valida.');
+    if (!allowedProfileImageTypes.has(file.type)) {
+      setMessage('Formato nao permitido. Use PNG, JPEG, WebP ou GIF.');
+      event.target.value = '';
       return;
     }
 
     if (file.size > maxImageSize) {
-      setMessage('A imagem deve ter no maximo 5MB.');
+      setMessage('A imagem deve ter no maximo 12MB.');
+      event.target.value = '';
       return;
     }
 
-    setMessage('');
+    const label = field === 'fotoPerfil' ? 'Foto' : 'Banner';
+    setMessage(`${label} selecionado: ${file.name}`);
     setFormData((current) => ({ ...current, [field]: file }));
   }
 
@@ -178,6 +187,7 @@ export function ProfileView({
       novaSenha: '',
       confirmarSenha: '',
     });
+    setIsPasswordChangeOpen(false);
     setMessage('');
   }
 
@@ -186,9 +196,7 @@ export function ProfileView({
     setIsSaving(true);
     setMessage('');
 
-    const wantsPasswordChange = Boolean(
-      formData.senhaAtual || formData.novaSenha || formData.confirmarSenha,
-    );
+    const wantsPasswordChange = isPasswordChangeOpen;
 
     if (
       wantsPasswordChange &&
@@ -229,10 +237,11 @@ export function ProfileView({
         novaSenha: '',
         confirmarSenha: '',
       }));
+      setIsPasswordChangeOpen(false);
       setMessage('Perfil atualizado.');
       setIsEditing(false);
-    } catch {
-      setMessage('Nao foi possivel atualizar o perfil.');
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, 'Nao foi possivel atualizar o perfil.'));
     } finally {
       setIsSaving(false);
     }
@@ -338,12 +347,46 @@ export function ProfileView({
                   <Textarea label="Bio" maxLength={280} name="bio" onChange={(event) => setFormData((current) => ({ ...current, bio: event.target.value }))} value={formData.bio ?? ''} />
                   <Input label="Rede social" name="redeSocial" onChange={(event) => setFormData((current) => ({ ...current, redeSocial: event.target.value }))} placeholder="@usuario ou link" value={formData.redeSocial ?? ''} />
                   <div className="profile-password-block">
-                    <div className="profile-password-title"><KeyRound /> Alteração de senha</div>
-                    <div className="grid gap-3">
-                      <PasswordInput autoComplete="current-password" label="Senha atual" name="senhaAtual" onChange={(event) => setFormData((current) => ({ ...current, senhaAtual: event.target.value }))} value={formData.senhaAtual} />
-                      <PasswordInput autoComplete="new-password" label="Nova senha" name="novaSenha" onChange={(event) => setFormData((current) => ({ ...current, novaSenha: event.target.value }))} value={formData.novaSenha} />
-                      <PasswordInput autoComplete="new-password" label="Confirmar senha" name="confirmarSenha" onChange={(event) => setFormData((current) => ({ ...current, confirmarSenha: event.target.value }))} value={formData.confirmarSenha} />
-                    </div>
+                    <div className="profile-password-title"><KeyRound /> Senha</div>
+                    {!isPasswordChangeOpen ? (
+                      <div className="grid gap-2">
+                        <p className="text-sm text-slate-500">
+                          Foto, banner e outros dados podem ser salvos sem trocar a senha.
+                        </p>
+                        <Button
+                          onClick={() => {
+                            setMessage('');
+                            setIsPasswordChangeOpen(true);
+                          }}
+                          type="button"
+                          variant="secondary"
+                        >
+                          Alterar senha
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        <PasswordInput autoComplete="current-password" label="Senha atual" name="senhaAtual" onChange={(event) => setFormData((current) => ({ ...current, senhaAtual: event.target.value }))} value={formData.senhaAtual} />
+                        <PasswordInput autoComplete="new-password" label="Nova senha" name="novaSenha" onChange={(event) => setFormData((current) => ({ ...current, novaSenha: event.target.value }))} value={formData.novaSenha} />
+                        <PasswordInput autoComplete="new-password" label="Confirmar senha" name="confirmarSenha" onChange={(event) => setFormData((current) => ({ ...current, confirmarSenha: event.target.value }))} value={formData.confirmarSenha} />
+                        <Button
+                          onClick={() => {
+                            setFormData((current) => ({
+                              ...current,
+                              senhaAtual: '',
+                              novaSenha: '',
+                              confirmarSenha: '',
+                            }));
+                            setIsPasswordChangeOpen(false);
+                            setMessage('');
+                          }}
+                          type="button"
+                          variant="secondary"
+                        >
+                          Cancelar alteracao de senha
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="profile-edit-actions">
                     <Button onClick={() => { resetEditState(); setIsEditing(false); }} type="button" variant="secondary">Cancelar</Button>

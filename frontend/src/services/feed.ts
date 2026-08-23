@@ -31,11 +31,10 @@ function toFormData(payload: Record<string, File | string | undefined>): FormDat
 }
 
 export async function createFeedPost(payload: CreatePostPayload): Promise<FeedPost> {
-  const response = await api.post<ApiResponse<{ publicacao: FeedPost }>>('/feed', toFormData(payload), {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  const response = await api.post<ApiResponse<{ publicacao: FeedPost }>>(
+    '/feed',
+    toFormData(payload),
+  );
 
   return response.data.data.publicacao;
 }
@@ -65,11 +64,10 @@ export async function listFeedStories(): Promise<FeedStory[]> {
 }
 
 export async function createFeedStory(payload: CreateStoryPayload): Promise<FeedStory> {
-  const response = await api.post<ApiResponse<{ story: FeedStory }>>('/feed/stories', toFormData(payload), {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  const response = await api.post<ApiResponse<{ story: FeedStory }>>(
+    '/feed/stories',
+    toFormData(payload),
+  );
 
   return response.data.data.story;
 }

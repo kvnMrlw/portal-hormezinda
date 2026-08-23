@@ -22,6 +22,7 @@ import { Input } from '../components/ui/Input';
 import { Loading } from '../components/ui/Loading';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
+import { getApiErrorMessage } from '../lib/apiError';
 import { getAssetUrl } from '../lib/assets';
 import { getDisplayRoleLabel, getRoleLabel } from '../lib/roles';
 import { cn } from '../lib/utils';
@@ -199,15 +200,7 @@ function buildPayload(form: UserFormState, editingUser?: User): AdminUserPayload
 }
 
 function getErrorMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const response = (error as { response?: { data?: { message?: string } } }).response;
-
-    if (response?.data?.message) {
-      return response.data.message;
-    }
-  }
-
-  return 'Nao foi possivel concluir a solicitacao.';
+  return getApiErrorMessage(error, 'Nao foi possivel concluir a solicitacao.');
 }
 
 function validateForm(form: UserFormState, users: User[], editingUser?: User): string | null {

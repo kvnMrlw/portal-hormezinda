@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /cadastro
+Disallow: /verificar-email
+Disallow: /esqueci-senha
+Disallow: /home
+Disallow: /perfil
+Disallow: /avisos
+Disallow: /notificacoes
+Disallow: /configuracoes
+Disallow: /cardapio
+Disallow: /pessoas
+Disallow: /horarios
+Disallow: /cursos
+Disallow: /ideias
+Disallow: /disciplinas
+Disallow: /tarefas
+Disallow: /diario
+Disallow: /usuarios
+Disallow: /cadastros
+
+Sitemap: https://portal-hormezinda.vercel.app/sitemap.xml

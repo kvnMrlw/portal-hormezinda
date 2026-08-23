@@ -62,7 +62,7 @@ export function Topbar({ collapsed, onLogout, onMenuClick, onToggleSidebar }: To
 
   useEffect(() => {
     void loadNotifications();
-    const interval = window.setInterval(() => void loadNotifications(), 15000);
+    const interval = window.setInterval(() => void loadNotifications(), 60000);
     return () => window.clearInterval(interval);
   }, [loadNotifications]);
 

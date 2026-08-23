@@ -37,17 +37,19 @@ export async function listMeals(filters: MealFilters = {}): Promise<Meal[]> {
 }
 
 export async function createMeal(payload: MealPayload): Promise<Meal> {
-  const response = await api.post<ApiResponse<{ refeicao: Meal }>>('/meals', buildMealFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.post<ApiResponse<{ refeicao: Meal }>>(
+    '/meals',
+    buildMealFormData(payload),
+  );
 
   return response.data.data.refeicao;
 }
 
 export async function updateMeal(id: string, payload: MealPayload): Promise<Meal> {
-  const response = await api.patch<ApiResponse<{ refeicao: Meal }>>(`/meals/${id}`, buildMealFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.patch<ApiResponse<{ refeicao: Meal }>>(
+    `/meals/${id}`,
+    buildMealFormData(payload),
+  );
 
   return response.data.data.refeicao;
 }

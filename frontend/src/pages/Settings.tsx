@@ -8,11 +8,20 @@ import { Input } from '../components/ui/Input';
 import { PasswordInput } from '../components/ui/PasswordInput';
 import { Textarea } from '../components/ui/Textarea';
 import { useAuth } from '../contexts/useAuth';
+import { getApiErrorMessage } from '../lib/apiError';
 import type {
   NotificationPreferences,
   PrivacyPreferences,
   ProfileUpdatePayload,
 } from '../types/auth';
+
+const maxProfileImageSize = 12 * 1024 * 1024;
+const allowedProfileImageTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
 
 type SettingsForm = {
   bio: string;
@@ -46,6 +55,7 @@ export function Settings() {
   const { updateProfile, user } = useAuth();
   const [form, setForm] = useState<SettingsForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPasswordChangeOpen, setIsPasswordChangeOpen] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -69,6 +79,20 @@ export function Settings() {
     const file = event.target.files?.[0];
     if (!file || !form) return;
 
+    if (!allowedProfileImageTypes.has(file.type)) {
+      setMessage('Formato nao permitido. Use PNG, JPEG, WebP ou GIF.');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > maxProfileImageSize) {
+      setMessage('A imagem deve ter no maximo 12MB.');
+      event.target.value = '';
+      return;
+    }
+
+    const label = field === 'fotoPerfil' ? 'Foto' : 'Banner';
+    setMessage(`${label} selecionado: ${file.name}`);
     setForm({ ...form, [field]: file });
   }
 
@@ -77,9 +101,14 @@ export function Settings() {
     if (!form) return;
 
     if (
-      (form.senhaAtual || form.novaSenha || form.confirmarSenha) &&
-      form.novaSenha !== form.confirmarSenha
+      isPasswordChangeOpen &&
+      (!form.senhaAtual || !form.novaSenha || !form.confirmarSenha)
     ) {
+      setMessage('Preencha todos os campos de senha.');
+      return;
+    }
+
+    if (isPasswordChangeOpen && form.novaSenha !== form.confirmarSenha) {
       setMessage('As senhas nao conferem.');
       return;
     }
@@ -91,7 +120,7 @@ export function Settings() {
       notificacoes: form.notificacoes,
       ...(form.fotoPerfil ? { fotoPerfil: form.fotoPerfil } : {}),
       ...(form.bannerPerfil ? { bannerPerfil: form.bannerPerfil } : {}),
-      ...(form.senhaAtual || form.novaSenha || form.confirmarSenha
+      ...(isPasswordChangeOpen
         ? {
             senhaAtual: form.senhaAtual,
             novaSenha: form.novaSenha,
@@ -103,6 +132,7 @@ export function Settings() {
     try {
       setIsSaving(true);
       await updateProfile(payload);
+      setIsPasswordChangeOpen(false);
       setMessage('Configuracoes atualizadas.');
       setForm((current) =>
         current
@@ -116,8 +146,10 @@ export function Settings() {
             }
           : current,
       );
-    } catch {
-      setMessage('Nao foi possivel atualizar as configuracoes.');
+    } catch (error) {
+      setMessage(
+        getApiErrorMessage(error, 'Nao foi possivel atualizar as configuracoes.'),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -209,26 +241,63 @@ export function Settings() {
                 <KeyRound className="h-5 w-5 text-brand-blue" />
                 Senha
               </h2>
-              <div className="mt-4 grid gap-3">
-                <PasswordInput
-                  label="Senha atual"
-                  name="senhaAtual"
-                  onChange={(event) => setForm({ ...form, senhaAtual: event.target.value })}
-                  value={form.senhaAtual}
-                />
-                <PasswordInput
-                  label="Nova senha"
-                  name="novaSenha"
-                  onChange={(event) => setForm({ ...form, novaSenha: event.target.value })}
-                  value={form.novaSenha}
-                />
-                <PasswordInput
-                  label="Confirmar nova senha"
-                  name="confirmarSenha"
-                  onChange={(event) => setForm({ ...form, confirmarSenha: event.target.value })}
-                  value={form.confirmarSenha}
-                />
-              </div>
+              {!isPasswordChangeOpen ? (
+                <div className="mt-4 grid gap-3">
+                  <p className="text-sm font-medium leading-6 text-slate-500">
+                    Foto, banner, bio, telefone e preferencias podem ser salvos sem trocar a senha.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      setMessage('');
+                      setIsPasswordChangeOpen(true);
+                    }}
+                    type="button"
+                    variant="secondary"
+                  >
+                    Alterar senha
+                  </Button>
+                </div>
+              ) : (
+                <div className="mt-4 grid gap-3">
+                  <PasswordInput
+                    autoComplete="current-password"
+                    label="Senha atual"
+                    name="senhaAtual"
+                    onChange={(event) => setForm({ ...form, senhaAtual: event.target.value })}
+                    value={form.senhaAtual}
+                  />
+                  <PasswordInput
+                    autoComplete="new-password"
+                    label="Nova senha"
+                    name="novaSenha"
+                    onChange={(event) => setForm({ ...form, novaSenha: event.target.value })}
+                    value={form.novaSenha}
+                  />
+                  <PasswordInput
+                    autoComplete="new-password"
+                    label="Confirmar nova senha"
+                    name="confirmarSenha"
+                    onChange={(event) => setForm({ ...form, confirmarSenha: event.target.value })}
+                    value={form.confirmarSenha}
+                  />
+                  <Button
+                    onClick={() => {
+                      setForm({
+                        ...form,
+                        senhaAtual: '',
+                        novaSenha: '',
+                        confirmarSenha: '',
+                      });
+                      setIsPasswordChangeOpen(false);
+                      setMessage('');
+                    }}
+                    type="button"
+                    variant="secondary"
+                  >
+                    Cancelar alteracao de senha
+                  </Button>
+                </div>
+              )}
             </Card>
           </div>
 

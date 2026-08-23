@@ -118,6 +118,7 @@ export function RecaptchaCheckbox({
 
   useEffect(() => {
     let cancelled = false;
+    const container = containerRef.current;
 
     if (!siteKey) {
       setLoadError(
@@ -133,7 +134,7 @@ export function RecaptchaCheckbox({
       .then(() => {
         if (
           cancelled ||
-          !containerRef.current ||
+          !container ||
           !window.grecaptcha ||
           widgetIdRef.current !== null
         ) {
@@ -143,7 +144,7 @@ export function RecaptchaCheckbox({
         const compact = window.matchMedia('(max-width: 380px)').matches;
 
         widgetIdRef.current = window.grecaptcha.render(
-          containerRef.current,
+          container,
           {
             sitekey: siteKey,
             theme: 'light',
@@ -192,8 +193,8 @@ export function RecaptchaCheckbox({
 
       widgetIdRef.current = null;
 
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
+      if (container) {
+        container.innerHTML = '';
       }
     };
   }, [siteKey]);

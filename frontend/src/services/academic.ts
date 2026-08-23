@@ -81,9 +81,10 @@ export async function listContents(filters: AcademicFilters = {}): Promise<Lesso
 }
 
 export async function createContent(payload: ContentPayload): Promise<LessonContent> {
-  const response = await api.post<ApiResponse<{ conteudo: LessonContent }>>('/academic/contents', contentToFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.post<ApiResponse<{ conteudo: LessonContent }>>(
+    '/academic/contents',
+    contentToFormData(payload),
+  );
 
   return response.data.data.conteudo;
 }
@@ -95,17 +96,19 @@ export async function listTasks(filters: AcademicFilters = {}): Promise<Academic
 }
 
 export async function createTask(payload: TaskPayload): Promise<AcademicTask> {
-  const response = await api.post<ApiResponse<{ tarefa: AcademicTask }>>('/academic/tasks', taskToFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.post<ApiResponse<{ tarefa: AcademicTask }>>(
+    '/academic/tasks',
+    taskToFormData(payload),
+  );
 
   return response.data.data.tarefa;
 }
 
 export async function updateTask(id: string, payload: TaskPayload): Promise<AcademicTask> {
-  const response = await api.patch<ApiResponse<{ tarefa: AcademicTask }>>(`/academic/tasks/${id}`, taskToFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.patch<ApiResponse<{ tarefa: AcademicTask }>>(
+    `/academic/tasks/${id}`,
+    taskToFormData(payload),
+  );
 
   return response.data.data.tarefa;
 }
@@ -113,9 +116,10 @@ export async function updateTask(id: string, payload: TaskPayload): Promise<Acad
 export async function submitTask(taskId: string, arquivo: File): Promise<TaskSubmission> {
   const formData = new FormData();
   formData.append('arquivo', arquivo);
-  const response = await api.post<ApiResponse<{ entrega: TaskSubmission }>>(`/academic/tasks/${taskId}/submissions`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.post<ApiResponse<{ entrega: TaskSubmission }>>(
+    `/academic/tasks/${taskId}/submissions`,
+    formData,
+  );
 
   return response.data.data.entrega;
 }

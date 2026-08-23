@@ -89,18 +89,6 @@ export async function getUserById(id: string): Promise<User> {
   return response.data.data.usuario;
 }
 
-function toFormData(payload: ProfileUpdatePayload): FormData {
-  const formData = new FormData();
-
-  Object.entries(payload).forEach(([key, value]) => {
-    if (value) {
-      formData.append(key, value instanceof File ? value : typeof value === 'object' ? JSON.stringify(value) : String(value));
-    }
-  });
-
-  return formData;
-}
-
 function adminUserToFormData(payload: AdminUserPayload): FormData {
   const formData = new FormData();
 
@@ -114,31 +102,40 @@ function adminUserToFormData(payload: AdminUserPayload): FormData {
 }
 
 export async function updateMyProfile(payload: ProfileUpdatePayload): Promise<User> {
-  const response = await api.patch<ApiResponse<{ usuario: User }>>('/users/me/profile', toFormData(payload), {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  const { bannerPerfil, fotoPerfil, ...profileData } = payload;
 
-  return response.data.data.usuario;
+  const response = await api.patch<ApiResponse<{ usuario: User }>>('/users/me/profile', profileData);
+  let updatedUser = response.data.data.usuario;
+
+  if (fotoPerfil || bannerPerfil) {
+    const media = new FormData();
+
+    if (fotoPerfil) {
+      media.append('fotoPerfil', fotoPerfil, fotoPerfil.name);
+    }
+
+    if (bannerPerfil) {
+      media.append('bannerPerfil', bannerPerfil, bannerPerfil.name);
+    }
+
+    const mediaResponse = await api.patch<ApiResponse<{ usuario: User }>>(
+      '/users/me/profile/media',
+      media,
+    );
+    updatedUser = mediaResponse.data.data.usuario;
+  }
+
+  return updatedUser;
 }
 
 export async function createAdminUser(payload: AdminUserPayload): Promise<User> {
-  const response = await api.post<ApiResponse<{ usuario: User }>>('/users/admin', adminUserToFormData(payload), {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  const response = await api.post<ApiResponse<{ usuario: User }>>('/users/admin', adminUserToFormData(payload));
 
   return response.data.data.usuario;
 }
 
 export async function updateAdminUser(id: string, payload: AdminUserPayload): Promise<User> {
-  const response = await api.patch<ApiResponse<{ usuario: User }>>(`/users/admin/${id}`, adminUserToFormData(payload), {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  const response = await api.patch<ApiResponse<{ usuario: User }>>(`/users/admin/${id}`, adminUserToFormData(payload));
 
   return response.data.data.usuario;
 }

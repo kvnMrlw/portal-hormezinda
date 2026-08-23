@@ -2,6 +2,7 @@ import { Bell, CheckCheck, RefreshCcw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { AppShell } from '../components/app/AppShell';
+import { getApiErrorMessage } from '../lib/apiError';
 import { NotificationItem } from '../components/notifications/NotificationItem';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -21,8 +22,10 @@ export function Notifications() {
       const response = await listNotifications({ limit: 50 });
       setNotifications(response.notificacoes);
       setUnreadCount(response.naoLidas);
-    } catch {
-      setError('Nao foi possivel carregar as notificacoes.');
+    } catch (error) {
+      setError(
+        getApiErrorMessage(error, 'Nao foi possivel carregar as notificacoes.'),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -30,15 +33,24 @@ export function Notifications() {
 
   useEffect(() => {
     void loadNotifications();
-    const interval = window.setInterval(() => void loadNotifications(), 15000);
+    const interval = window.setInterval(() => void loadNotifications(), 60000);
 
     return () => window.clearInterval(interval);
   }, [loadNotifications]);
 
   async function handleMarkAllAsRead(): Promise<void> {
-    await markAllNotificationsAsRead();
-    setNotifications((current) => current.map((notification) => ({ ...notification, lida: true })));
-    setUnreadCount(0);
+    try {
+      setError('');
+      await markAllNotificationsAsRead();
+      setNotifications((current) =>
+        current.map((notification) => ({ ...notification, lida: true })),
+      );
+      setUnreadCount(0);
+    } catch (error) {
+      setError(
+        getApiErrorMessage(error, 'Nao foi possivel marcar as notificacoes como lidas.'),
+      );
+    }
   }
 
   return (
@@ -101,7 +113,7 @@ export function Notifications() {
             ))}
           </section>
         ) : null}
-        {!isLoading && !notifications.length ? (
+        {!isLoading && !error && !notifications.length ? (
           <EmptyState description="Tudo certo por aqui." icon={Bell} title="Nenhuma notificacao." />
         ) : null}
       </div>

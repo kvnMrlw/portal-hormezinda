@@ -21,7 +21,11 @@ export async function authenticate(
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+    const payload = jwt.verify(token, env.JWT_SECRET, {
+      algorithms: ['HS256'],
+      audience: 'portal-hormezinda-web',
+      issuer: 'portal-hormezinda-api'
+    }) as JwtPayload;
 
     if (payload.tipo && payload.tipo !== 'access') {
       throw new AppError('Token invalido', 401);
