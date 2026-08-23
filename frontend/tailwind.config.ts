@@ -6,38 +6,34 @@ export default {
     extend: {
       colors: {
         brand: {
-          blue: '#2563EB',
-          blueDark: '#0F3F8F',
-          blueMid: '#3B82F6',
-          blueLight: '#DBEAFE',
-          lightGray: '#F3F6FA',
-          graySoft: '#F7F9FC',
-          grayMedium: '#94A3B8',
+          blue: '#4A7FA7',
+          blueDark: '#1A3D63',
+          blueMid: '#6F9FBE',
+          blueLight: '#B3CFE5',
+          lightGray: '#F6FAFD',
+          graySoft: '#EEF5F9',
+          grayMedium: '#73879A',
           white: '#FFFFFF',
-          navy: '#0F2447',
-          darkGray: '#27364A',
-          green: '#2FA36B',
-          yellow: '#F59E0B',
-          red: '#DC2626'
+          navy: '#0A1931',
+          darkGray: '#31465A',
+          green: '#2F9D78',
+          yellow: '#D9963A',
+          red: '#C84D5A'
         }
       },
-      borderRadius: {
-        brand: '1.25rem'
-      },
+      borderRadius: { brand: '1.25rem' },
       boxShadow: {
         soft: 'var(--shadow-soft)',
         card: 'var(--shadow-card)',
         hover: 'var(--shadow-hover)'
       },
       backgroundImage: {
-        'portal-surface':
-          'linear-gradient(180deg, #FFFFFF 0%, #FAFBFD 100%)',
-        'portal-blue': 'linear-gradient(180deg, #2F6FF0 0%, #174EA6 100%)',
-        'story-ring': 'linear-gradient(135deg, #2563EB 0%, #38BDF8 42%, #2FA36B 100%)'
+        'portal-surface': 'linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(246,250,253,.96) 100%)',
+        'portal-blue': 'linear-gradient(135deg, #1A3D63 0%, #4A7FA7 100%)',
+        'portal-deep': 'linear-gradient(145deg, #07182B 0%, #0A1931 42%, #1A3D63 100%)',
+        'story-ring': 'linear-gradient(135deg, #1A3D63 0%, #4A7FA7 48%, #2F9D78 100%)'
       },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif']
-      }
+      fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] }
     }
   },
   plugins: []

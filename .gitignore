@@ -18,3 +18,13 @@ Thumbs.db
 
 backend/src/uploads/*
 !backend/src/uploads/.gitkeep
+
+# Backups locais do desenvolvimento
+.backup-visual-*/
+.backups/
+.portal-backups/
+.visual-backups/
+backups/
+
+# Pacotes/arquivos temporarios locais
+*.zip

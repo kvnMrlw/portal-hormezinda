@@ -1,0 +1,462 @@
+/*
+ * Cadastro V27
+ * O shell, a ilustracao, a fusao da fumaca, a logo e o comportamento mobile
+ * sao herdados diretamente do Login.css atual.
+ * Este arquivo estiliza apenas os elementos exclusivos do formulario.
+ */
+
+.register-v27__form-wrap {
+  width: min(100%, 500px);
+}
+
+.register-v27__form-side {
+  padding-top: clamp(34px, 4vh, 54px);
+  padding-bottom: 30px;
+}
+
+.register-v27__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.register-v27__kicker {
+  margin-bottom: 0;
+}
+
+.register-v27__login-link {
+  color: #0a73bd;
+  font-size: 11px;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.register-v27__login-link:hover {
+  color: #075f9d;
+}
+
+.register-v27 h1 {
+  margin-top: 18px;
+  font-size: clamp(3rem, 4.6vw, 4.7rem);
+}
+
+.register-v27__intro {
+  display: grid;
+  gap: 14px;
+  margin: 14px 0 20px;
+}
+
+.register-v27__intro > p {
+  margin: 0;
+  color: #6d8499;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.register-v27__progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 250px;
+}
+
+.register-v27__progress-step {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 28px;
+  border: 1px solid #d8e3ed;
+  border-radius: 999px;
+  background: #f7fafc;
+  color: #8aa0b4;
+  font-size: 10px;
+  font-weight: 900;
+  transition: 180ms ease;
+}
+
+.register-v27__progress-step svg {
+  width: 12px;
+  height: 12px;
+}
+
+.register-v27__progress-step.is-active {
+  border-color: #1e9fdc;
+  background: #eaf8ff;
+  color: #087ec2;
+  box-shadow: 0 0 0 3px rgba(30, 159, 220, 0.08);
+}
+
+.register-v27__progress-step.is-done {
+  border-color: #58b8de;
+  background: linear-gradient(135deg, #1487bb, #1aa6d1);
+  color: #fff;
+}
+
+.register-v27 form {
+  gap: 14px;
+}
+
+.register-v27__step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 2px;
+}
+
+.register-v27__step-header > span {
+  color: #7c91a4;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.register-v27__step-header > strong {
+  color: #0b2449;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.register-v27__fields {
+  display: grid;
+  gap: 14px;
+}
+
+.register-v27__fields--access {
+  gap: 12px;
+}
+
+.register-v27__date-input input {
+  min-width: 0;
+}
+
+.register-v27__date-input input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.62;
+}
+
+.register-v27__choice-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.register-v27__choice-grid--turno {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.register-v27__choice {
+  position: relative;
+  min-height: 116px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1.5px solid #d6e2ec;
+  border-radius: 18px;
+  background: #fff;
+  color: #0b2449;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.register-v27__choice:hover {
+  transform: translateY(-2px);
+  border-color: #8dcbe5;
+  box-shadow: 0 12px 30px rgba(28, 115, 170, 0.08);
+}
+
+.register-v27__choice.is-selected {
+  border-color: #1d9ed9;
+  background: linear-gradient(145deg, #f4fbff 0%, #e7f7ff 100%);
+  box-shadow:
+    0 0 0 4px rgba(30, 161, 221, 0.08),
+    0 14px 30px rgba(28, 115, 170, 0.1);
+}
+
+.register-v27__choice-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: #edf7fc;
+  color: #1b83ba;
+}
+
+.register-v27__choice-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.register-v27__choice > span:nth-child(2) {
+  display: grid;
+  gap: 4px;
+}
+
+.register-v27__choice strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.register-v27__choice small {
+  color: #7890a5;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.register-v27__choice-check {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #d2e0ea;
+  border-radius: 50%;
+  color: transparent;
+  background: #fff;
+}
+
+.register-v27__choice-check svg {
+  width: 13px;
+  height: 13px;
+}
+
+.register-v27__choice.is-selected .register-v27__choice-check {
+  border-color: #168fc9;
+  color: #fff;
+  background: #168fc9;
+}
+
+.register-v27__wide-error {
+  grid-column: 1 / -1;
+}
+
+.register-v27__class-wrap {
+  display: grid;
+  gap: 12px;
+}
+
+.register-v27__helper {
+  margin: 0;
+  color: #71889d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.register-v27__class-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.register-v27__class-button {
+  position: relative;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px;
+  border: 1.5px solid #d6e2ec;
+  border-radius: 15px;
+  background: #fff;
+  color: #153355;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.register-v27__class-button svg {
+  display: none;
+  width: 12px;
+  height: 12px;
+}
+
+.register-v27__class-button:hover {
+  transform: translateY(-1px);
+  border-color: #8dcbe5;
+}
+
+.register-v27__class-button.is-selected {
+  border-color: #1d9ed9;
+  background: linear-gradient(135deg, #1689bc 0%, #1aa6d1 100%);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(22, 137, 188, 0.16);
+}
+
+.register-v27__class-button.is-selected svg {
+  display: block;
+}
+
+.register-v27__actions {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.register-v27__back {
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1.5px solid #d5e1eb;
+  border-radius: 14px;
+  background: #fff;
+  color: #607b92;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.register-v27__back:hover {
+  transform: translateY(-2px);
+  border-color: #9fcadd;
+  color: #176f9c;
+  box-shadow: 0 12px 28px rgba(28, 115, 170, 0.07);
+}
+
+.register-v27__back:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+.register-v27__back svg {
+  width: 17px;
+  height: 17px;
+}
+
+.register-v27__next {
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .register-v27__form-side {
+    padding-top: 34px;
+    padding-bottom: 26px;
+  }
+
+  .register-v27 h1 {
+    font-size: 3.7rem;
+  }
+}
+
+@media (max-width: 860px) {
+  .register-v27 {
+    overflow: auto;
+  }
+
+  .register-v27__form-side {
+    padding-top: 68px;
+    padding-bottom: 28px;
+  }
+
+  .register-v27__form-wrap {
+    width: 100%;
+  }
+
+  .register-v27 h1 {
+    font-size: clamp(2.65rem, 11vw, 3.8rem);
+  }
+
+  .register-v27__intro {
+    margin-bottom: 18px;
+  }
+
+  .register-v27__login-link {
+    font-size: 10px;
+  }
+
+  .register-v27__choice {
+    min-height: 100px;
+  }
+}
+
+@media (max-width: 520px) {
+  .register-v27__form-side {
+    padding-top: 58px;
+  }
+
+  .register-v27__topline {
+    gap: 10px;
+  }
+
+  .register-v27 h1 {
+    margin-top: 15px;
+    font-size: 2.65rem;
+  }
+
+  .register-v27__intro {
+    gap: 11px;
+    margin-top: 11px;
+  }
+
+  .register-v27__intro > p {
+    font-size: 13px;
+  }
+
+  .register-v27__progress {
+    max-width: 220px;
+  }
+
+  .register-v27__choice-grid--turno {
+    grid-template-columns: 1fr;
+  }
+
+  .register-v27__choice {
+    min-height: 86px;
+  }
+
+  .register-v27__class-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .register-v27__class-button {
+    min-height: 48px;
+    padding: 8px 6px;
+    border-radius: 13px;
+    font-size: 11px;
+  }
+
+  .register-v27__actions {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .register-v27__back,
+  .register-v27__next {
+    height: 56px;
+  }
+}
+
+@media (max-width: 380px) {
+  .register-v27__login-link {
+    display: none;
+  }
+
+  .register-v27__class-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

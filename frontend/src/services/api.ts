@@ -6,9 +6,14 @@ const USER_KEY = 'portal_hormezinda_user';
 export const AUTH_SESSION_EXPIRED_EVENT = 'portal-hormezinda:session-expired';
 export { REFRESH_TOKEN_KEY, TOKEN_KEY, USER_KEY };
 
-// Cliente HTTP compartilhado para comunicar o frontend com a API do backend.
+// Em desenvolvimento usamos /api e deixamos o Vite fazer proxy para o backend.
+// Isso evita CORS quando o portal e acessado por IP da rede (ex.: 10.x.x.x:5173).
+// Em producao, VITE_API_URL continua tendo prioridade.
+const apiBaseUrl = import.meta.env.VITE_API_URL?.trim() || '/api';
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'
+  baseURL: apiBaseUrl,
+  timeout: 15000,
 });
 
 type RefreshResponse = {
@@ -39,15 +44,11 @@ function persistRefreshedSession(data: RefreshResponse['data']): void {
 
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-  if (!refreshToken) {
-    return null;
-  }
+  if (!refreshToken) return null;
 
   try {
     const response = await axios.post<RefreshResponse>(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
     persistRefreshedSession(response.data.data);
-
     return response.data.data.token;
   } catch {
     clearStoredSession();
@@ -57,11 +58,7 @@ async function refreshAccessToken(): Promise<string | null> {
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY);
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -78,13 +75,10 @@ api.interceptors.response.use(
         refreshPromise ??= refreshAccessToken().finally(() => {
           refreshPromise = null;
         });
-
         const nextToken = await refreshPromise;
-
         if (nextToken) {
           originalRequest.headers = originalRequest.headers ?? {};
           originalRequest.headers.Authorization = `Bearer ${nextToken}`;
-
           return api(originalRequest);
         }
       }
@@ -92,7 +86,6 @@ api.interceptors.response.use(
       clearStoredSession();
       window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
     }
-
     return Promise.reject(error);
-  }
+  },
 );

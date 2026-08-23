@@ -1,11 +1,27 @@
 import { api } from '../services/api';
 
 export function getAssetUrl(url?: string): string | undefined {
-  if (!url || url.startsWith('http') || url.startsWith('blob:')) {
+  if (!url) {
+    return undefined;
+  }
+
+  if (/^(https?:|blob:|data:)/i.test(url)) {
     return url;
   }
 
-  const baseUrl = String(api.defaults.baseURL ?? '').replace(/\/api\/?$/, '');
+  const normalizedUrl = url.replace(/\\/g, '/').trim();
+  const configuredBase = String(api.defaults.baseURL ?? '');
+  const backendBase = configuredBase.replace(/\/api\/?$/, '').replace(/\/$/, '');
 
-  return `${baseUrl}${url}`;
+  if (normalizedUrl.startsWith('/')) {
+    return `${backendBase}${normalizedUrl}` || normalizedUrl;
+  }
+
+  if (normalizedUrl.startsWith('uploads/')) {
+    const path = `/${normalizedUrl}`;
+    return `${backendBase}${path}` || path;
+  }
+
+  const uploadPath = `/uploads/${normalizedUrl}`;
+  return `${backendBase}${uploadPath}` || uploadPath;
 }

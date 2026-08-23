@@ -99,21 +99,21 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
       />
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-950/5 bg-white px-4 py-5 shadow-soft ring-1 ring-white/80 transition-all duration-300 ease-out lg:sticky lg:z-30',
+          'portal-sidebar fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-white/10 bg-[linear-gradient(180deg,#0A1931_0%,#102B46_58%,#1A3D63_100%)] px-4 py-5 text-white shadow-soft transition-all duration-300 ease-out lg:sticky lg:z-30',
           collapsed ? 'lg:w-[5.75rem]' : 'lg:w-72',
           isMobileOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full lg:translate-x-0',
         )}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.25rem] bg-white p-1.5 shadow-card ring-1 ring-slate-950/5">
+            <div className="portal-sidebar-logo flex h-14 w-14 shrink-0 items-center justify-center">
               <SchoolLogo />
             </div>
             <span className={cn('min-w-0 transition-opacity', collapsed && 'lg:hidden')}>
-              <span className="block truncate text-base font-bold text-brand-navy">
+              <span className="block truncate text-base font-bold text-white">
                 Portal Hormezinda
               </span>
-              <span className="block truncate text-xs font-semibold text-slate-400">
+              <span className="block truncate text-xs font-semibold text-brand-blueLight">
                 Comunidade escolar
               </span>
             </span>
@@ -133,7 +133,7 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
             <div className="space-y-1.5" key={group.title}>
               <p
                 className={cn(
-                  'px-4 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-slate-400',
+                  'px-4 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-brand-blueLight/65',
                   collapsed && 'lg:hidden',
                 )}
               >
@@ -148,8 +148,8 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
                       cn(
                         'group relative flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-100',
                         isActive
-                          ? 'bg-slate-950 text-white shadow-hover'
-                          : 'text-slate-600 hover:-translate-y-0.5 hover:bg-slate-50 hover:text-brand-navy hover:shadow-card',
+                          ? 'bg-white text-brand-navy shadow-hover'
+                          : 'text-brand-blueLight hover:-translate-y-0.5 hover:bg-white/10 hover:text-white',
                         collapsed && 'lg:justify-center lg:px-3',
                       )
                     }
@@ -161,7 +161,7 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
                       <>
                         <span
                           className={cn(
-                            'absolute left-1 h-7 w-1 rounded-full bg-brand-blue transition-all duration-300',
+                            'absolute left-1 h-7 w-1 rounded-full bg-brand-blueLight transition-all duration-300',
                             isActive ? 'opacity-100' : 'opacity-0',
                           )}
                         />
@@ -185,7 +185,7 @@ export function Sidebar({ collapsed, isMobileOpen, onCloseMobile, onLogout }: Si
 
         <button
           className={cn(
-            'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-600 transition-all hover:-translate-y-0.5 hover:bg-red-50 hover:text-red-600 hover:shadow-card focus:outline-none focus:ring-4 focus:ring-red-100',
+            'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-brand-blueLight transition-all hover:-translate-y-0.5 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-white/10',
             collapsed && 'lg:justify-center lg:px-3',
           )}
           onClick={onLogout}

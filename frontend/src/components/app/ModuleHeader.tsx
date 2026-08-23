@@ -9,7 +9,7 @@ type ModuleHeaderProps = {
 
 export function ModuleHeader({ action, description, eyebrow, title }: ModuleHeaderProps) {
   return (
-    <div className="relative overflow-hidden rounded-[1.75rem] border border-slate-950/5 bg-portal-surface p-6 shadow-card ring-1 ring-white/80 sm:p-7">
+    <div className="portal-module-header relative overflow-hidden p-6 sm:p-7">
       <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white" />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>

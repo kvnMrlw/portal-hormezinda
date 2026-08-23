@@ -18,7 +18,7 @@ export function Modal({ children, className, isOpen, onClose, title }: ModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4">
-      <section className={cn('w-full max-w-lg rounded-3xl bg-white p-6 shadow-soft', className)}>
+      <section className={cn('portal-modal w-full max-w-lg rounded-3xl p-6', className)}>
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-semibold text-brand-navy">{title}</h2>
           <button

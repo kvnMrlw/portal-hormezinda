@@ -1,15 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Bell, CalendarDays, ImagePlus, Plus, Sparkles } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/useAuth';
-import {
-  canCreateFeedPost,
-  canDeleteFeedPost,
-  canDeleteFeedStory,
-  canPinFeedPost,
-  groupStories,
-} from './feedUtils';
+import { getAssetUrl } from '../../lib/assets';
 import {
   createFeedPost,
   createFeedStory,
@@ -28,9 +23,17 @@ import type {
   FeedStory,
   ReactionEmoji,
 } from '../../types/feed';
-import { CreateContentButton, CreateContentModal } from './CreateContentModal';
+import { Avatar } from '../ui/Avatar';
+import { CreateContentModal } from './CreateContentModal';
 import { DeletePostDialog } from './DeletePostDialog';
 import { EmptyFeed } from './EmptyFeed';
+import {
+  canCreateFeedPost,
+  canDeleteFeedPost,
+  canDeleteFeedStory,
+  canPinFeedPost,
+  groupStories,
+} from './feedUtils';
 import { LoadingFeed } from './LoadingFeed';
 import { PostCard } from './PostCard';
 import { StoriesBar } from './StoriesBar';
@@ -41,22 +44,21 @@ const storiesQueryKey = ['feed', 'stories'] as const;
 
 function FeedError() {
   return (
-    <section className="rounded-[1.75rem] border border-red-100 bg-red-50/90 p-5 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-red-600">
-          <AlertCircle className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-brand-navy">
-            Nao foi possivel carregar as publicacoes.
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
-            Tente novamente em alguns instantes.
-          </p>
-        </div>
+    <section className="ph-feed-error">
+      <AlertCircle />
+      <div>
+        <h2>Não foi possível carregar as publicações.</h2>
+        <p>Tente novamente em alguns instantes.</p>
       </div>
     </section>
   );
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Bom dia';
+  if (hour < 18) return 'Boa tarde';
+  return 'Boa noite';
 }
 
 export function Feed() {
@@ -84,20 +86,16 @@ export function Feed() {
 
   const createPostMutation = useMutation({
     mutationFn: createFeedPost,
-    onError: () => setCreateError('Nao foi possivel publicar agora.'),
+    onError: () => setCreateError('Não foi possível publicar agora.'),
     onMutate: () => setCreateError(undefined),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: feedQueryKey });
-    },
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: feedQueryKey }),
   });
 
   const createStoryMutation = useMutation({
     mutationFn: createFeedStory,
-    onError: () => setCreateError('Nao foi possivel publicar agora.'),
+    onError: () => setCreateError('Não foi possível publicar agora.'),
     onMutate: () => setCreateError(undefined),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: storiesQueryKey });
-    },
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: storiesQueryKey }),
   });
 
   const reactionMutation = useMutation({
@@ -107,10 +105,7 @@ export function Feed() {
     onSettled: () => setReactingPostId(undefined),
     onSuccess: (updatedPost) => {
       queryClient.setQueryData<FeedResponse>(feedQueryKey, (current) => {
-        if (!current) {
-          return current;
-        }
-
+        if (!current) return current;
         return {
           ...current,
           publicacoes: current.publicacoes.map((post) =>
@@ -126,9 +121,7 @@ export function Feed() {
       setFeedPostPinned(postId, pinned),
     onMutate: ({ postId }) => setPinningPostId(postId),
     onSettled: () => setPinningPostId(undefined),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: feedQueryKey });
-    },
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey: feedQueryKey }),
   });
 
   const deleteMutation = useMutation({
@@ -136,34 +129,21 @@ export function Feed() {
     onMutate: async (postId) => {
       await queryClient.cancelQueries({ queryKey: feedQueryKey });
       const previousFeed = queryClient.getQueryData<FeedResponse>(feedQueryKey);
-
       queryClient.setQueryData<FeedResponse>(feedQueryKey, (current) => {
-        if (!current) {
-          return current;
-        }
-
+        if (!current) return current;
         return {
           ...current,
           publicacoes: current.publicacoes.filter((post) => post.id !== postId),
-          paginacao: {
-            ...current.paginacao,
-            total: Math.max(current.paginacao.total - 1, 0),
-          },
+          paginacao: { ...current.paginacao, total: Math.max(current.paginacao.total - 1, 0) },
         };
       });
-
       setPostToDeleteId(undefined);
-
       return { previousFeed };
     },
     onError: (_error, _postId, context) => {
-      if (context?.previousFeed) {
-        queryClient.setQueryData(feedQueryKey, context.previousFeed);
-      }
+      if (context?.previousFeed) queryClient.setQueryData(feedQueryKey, context.previousFeed);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: feedQueryKey });
-    },
+    onSettled: async () => queryClient.invalidateQueries({ queryKey: feedQueryKey }),
   });
 
   const deleteStoryMutation = useMutation({
@@ -172,17 +152,13 @@ export function Feed() {
       setDeletingStoryId(storyId);
       await queryClient.cancelQueries({ queryKey: storiesQueryKey });
       const previousStories = queryClient.getQueryData<FeedStory[]>(storiesQueryKey);
-
       queryClient.setQueryData<FeedStory[]>(storiesQueryKey, (current) =>
         current?.filter((story) => story.id !== storyId),
       );
-
       return { previousStories };
     },
     onError: (_error, _storyId, context) => {
-      if (context?.previousStories) {
-        queryClient.setQueryData(storiesQueryKey, context.previousStories);
-      }
+      if (context?.previousStories) queryClient.setQueryData(storiesQueryKey, context.previousStories);
     },
     onSettled: async () => {
       setDeletingStoryId(undefined);
@@ -203,100 +179,146 @@ export function Feed() {
   const storyGroups = useMemo(() => groupStories(storiesQuery.data ?? []), [storiesQuery.data]);
 
   const handleCreate = useCallback(
-    async (payload: CreatePostPayload) => {
-      await createPostMutation.mutateAsync(payload);
-    },
+    async (payload: CreatePostPayload) => createPostMutation.mutateAsync(payload),
     [createPostMutation],
   );
-
   const handleCreateStory = useCallback(
-    async (payload: CreateStoryPayload) => {
-      await createStoryMutation.mutateAsync(payload);
-    },
+    async (payload: CreateStoryPayload) => createStoryMutation.mutateAsync(payload),
     [createStoryMutation],
   );
-
   const handleReact = useCallback(
     (postId: string, emoji: ReactionEmoji) => {
-      if (!reactionMutation.isPending) {
-        reactionMutation.mutate({ postId, emoji });
-      }
+      if (!reactionMutation.isPending) reactionMutation.mutate({ postId, emoji });
     },
     [reactionMutation],
   );
-
   const handlePin = useCallback(
     (postId: string, pinned: boolean) => {
-      if (!pinMutation.isPending) {
-        pinMutation.mutate({ postId, pinned });
-      }
+      if (!pinMutation.isPending) pinMutation.mutate({ postId, pinned });
     },
     [pinMutation],
   );
-
   const handleViewStory = useCallback(
-    (storyId: string) => {
-      viewStoryMutation.mutate(storyId);
-    },
+    (storyId: string) => viewStoryMutation.mutate(storyId),
     [viewStoryMutation],
   );
-
   const handleDeleteStory = useCallback(
     (storyId: string) => {
-      const confirmed = window.confirm('Deseja realmente excluir este Story?');
-
-      if (confirmed && !deleteStoryMutation.isPending) {
+      if (window.confirm('Deseja realmente excluir este Story?') && !deleteStoryMutation.isPending) {
         deleteStoryMutation.mutate(storyId);
       }
     },
     [deleteStoryMutation],
   );
-
   const handleConfirmDelete = useCallback(() => {
-    if (postToDeleteId && !deleteMutation.isPending) {
-      deleteMutation.mutate(postToDeleteId);
-    }
+    if (postToDeleteId && !deleteMutation.isPending) deleteMutation.mutate(postToDeleteId);
   }, [deleteMutation, postToDeleteId]);
 
+  const firstName = user?.nomeCompleto?.trim().split(/\s+/)[0] ?? 'Visitante';
+
   return (
-    <section aria-label="Feed social" className="mx-auto w-full max-w-5xl space-y-5">
+    <section aria-label="Feed social" className="ph-home">
+      <section className="ph-community-head">
+        <div className="ph-community-copy">
+          <span className="ph-eyebrow"><Sparkles /> Comunidade Hormezinda</span>
+          <h1>{getGreeting()}, {firstName}! <span aria-hidden="true">👋</span></h1>
+          <p>Novidades, momentos e informações importantes da escola em um só lugar.</p>
+        </div>
+        {canCreate ? (
+          <button className="ph-primary-action" onClick={() => setIsCreateOpen(true)} type="button">
+            <Plus /> Criar publicação
+          </button>
+        ) : null}
+        <div className="ph-head-decoration" aria-hidden="true">
+          <span className="ph-deco-circle one" />
+          <span className="ph-deco-circle two" />
+          <span className="ph-deco-grid" />
+        </div>
+
+      </section>
+
       <StoriesBar
+        canCreate={canCreate}
+        currentUserAvatar={user?.fotoPerfil}
+        currentUserName={user?.nomeCompleto}
         groups={storyGroups}
         isLoading={storiesQuery.isLoading}
+        onCreate={() => setIsCreateOpen(true)}
         onOpen={setViewerGroupIndex}
       />
-      {canCreate ? (
-        <div className="flex justify-end">
-          <CreateContentButton onClick={() => setIsCreateOpen(true)} />
-        </div>
-      ) : null}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal text-brand-navy sm:text-3xl">Feed</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Novidades, avisos e momentos da comunidade escolar.
-        </p>
+
+      <div className="ph-home-grid">
+        <main className="ph-feed-column">
+          {canCreate ? (
+            <section className="ph-composer">
+              <div className="ph-composer-main">
+                <Avatar
+                  className="ph-composer-avatar"
+                  name={user?.nomeCompleto}
+                  src={getAssetUrl(user?.fotoPerfil)}
+                />
+                <button className="ph-composer-prompt" onClick={() => setIsCreateOpen(true)} type="button">
+                  No que você está pensando?
+                </button>
+              </div>
+              <div className="ph-composer-actions">
+                <button onClick={() => setIsCreateOpen(true)} type="button"><ImagePlus /> Foto/vídeo</button>
+                <button onClick={() => setIsCreateOpen(true)} type="button"><Sparkles /> Story</button>
+                <button className="ph-composer-publish" onClick={() => setIsCreateOpen(true)} type="button"><Plus /> Publicar</button>
+              </div>
+            </section>
+          ) : null}
+
+          <nav className="ph-feed-tabs" aria-label="Filtros visuais do feed">
+            <button className="active" type="button">Feed</button>
+            <button type="button">Para você</button>
+            <button type="button">Seguindo</button>
+          </nav>
+
+          {feedQuery.isLoading ? <LoadingFeed /> : null}
+          {feedQuery.isError ? <FeedError /> : null}
+          {!feedQuery.isLoading && !feedQuery.isError && posts.length === 0 ? <EmptyFeed /> : null}
+          {!feedQuery.isLoading && !feedQuery.isError && posts.length > 0 ? (
+            <div className="ph-feed-posts">
+              {posts.map((post) => (
+                <PostCard
+                  canDelete={canDeleteFeedPost(user?.id, user?.cargo, post.autor.id)}
+                  canPin={canPin}
+                  isDeleting={deleteMutation.isPending && postToDeleteId === post.id}
+                  isPinning={pinningPostId === post.id}
+                  isReacting={reactingPostId === post.id}
+                  key={post.id}
+                  onDelete={setPostToDeleteId}
+                  onPin={handlePin}
+                  onReact={handleReact}
+                  post={post}
+                />
+              ))}
+            </div>
+          ) : null}
+        </main>
+
+        <aside className="ph-home-rail" aria-label="Atalhos do portal">
+          <section className="ph-rail-card ph-rail-card-dark">
+            <span className="ph-rail-label">Portal agora</span>
+            <strong>{storyGroups.length}</strong>
+            <p>{storyGroups.length === 1 ? 'story ativo na comunidade' : 'stories ativos na comunidade'}</p>
+          </section>
+
+          <section className="ph-rail-card">
+            <span className="ph-rail-label">Acesso rápido</span>
+            <Link to="/avisos"><Bell /> <span><strong>Avisos</strong><small>Comunicados da escola</small></span></Link>
+            <Link to="/horarios"><CalendarDays /> <span><strong>Horários</strong><small>Consulte sua rotina</small></span></Link>
+          </section>
+
+          <section className="ph-rail-card ph-rail-note">
+            <span className="ph-rail-label">Comunidade</span>
+            <h3>Um portal com cara de escola.</h3>
+            <p>O feed reúne apenas conteúdos e módulos que já fazem parte do Portal Hormezinda.</p>
+          </section>
+        </aside>
       </div>
-      {feedQuery.isLoading ? <LoadingFeed /> : null}
-      {feedQuery.isError ? <FeedError /> : null}
-      {!feedQuery.isLoading && !feedQuery.isError && posts.length === 0 ? <EmptyFeed /> : null}
-      {!feedQuery.isLoading && !feedQuery.isError && posts.length > 0 ? (
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <PostCard
-              canDelete={canDeleteFeedPost(user?.id, user?.cargo, post.autor.id)}
-              canPin={canPin}
-              isDeleting={deleteMutation.isPending && postToDeleteId === post.id}
-              isPinning={pinningPostId === post.id}
-              isReacting={reactingPostId === post.id}
-              key={post.id}
-              onDelete={setPostToDeleteId}
-              onPin={handlePin}
-              onReact={handleReact}
-              post={post}
-            />
-          ))}
-        </div>
-      ) : null}
+
       <CreateContentModal
         error={createError}
         isOpen={isCreateOpen}
