@@ -18,3 +18,19 @@ Thumbs.db
 
 backend/src/uploads/*
 !backend/src/uploads/.gitkeep
+
+# Backups locais do desenvolvimento
+.backup-visual-*/
+.backups/
+.portal-backups/
+.visual-backups/
+backups/
+
+# Pacotes/arquivos temporarios locais
+*.zip
+
+# Configuracao local do reCAPTCHA
+frontend/.env.local
+
+# Evita copia completa do projeto dentro do proprio repositorio
+/portal-hormezinda/

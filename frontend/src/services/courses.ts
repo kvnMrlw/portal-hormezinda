@@ -41,17 +41,19 @@ export async function listCourses(filters: CourseFilters = {}): Promise<Course[]
 }
 
 export async function createCourse(payload: CoursePayload): Promise<Course> {
-  const response = await api.post<ApiResponse<{ curso: Course }>>('/courses', toFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.post<ApiResponse<{ curso: Course }>>(
+    '/courses',
+    toFormData(payload),
+  );
 
   return response.data.data.curso;
 }
 
 export async function updateCourse(id: string, payload: CoursePayload): Promise<Course> {
-  const response = await api.patch<ApiResponse<{ curso: Course }>>(`/courses/${id}`, toFormData(payload), {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await api.patch<ApiResponse<{ curso: Course }>>(
+    `/courses/${id}`,
+    toFormData(payload),
+  );
 
   return response.data.data.curso;
 }

@@ -4,6 +4,8 @@ import { Home } from '../pages/Home';
 import { Catalogs } from '../pages/Catalogs';
 import { Courses } from '../pages/Courses';
 import { Login } from '../pages/Login';
+import { ForgotPassword } from '../pages/ForgotPassword';
+import { VerifyEmail } from '../pages/VerifyEmail';
 import { ModulePlaceholder } from '../pages/ModulePlaceholder';
 import { Menu } from '../pages/Menu';
 import { Notices } from '../pages/Notices';
@@ -36,6 +38,14 @@ const router = createBrowserRouter([
   {
     path: '/cadastro',
     element: <Register />
+  },
+  {
+    path: '/verificar-email',
+    element: <VerifyEmail />
+  },
+  {
+    path: '/esqueci-senha',
+    element: <ForgotPassword />
   },
   {
     path: '/home',

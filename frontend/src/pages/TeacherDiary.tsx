@@ -11,6 +11,7 @@ import { Loading } from '../components/ui/Loading';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
 import { Textarea } from '../components/ui/Textarea';
+import { getApiErrorMessage } from '../lib/apiError';
 import { getAssetUrl } from '../lib/assets';
 import { formatClassName } from '../lib/classes';
 import { getRoleLabel } from '../lib/roles';
@@ -93,6 +94,7 @@ export function TeacherDiary() {
   useEffect(() => {
     async function loadBaseData() {
       try {
+        setMessage('');
         setIsLoading(true);
         const [loadedSubjects, loadedPeople] = await Promise.all([
           listAcademicSubjects(),
@@ -115,8 +117,8 @@ export function TeacherDiary() {
               }
             : null,
         );
-      } catch {
-        setMessage('Nao foi possivel carregar o diario.');
+      } catch (error) {
+        setMessage(getApiErrorMessage(error, 'Nao foi possivel carregar o diario.'));
       } finally {
         setIsLoading(false);
       }

@@ -15,7 +15,7 @@ export function AuthLayout({ children, subtitle, title }: AuthLayoutProps) {
     <main className="min-h-screen bg-[#f3f6fb] px-5 py-6 text-brand-navy">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col">
         <header className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white p-1.5 shadow-soft ring-1 ring-slate-950/5">
+          <div className="portal-auth-logo flex h-11 w-11 items-center justify-center">
             <SchoolLogo />
           </div>
           <span className="text-lg font-semibold">Portal Hormezinda</span>

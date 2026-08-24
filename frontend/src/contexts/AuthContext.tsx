@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { AUTH_SESSION_EXPIRED_EVENT, REFRESH_TOKEN_KEY, TOKEN_KEY, USER_KEY, api, clearStoredSession } from '../services/api';
@@ -24,6 +25,18 @@ function readStoredUser(): User | null {
     localStorage.removeItem(USER_KEY);
     return null;
   }
+}
+
+function isTransientSessionFailure(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  if (!error.response) {
+    return true;
+  }
+
+  return error.response.status >= 500 && error.response.status <= 599;
 }
 
 // Provedor global do estado de autenticacao do frontend.
@@ -62,10 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.data.data.usuario);
         setToken(localStorage.getItem(TOKEN_KEY));
         localStorage.setItem(USER_KEY, JSON.stringify(response.data.data.usuario));
-      } catch {
-        clearStoredSession();
-        setToken(null);
-        setUser(null);
+      } catch (error) {
+        if (isTransientSessionFailure(error)) {
+          setToken(localStorage.getItem(TOKEN_KEY));
+          setUser(readStoredUser());
+        } else {
+          clearStoredSession();
+          setToken(null);
+          setUser(null);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -111,10 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function register(payload: RegisterPayload): Promise<void> {
-    const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', payload);
-    persistSession(response.data.data);
-    setToken(response.data.data.token);
-    setUser(response.data.data.usuario);
+    await api.post('/auth/register', payload);
   }
 
   async function updateProfile(payload: ProfileUpdatePayload): Promise<void> {

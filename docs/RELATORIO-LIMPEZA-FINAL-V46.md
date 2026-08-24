@@ -1,0 +1,378 @@
+# Relatorio V46 - Limpeza final da copia duplicada
+
+Gerado em: `2026-08-23T19:17:41`
+
+## Resultado
+
+- Copia interna: **movida para arquivo externo, nao apagada**
+- Arquivos rastreados removidos do working tree: **298**
+- Arquivos exclusivos da copia antes da remocao: **0**
+- Regra `/portal-hormezinda/` adicionada ao `.gitignore`
+- Lint backend/frontend: **OK, zero warnings**
+- Build backend/frontend: **OK**
+- npm audit backend/frontend: **0 vulnerabilidades**
+- Smoke GET: **19 endpoints**
+- EMPTY_OK: **12**
+- Endpoints com atencao: **0**
+- Imagens de capa: **hashes preservados**
+- Commit/push: **NAO executados**
+
+## Backup da copia antiga
+
+`/home/jose-silva/Documentos/portal-hormezinda-oficial/portal-hormezinda-arquivo-v46-20260823-191716/copia-interna-wrapper`
+
+## Git apos limpeza
+
+```text
+## dev...origin/dev [à frente 2]
+ M .gitignore
+ M backend/.env.example
+ M backend/package-lock.json
+ M backend/package.json
+ M backend/src/app.ts
+ M backend/src/config/env.ts
+ M backend/src/modules/auth/middlewares/auth.middleware.ts
+ M backend/src/modules/auth/service/auth.service.ts
+ M backend/src/modules/users/controller/user.controller.ts
+ M backend/src/modules/users/middlewares/profile-upload.middleware.ts
+ M backend/src/modules/users/routes/user.routes.ts
+ M backend/src/seeds/ensureAdmin.ts
+ M backend/src/utils/imageUpload.ts
+ M frontend/index.html
+ M frontend/package-lock.json
+ M frontend/src/components/app/Topbar.tsx
+ M frontend/src/components/auth/RecaptchaCheckbox.tsx
+ M frontend/src/components/profile/ProfileView.tsx
+ M frontend/src/contexts/AuthContext.tsx
+ M frontend/src/pages/Ideas.tsx
+ M frontend/src/pages/MySubjects.tsx
+ M frontend/src/pages/MyTasks.tsx
+ M frontend/src/pages/Notices.tsx
+ M frontend/src/pages/Notifications.tsx
+ M frontend/src/pages/PublicProfile.tsx
+ M frontend/src/pages/Settings.tsx
+ M frontend/src/pages/TeacherDiary.tsx
+ M frontend/src/pages/Users.tsx
+ M frontend/src/services/academic.ts
+ M frontend/src/services/api.ts
+ M frontend/src/services/courses.ts
+ M frontend/src/services/feed.ts
+ M frontend/src/services/ideas.ts
+ M frontend/src/services/meals.ts
+ M frontend/src/services/users.ts
+ D portal-hormezinda/portal-hormezinda/.editorconfig
+ D portal-hormezinda/portal-hormezinda/.github/workflows/ci.yml
+ D portal-hormezinda/portal-hormezinda/.gitignore
+ D portal-hormezinda/portal-hormezinda/README.md
+ D portal-hormezinda/portal-hormezinda/backend/.env.example
+ D portal-hormezinda/portal-hormezinda/backend/.prettierrc
+ D portal-hormezinda/portal-hormezinda/backend/eslint.config.js
+ D portal-hormezinda/portal-hormezinda/backend/package-lock.json
+ D portal-hormezinda/portal-hormezinda/backend/package.json
+ D portal-hormezinda/portal-hormezinda/backend/src/app.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/config/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/config/database.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/config/env.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/controllers/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/middlewares/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/middlewares/error.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/models/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/controller/academic.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/middlewares/academic-upload.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/models/academic-task.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/models/attendance.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/models/diary-entry.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/models/lesson-content.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/models/observation.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/models/task-submission.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/repository/academic.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/routes/academic.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/service/academic.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/types/academic.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/academic/validation/academic.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/controller/auth.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/middlewares/auth.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/middlewares/rbac.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/permissions/roles.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/repository/auth.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/routes/auth.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/service/auth.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/types/auth.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/auth/validation/auth.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/controller/catalog.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/models/class-group.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/models/room.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/models/subject.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/repository/catalog.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/routes/catalog.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/service/catalog.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/types/catalog.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/catalogs/validation/catalog.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/courses/controller/course.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/courses/middlewares/course-upload.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/courses/models/course.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/courses/repository/course.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/courses/routes/course.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/courses/service/course.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/courses/types/course.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/courses/validation/course.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/controller/feed.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/middlewares/upload.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/models/post.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/models/story.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/repository/feed.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/routes/feed.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/service/feed.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/types/feed.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/feed/validation/feed.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/ideas/controller/idea.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/ideas/middlewares/idea-upload.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/ideas/models/idea.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/ideas/repository/idea.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/ideas/routes/idea.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/ideas/service/idea.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/ideas/types/idea.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/ideas/validation/idea.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/meals/controller/meal.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/meals/middlewares/meal-upload.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/meals/models/meal.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/meals/repository/meal.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/meals/routes/meal.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/meals/service/meal.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/meals/types/meal.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/meals/validation/meal.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notices/controller/notice.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notices/middlewares/notice-upload.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notices/models/notice.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notices/repository/notice.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notices/routes/notice.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notices/service/notice.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notices/types/notice.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notices/validation/notice.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notifications/controller/notification.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notifications/models/notification.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notifications/repository/notification.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notifications/routes/notification.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notifications/service/notification-events.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notifications/service/notification.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notifications/types/notification.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/notifications/validation/notification.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/schedules/controller/schedule.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/schedules/models/schedule.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/schedules/repository/schedule.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/schedules/routes/schedule.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/schedules/service/schedule.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/schedules/types/schedule.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/schedules/validation/schedule.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/social/controller/social.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/social/models/birthday-message.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/social/repository/social.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/social/routes/social.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/social/service/social.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/social/types/social.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/social/validation/social.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/users/controller/user.controller.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/users/middlewares/profile-upload.middleware.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/users/models/user.model.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/users/repository/user.repository.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/users/routes/user.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/users/service/user.service.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/users/types/user.types.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/modules/users/validation/user.validation.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/repositories/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/routes/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/routes/health.routes.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/seeds/admin.seed.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/seeds/ensureAdmin.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/server.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/services/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/sockets/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/types/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/uploads/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/utils/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/src/utils/apiResponse.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/utils/async.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/utils/imageUpload.ts
+ D portal-hormezinda/portal-hormezinda/backend/src/validations/.gitkeep
+ D portal-hormezinda/portal-hormezinda/backend/tsconfig.json
+ D portal-hormezinda/portal-hormezinda/docs/README.md
+ D portal-hormezinda/portal-hormezinda/frontend/.env.example
+ D portal-hormezinda/portal-hormezinda/frontend/.prettierrc
+ D portal-hormezinda/portal-hormezinda/frontend/eslint.config.js
+ D portal-hormezinda/portal-hormezinda/frontend/index.html
+ D portal-hormezinda/portal-hormezinda/frontend/package-lock.json
+ D portal-hormezinda/portal-hormezinda/frontend/package.json
+ D portal-hormezinda/portal-hormezinda/frontend/postcss.config.js
+ D portal-hormezinda/portal-hormezinda/frontend/src/App.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/README.md
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/backgrounds/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/fonts/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/icons/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/illustrations/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/images/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/logo/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/logo/logoportalhormezinda.png
+ D portal-hormezinda/portal-hormezinda/frontend/src/assets/placeholders/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/admin/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/app/AppShell.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/app/ContentArea.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/app/MainContainer.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/app/ModuleHeader.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/app/Sidebar.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/app/Topbar.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/cards/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/courses/CourseCard.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/CreateContentModal.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/CreatePost.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/DeletePostDialog.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/EmptyFeed.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/Feed.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/LoadingFeed.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/PostCard.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/PostFooter.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/PostHeader.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/StoriesBar.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/StoryViewer.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/feed/feedUtils.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/forms/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/home/HomeFeed.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/home/HomeHeader.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/home/SchoolPanel.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/home/SummaryCards.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/layout/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/layout/AuthLayout.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/meals/MealCard.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/notices/NoticeCard.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/notices/NoticeFilters.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/notices/NoticeModal.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/notices/noticeOptions.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/notifications/NotificationItem.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/profile/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/profile/ProfileView.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedule/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedules/ScheduleDayCards.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedules/ScheduleFilters.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedules/ScheduleLessonCard.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedules/ScheduleModal.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedules/ScheduleTable.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedules/ScheduleTopSummary.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedules/TeacherAgenda.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/schedules/scheduleUtils.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/social/BirthdayWelcome.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/stories/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Avatar.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Badge.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Button.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Card.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/DatePicker.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/EmptyState.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Input.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Loading.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Modal.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/PasswordInput.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/RoleBadge.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/SchoolLogo.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/SearchInput.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Select.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Skeleton.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Spinner.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/components/ui/Textarea.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/contexts/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/contexts/AuthContext.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/contexts/auth-context.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/contexts/useAuth.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/data/schoolModules.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/hooks/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/lib/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/lib/assets.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/lib/classes.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/lib/profile.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/lib/roles.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/lib/utils.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/main.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Catalogs.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Courses.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Home.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Ideas.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Login.css
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Login.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Menu.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/ModulePlaceholder.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/MySubjects.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/MyTasks.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Notices.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Notifications.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/People.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/PlatformHome.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Profile.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/PublicProfile.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Register.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Schedules.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Settings.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/TeacherDiary.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/pages/Users.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/router/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/router/AppRouter.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/routes/ProtectedRoute.tsx
+ D portal-hormezinda/portal-hormezinda/frontend/src/schemas/auth.schema.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/academic.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/api.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/catalogs.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/courses.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/feed.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/ideas.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/meals.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/notices.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/notifications.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/schedules.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/social.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/services/users.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/styles/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/styles/globals.css
+ D portal-hormezinda/portal-hormezinda/frontend/src/styles/theme.css
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/academic.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/auth.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/catalogs.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/courses.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/feed.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/ideas.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/meals.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/notices.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/notifications.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/schedules.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/types/social.ts
+ D portal-hormezinda/portal-hormezinda/frontend/src/utils/.gitkeep
+ D portal-hormezinda/portal-hormezinda/frontend/src/vite-env.d.ts
+ D portal-hormezinda/portal-hormezinda/frontend/tailwind.config.ts
+ D portal-hormezinda/portal-hormezinda/frontend/tsconfig.app.json
+ D portal-hormezinda/portal-hormezinda/frontend/tsconfig.json
+ D portal-hormezinda/portal-hormezinda/frontend/tsconfig.node.json
+ D portal-hormezinda/portal-hormezinda/frontend/vercel.json
+ D portal-hormezinda/portal-hormezinda/frontend/vite.config.ts
+ D portal-hormezinda/portal-hormezinda/package-lock.json
+ D portal-hormezinda/portal-hormezinda/package.json
+ D portal-hormezinda/portal-hormezinda/render.yaml
+?? backend/src/routes/readiness.routes.ts
+?? docs/RELATORIO-AUDITORIA-FINAL-V45.md
+?? docs/RELATORIO-CONSOLIDACAO-V43.md
+?? docs/RELATORIO-DUPLICATA-V45-R4.md
+?? docs/RELATORIO-POLIMENTO-V44.md
+?? docs/RELATORIO-VALIDACAO-PAGINAS-V43.md
+?? frontend/.env.example
+?? frontend/public/robots.txt
+?? frontend/public/sitemap.xml
+?? frontend/src/lib/apiError.ts
+?? frontend/vercel.json
+?? render.yaml
+```
+
+## Observacao
+
+As 298 exclusoes no Git correspondem a copia interna antiga. O projeto raiz,
+que passou pelas validacoes V39-V46, permanece como unica arvore de aplicacao.

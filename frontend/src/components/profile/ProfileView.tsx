@@ -1,13 +1,9 @@
 import {
   CalendarDays,
-  Camera,
   Bell,
   ExternalLink,
   BookOpen,
-  CheckCircle2,
   Grid3X3,
-  Heart,
-  ImagePlus,
   KeyRound,
   Lightbulb,
   Link as LinkIcon,
@@ -19,6 +15,7 @@ import {
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '../../contexts/useAuth';
+import { getApiErrorMessage } from '../../lib/apiError';
 import { getAssetUrl } from '../../lib/assets';
 import { calculateAge, getProfileDetails, getProfileHeadline } from '../../lib/profile';
 import { getDisplayRoleLabel, isAdminRole } from '../../lib/roles';
@@ -84,7 +81,13 @@ type ProfileFormData = {
   senhaAtual: string;
 };
 
-const maxImageSize = 5 * 1024 * 1024;
+const maxImageSize = 12 * 1024 * 1024;
+const allowedProfileImageTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
 
 export function ProfileView({
   academicSummary,
@@ -100,6 +103,7 @@ export function ProfileView({
   const { updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPasswordChangeOpen, setIsPasswordChangeOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState<ProfileFormData>({
     bio: user.bio ?? '',
@@ -158,17 +162,20 @@ export function ProfileView({
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
-      setMessage('Selecione uma imagem valida.');
+    if (!allowedProfileImageTypes.has(file.type)) {
+      setMessage('Formato nao permitido. Use PNG, JPEG, WebP ou GIF.');
+      event.target.value = '';
       return;
     }
 
     if (file.size > maxImageSize) {
-      setMessage('A imagem deve ter no maximo 5MB.');
+      setMessage('A imagem deve ter no maximo 12MB.');
+      event.target.value = '';
       return;
     }
 
-    setMessage('');
+    const label = field === 'fotoPerfil' ? 'Foto' : 'Banner';
+    setMessage(`${label} selecionado: ${file.name}`);
     setFormData((current) => ({ ...current, [field]: file }));
   }
 
@@ -180,6 +187,7 @@ export function ProfileView({
       novaSenha: '',
       confirmarSenha: '',
     });
+    setIsPasswordChangeOpen(false);
     setMessage('');
   }
 
@@ -188,9 +196,7 @@ export function ProfileView({
     setIsSaving(true);
     setMessage('');
 
-    const wantsPasswordChange = Boolean(
-      formData.senhaAtual || formData.novaSenha || formData.confirmarSenha,
-    );
+    const wantsPasswordChange = isPasswordChangeOpen;
 
     if (
       wantsPasswordChange &&
@@ -231,238 +237,186 @@ export function ProfileView({
         novaSenha: '',
         confirmarSenha: '',
       }));
+      setIsPasswordChangeOpen(false);
       setMessage('Perfil atualizado.');
       setIsEditing(false);
-    } catch {
-      setMessage('Nao foi possivel atualizar o perfil.');
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, 'Nao foi possivel atualizar o perfil.'));
     } finally {
       setIsSaving(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <Card className="overflow-visible p-0">
-        <div className="relative flex min-h-44 items-center justify-center overflow-hidden rounded-t-[1.5rem] bg-slate-950 sm:min-h-56">
-          {!bannerUrl ? (
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,#0f2447_0%,#12315f_52%,#174ea6_100%)]" />
+    <div className="profile-social-page">
+      <Card className="profile-social-card">
+        <div className="profile-social-cover">
+          {!bannerUrl ? <div className="profile-cover-art" aria-hidden="true" /> : null}
+          {bannerUrl ? <img alt="" className="profile-cover-image" src={bannerUrl} /> : null}
+          <div className="profile-cover-shade" />
+          {editable && isEditing ? (
+            <label className="profile-cover-edit-control" title="Alterar banner">
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Alterar banner</span>
+              <input
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="sr-only"
+                onChange={(event) => handleImageChange('bannerPerfil', event)}
+                type="file"
+              />
+            </label>
           ) : null}
-          {bannerUrl ? (
-            <img
-              alt=""
-              className="relative z-0 max-h-72 w-full object-contain sm:max-h-96"
-              src={bannerUrl}
-            />
-          ) : null}
-          <div className="absolute inset-0 bg-slate-950/10" />
         </div>
-        <div className="px-5 pb-7 sm:px-8">
-          <div className="relative z-10 flex flex-col gap-5 pt-6 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+
+        <div className="profile-social-body">
+          <div className="profile-social-header">
+            <div className={`profile-avatar-wrap ${isEditing ? 'is-editing' : ''}`}>
               <Avatar
-                className="h-28 w-28 shrink-0 border-[6px] border-white bg-white text-4xl shadow-soft ring-1 ring-slate-950/5 sm:h-32 sm:w-32"
+                className="profile-social-avatar"
                 name={user.nomeCompleto}
                 src={avatarUrl}
               />
-              <div className="min-w-0 px-1 pb-2 pt-1 sm:px-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="break-words text-3xl font-bold tracking-normal text-brand-navy sm:text-4xl">
-                    {user.nomeCompleto}
-                  </h1>
-                  <RoleBadge user={user} />
-                </div>
-                <p className="mt-1 text-sm font-semibold text-slate-500">@{user.usuario}</p>
-                <p className="mt-2 font-semibold text-brand-navy">{getProfileHeadline(user)}</p>
-              </div>
+              <span className="profile-status-dot" aria-label="Perfil ativo" />
+              {editable && isEditing ? (
+                <label className="profile-avatar-edit-control" title="Alterar foto de perfil">
+                  <Pencil className="h-4 w-4" />
+                  <span className="sr-only">Alterar foto de perfil</span>
+                  <input
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="sr-only"
+                    onChange={(event) => handleImageChange('fotoPerfil', event)}
+                    type="file"
+                  />
+                </label>
+              ) : null}
             </div>
+
+            <div className="profile-social-identity">
+              <div className="profile-name-line">
+                <h1>{user.nomeCompleto}</h1>
+                <RoleBadge user={user} />
+              </div>
+              <p className="profile-handle">@{user.usuario}</p>
+              <p className="profile-headline">{getProfileHeadline(user)}</p>
+            </div>
+
             {editable ? (
               <Button
+                className="profile-edit-button"
                 onClick={() => {
-                  if (isEditing) {
-                    resetEditState();
-                  }
-
+                  if (isEditing) resetEditState();
                   setIsEditing((current) => !current);
                 }}
                 type="button"
                 variant="secondary"
-                className="self-start sm:self-end"
               >
                 <Pencil className="h-4 w-4" />
-                Editar Perfil
+                Editar perfil
               </Button>
             ) : null}
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-            <section className="space-y-5">
-              {estatisticas ? (
-                <SocialStatsCards estatisticas={estatisticas} storiesCount={stories?.length ?? 0} />
-              ) : null}
-              {stories ? <StoryStrip stories={stories} /> : null}
-              {professorResumo ? <TeacherProfileSummary professorResumo={professorResumo} /> : null}
-              {academicSummary ? (
-                <AcademicProfileSummary academicSummary={academicSummary} user={user} />
-              ) : null}
+          {estatisticas ? (
+            <div className="profile-stats-wrap">
+              <SocialStatsCards estatisticas={estatisticas} storiesCount={stories?.length ?? 0} />
+            </div>
+          ) : null}
 
-              <div>
-                <h2 className="text-lg font-semibold text-brand-navy">Sobre</h2>
-                <p className="mt-3 rounded-3xl bg-slate-50 p-5 leading-7 text-slate-600 shadow-inner ring-1 ring-slate-950/5">
-                  {admin ? 'Administrador do Sistema' : user.bio || 'Bio ainda nao preenchida.'}
-                </p>
+          <div className="profile-social-grid">
+            <section className="profile-social-main">
+              <div className="profile-bio-card">
+                <span>Sobre</span>
+                <p>{admin ? 'Administrador do Sistema' : user.bio || 'Bio ainda não preenchida.'}</p>
+                {user.redeSocial ? (
+                  <a
+                    href={user.redeSocial.startsWith('http') ? user.redeSocial : undefined}
+                    rel="noreferrer"
+                    target={user.redeSocial.startsWith('http') ? '_blank' : undefined}
+                  >
+                    <ExternalLink /> {user.redeSocial}
+                  </a>
+                ) : null}
               </div>
 
+              {stories ? <StoryStrip stories={stories} /> : null}
+              {professorResumo ? <TeacherProfileSummary professorResumo={professorResumo} /> : null}
+              {academicSummary ? <AcademicProfileSummary academicSummary={academicSummary} user={user} /> : null}
+
               {isEditing ? (
-                <form
-                  className="space-y-4 rounded-3xl border border-slate-950/5 bg-white p-5 shadow-card ring-1 ring-white/80"
-                  onSubmit={handleSubmit}
-                >
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50/50">
-                      <span className="flex items-center gap-2">
-                        <Camera className="h-4 w-4 text-brand-blue" />
-                        Alterar foto
-                      </span>
-                      <input
-                        accept="image/png,image/jpeg,image/webp,image/gif"
-                        className="sr-only"
-                        onChange={(event) => handleImageChange('fotoPerfil', event)}
-                        type="file"
-                      />
-                    </label>
-                    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50/50">
-                      <span className="flex items-center gap-2">
-                        <ImagePlus className="h-4 w-4 text-brand-blue" />
-                        Alterar banner
-                      </span>
-                      <input
-                        accept="image/png,image/jpeg,image/webp,image/gif"
-                        className="sr-only"
-                        onChange={(event) => handleImageChange('bannerPerfil', event)}
-                        type="file"
-                      />
-                    </label>
+                <form className="profile-edit-panel" onSubmit={handleSubmit}>
+                  <Textarea label="Bio" maxLength={280} name="bio" onChange={(event) => setFormData((current) => ({ ...current, bio: event.target.value }))} value={formData.bio ?? ''} />
+                  <Input label="Rede social" name="redeSocial" onChange={(event) => setFormData((current) => ({ ...current, redeSocial: event.target.value }))} placeholder="@usuario ou link" value={formData.redeSocial ?? ''} />
+                  <div className="profile-password-block">
+                    <div className="profile-password-title"><KeyRound /> Senha</div>
+                    {!isPasswordChangeOpen ? (
+                      <div className="grid gap-2">
+                        <p className="text-sm text-slate-500">
+                          Foto, banner e outros dados podem ser salvos sem trocar a senha.
+                        </p>
+                        <Button
+                          onClick={() => {
+                            setMessage('');
+                            setIsPasswordChangeOpen(true);
+                          }}
+                          type="button"
+                          variant="secondary"
+                        >
+                          Alterar senha
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        <PasswordInput autoComplete="current-password" label="Senha atual" name="senhaAtual" onChange={(event) => setFormData((current) => ({ ...current, senhaAtual: event.target.value }))} value={formData.senhaAtual} />
+                        <PasswordInput autoComplete="new-password" label="Nova senha" name="novaSenha" onChange={(event) => setFormData((current) => ({ ...current, novaSenha: event.target.value }))} value={formData.novaSenha} />
+                        <PasswordInput autoComplete="new-password" label="Confirmar senha" name="confirmarSenha" onChange={(event) => setFormData((current) => ({ ...current, confirmarSenha: event.target.value }))} value={formData.confirmarSenha} />
+                        <Button
+                          onClick={() => {
+                            setFormData((current) => ({
+                              ...current,
+                              senhaAtual: '',
+                              novaSenha: '',
+                              confirmarSenha: '',
+                            }));
+                            setIsPasswordChangeOpen(false);
+                            setMessage('');
+                          }}
+                          type="button"
+                          variant="secondary"
+                        >
+                          Cancelar alteracao de senha
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <Textarea
-                    label="Bio"
-                    maxLength={280}
-                    name="bio"
-                    onChange={(event) =>
-                      setFormData((current) => ({ ...current, bio: event.target.value }))
-                    }
-                    value={formData.bio ?? ''}
-                  />
-                  <Input
-                    label="Rede social"
-                    name="redeSocial"
-                    onChange={(event) =>
-                      setFormData((current) => ({ ...current, redeSocial: event.target.value }))
-                    }
-                    placeholder="@usuario ou link"
-                    value={formData.redeSocial ?? ''}
-                  />
-                  <div className="rounded-3xl bg-slate-50/90 p-4 ring-1 ring-slate-100">
-                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-brand-navy">
-                      <KeyRound className="h-4 w-4 text-brand-blue" />
-                      Alteracao de senha
-                    </div>
-                    <div className="grid gap-3">
-                      <PasswordInput
-                        autoComplete="current-password"
-                        label="Senha atual"
-                        name="senhaAtual"
-                        onChange={(event) =>
-                          setFormData((current) => ({ ...current, senhaAtual: event.target.value }))
-                        }
-                        value={formData.senhaAtual}
-                      />
-                      <PasswordInput
-                        autoComplete="new-password"
-                        label="Nova senha"
-                        name="novaSenha"
-                        onChange={(event) =>
-                          setFormData((current) => ({ ...current, novaSenha: event.target.value }))
-                        }
-                        value={formData.novaSenha}
-                      />
-                      <PasswordInput
-                        autoComplete="new-password"
-                        label="Confirmar senha"
-                        name="confirmarSenha"
-                        onChange={(event) =>
-                          setFormData((current) => ({
-                            ...current,
-                            confirmarSenha: event.target.value,
-                          }))
-                        }
-                        value={formData.confirmarSenha}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <Button
-                      onClick={() => {
-                        resetEditState();
-                        setIsEditing(false);
-                      }}
-                      type="button"
-                      variant="secondary"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button disabled={isSaving} type="submit">
-                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                      {isSaving ? 'Salvando...' : 'Salvar'}
-                    </Button>
+                  <div className="profile-edit-actions">
+                    <Button onClick={() => { resetEditState(); setIsEditing(false); }} type="button" variant="secondary">Cancelar</Button>
+                    <Button disabled={isSaving} type="submit">{isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{isSaving ? 'Salvando...' : 'Salvar alterações'}</Button>
                   </div>
                   {message ? <p className="text-sm text-slate-500">{message}</p> : null}
                 </form>
               ) : null}
-
-              {user.redeSocial ? (
-                <a
-                  className="inline-flex items-center gap-2 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-brand-blue transition hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-100"
-                  href={user.redeSocial.startsWith('http') ? user.redeSocial : undefined}
-                  rel="noreferrer"
-                  target={user.redeSocial.startsWith('http') ? '_blank' : undefined}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  {user.redeSocial}
-                </a>
-              ) : null}
             </section>
 
-            <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <InfoCard icon={ShieldCheck} label="Cargo" value={getDisplayRoleLabel(user)} />
-              {age && !admin ? <InfoCard icon={CalendarDays} label="Idade" value={age} /> : null}
-              {user.cargo === Cargo.PROFESSOR && user.materia ? (
-                <InfoCard icon={BookOpen} label="Materia" value={user.materia} />
-              ) : null}
-              {(user.cargo === Cargo.ALUNO || user.cargo === Cargo.GREMIO) && details[0] ? (
-                <InfoCard icon={BookOpen} label="Turma" value={details[0]} />
-              ) : null}
-              {details[1] ? <InfoCard icon={MapPin} label="Turno" value={details[1]} /> : null}
-              {user.telefone ? (
-                <InfoCard icon={LinkIcon} label="Telefone" value={user.telefone} />
-              ) : null}
-              <InfoCard
-                icon={CalendarDays}
-                label="Entrada"
-                value={new Intl.DateTimeFormat('pt-BR').format(new Date(user.criadoEm))}
-              />
-              {!admin && !details.length ? (
-                <InfoCard icon={LinkIcon} label="Perfil" value="Informacoes em breve" />
-              ) : null}
+            <aside className="profile-social-aside">
+              <div className="profile-details-card">
+                <span className="profile-details-kicker">Informações</span>
+                <InfoCard icon={ShieldCheck} label="Cargo" value={getDisplayRoleLabel(user)} />
+                {age && !admin ? <InfoCard icon={CalendarDays} label="Idade" value={age} /> : null}
+                {user.cargo === Cargo.PROFESSOR && user.materia ? <InfoCard icon={BookOpen} label="Matéria" value={user.materia} /> : null}
+                {(user.cargo === Cargo.ALUNO || user.cargo === Cargo.GREMIO) && details[0] ? <InfoCard icon={BookOpen} label="Turma" value={details[0]} /> : null}
+                {details[1] ? <InfoCard icon={MapPin} label="Turno" value={details[1]} /> : null}
+                {user.telefone ? <InfoCard icon={LinkIcon} label="Telefone" value={user.telefone} /> : null}
+                <InfoCard icon={CalendarDays} label="Entrada" value={new Intl.DateTimeFormat('pt-BR').format(new Date(user.criadoEm))} />
+              </div>
             </aside>
           </div>
         </div>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="profile-secondary-grid">
         {recentNotifications ? <NotificationPreview notifications={recentNotifications} /> : null}
         {recentIdeas ? <IdeaPreview ideas={recentIdeas} /> : null}
       </div>
-
       {publicacoes ? <PostGrid posts={publicacoes} /> : null}
     </div>
   );
@@ -525,34 +479,24 @@ function SocialStatsCards({
   estatisticas: NonNullable<ProfileViewProps['estatisticas']>;
   storiesCount: number;
 }) {
-  return (
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      <SocialStat icon={Grid3X3} label="Publicacoes" value={estatisticas.publicacoes} />
-      <SocialStat icon={Camera} label="Stories" value={estatisticas.stories ?? storiesCount} />
-      <SocialStat icon={Lightbulb} label="Ideias" value={estatisticas.ideiasCriadas ?? 0} />
-      <SocialStat icon={Heart} label="Curtidas" value={estatisticas.curtidasRecebidas} />
-      <SocialStat icon={CheckCircle2} label="Apoios" value={estatisticas.apoiosRecebidos ?? 0} />
-    </section>
-  );
-}
+  const stats = [
+    { label: 'Publicações', value: estatisticas.publicacoes },
+    { label: 'Stories', value: estatisticas.stories ?? storiesCount },
+    { label: 'Ideias', value: estatisticas.ideiasCriadas ?? 0 },
+    { label: 'Curtidas', value: estatisticas.curtidasRecebidas },
+    { label: 'Apoios', value: estatisticas.apoiosRecebidos ?? 0 },
+  ];
 
-function SocialStat({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Grid3X3;
-  label: string;
-  value: number;
-}) {
   return (
-    <div className="group rounded-3xl border border-slate-950/5 bg-white p-5 shadow-card ring-1 ring-white/80 transition duration-300 hover:-translate-y-1 hover:shadow-hover">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-brand-blue shadow-sm ring-1 ring-blue-100 transition duration-300 group-hover:scale-105">
-        <Icon className="h-6 w-6" />
-      </div>
-      <p className="mt-4 text-3xl font-bold text-brand-navy">{value}</p>
-      <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
-    </div>
+    <section className="grid grid-cols-3 overflow-hidden rounded-[1.7rem] border border-slate-950/5 bg-white/86 shadow-card ring-1 ring-white/80 sm:grid-cols-5">
+      {stats.map((stat) => (
+        <div className="relative px-2 py-4 text-center sm:px-4" key={stat.label}>
+          <span className="absolute bottom-3 right-0 top-3 hidden w-px bg-slate-100 sm:block last:hidden" />
+          <p className="text-xl font-extrabold tracking-[-0.03em] text-brand-navy sm:text-2xl">{stat.value}</p>
+          <p className="mt-1 text-[0.66rem] font-bold text-slate-400 sm:text-xs">{stat.label}</p>
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -650,29 +594,37 @@ function InfoCard({ icon: Icon, label, value }: InfoCardProps) {
 
 function StoryStrip({ stories }: { stories: FeedStory[] }) {
   return (
-    <section>
-      <h2 className="text-lg font-semibold text-brand-navy">Stories publicos</h2>
+    <section className="profile-story-section">
+      <div className="profile-story-section-head">
+        <h2>Stories publicos</h2>
+        {stories.length ? <span>{stories.length} ativo{stories.length === 1 ? '' : 's'}</span> : null}
+      </div>
       {stories.length ? (
-        <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+        <div className="profile-story-strip" aria-label="Stories publicos">
           {stories.map((story) => (
-            <article
-              className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-story-ring p-1 shadow-card ring-2 ring-blue-100"
-              key={story.id}
-              style={story.tipo === StoryKind.TEXT ? { backgroundColor: story.fundo } : undefined}
-            >
-              {story.imagem ? (
-                <img
-                  alt={story.texto || 'Story'}
-                  className="h-full w-full object-cover"
-                  decoding="async"
-                  loading="lazy"
-                  src={getAssetUrl(story.imagem.url)}
-                />
-              ) : (
-                <p className="line-clamp-3 px-3 text-center text-xs font-semibold text-white">
-                  {story.texto || 'Story'}
-                </p>
-              )}
+            <article className="profile-story-item" key={story.id}>
+              <div
+                  className={`profile-story-circle-ring ${
+                    story.vistoPeloUsuario ? 'is-viewed' : 'is-unseen'
+                  }`}
+                >
+                <div
+                  className="profile-story-circle"
+                  style={story.tipo === StoryKind.TEXT ? { backgroundColor: story.fundo } : undefined}
+                >
+                  {story.imagem ? (
+                    <img
+                      alt={story.texto || 'Story'}
+                      decoding="async"
+                      loading="lazy"
+                      src={getAssetUrl(story.imagem.url)}
+                    />
+                  ) : (
+                    <p>{story.texto || 'Story'}</p>
+                  )}
+                </div>
+              </div>
+              <span>Story</span>
             </article>
           ))}
         </div>

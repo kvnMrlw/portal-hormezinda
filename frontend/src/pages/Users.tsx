@@ -22,6 +22,7 @@ import { Input } from '../components/ui/Input';
 import { Loading } from '../components/ui/Loading';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
+import { getApiErrorMessage } from '../lib/apiError';
 import { getAssetUrl } from '../lib/assets';
 import { getDisplayRoleLabel, getRoleLabel } from '../lib/roles';
 import { cn } from '../lib/utils';
@@ -43,6 +44,33 @@ import {
 } from '../types/auth';
 
 type RoleFilter = 'TODOS' | Cargo;
+
+function LocalFilePreview({ file, alt }: { file?: File; alt: string }) {
+  const [previewUrl, setPreviewUrl] = useState<string>();
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(undefined);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  if (!previewUrl) {
+    return null;
+  }
+
+  return (
+    <img
+      alt={alt}
+      className="h-16 w-16 shrink-0 rounded-2xl border border-blue-100 object-cover shadow-sm"
+      src={previewUrl}
+    />
+  );
+}
 type SortMode = 'recentes' | 'antigos' | 'nome-az' | 'nome-za';
 
 type UserFormState = {
@@ -172,15 +200,7 @@ function buildPayload(form: UserFormState, editingUser?: User): AdminUserPayload
 }
 
 function getErrorMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const response = (error as { response?: { data?: { message?: string } } }).response;
-
-    if (response?.data?.message) {
-      return response.data.message;
-    }
-  }
-
-  return 'Nao foi possivel concluir a solicitacao.';
+  return getApiErrorMessage(error, 'Nao foi possivel concluir a solicitacao.');
 }
 
 function validateForm(form: UserFormState, users: User[], editingUser?: User): string | null {
@@ -771,8 +791,16 @@ export function Users() {
 
           <div className="grid gap-3 md:grid-cols-2">
             <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm font-semibold text-brand-navy transition hover:border-blue-200 hover:bg-blue-50">
-              <ImagePlus className="h-5 w-5 text-brand-blue" />
-              Foto
+              <LocalFilePreview alt="Previa da foto de perfil" file={form.fotoPerfil} />
+              <ImagePlus className="h-5 w-5 shrink-0 text-brand-blue" />
+              <span className="min-w-0">
+                <span className="block">{form.fotoPerfil ? 'Trocar foto' : 'Foto'}</span>
+                {form.fotoPerfil ? (
+                  <span className="mt-1 block max-w-40 truncate text-xs font-medium text-slate-500">
+                    {form.fotoPerfil.name}
+                  </span>
+                ) : null}
+              </span>
               <input
                 accept="image/*"
                 className="sr-only"
@@ -780,15 +808,18 @@ export function Users() {
                 onChange={(event) => handleFileChange('fotoPerfil', event)}
                 type="file"
               />
-              {form.fotoPerfil ? (
-                <span className="ml-auto max-w-32 truncate text-xs text-slate-500">
-                  {form.fotoPerfil.name}
-                </span>
-              ) : null}
             </label>
             <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm font-semibold text-brand-navy transition hover:border-blue-200 hover:bg-blue-50">
-              <ImagePlus className="h-5 w-5 text-brand-blue" />
-              Banner
+              <LocalFilePreview alt="Previa do banner" file={form.bannerPerfil} />
+              <ImagePlus className="h-5 w-5 shrink-0 text-brand-blue" />
+              <span className="min-w-0">
+                <span className="block">{form.bannerPerfil ? 'Trocar banner' : 'Banner'}</span>
+                {form.bannerPerfil ? (
+                  <span className="mt-1 block max-w-40 truncate text-xs font-medium text-slate-500">
+                    {form.bannerPerfil.name}
+                  </span>
+                ) : null}
+              </span>
               <input
                 accept="image/*"
                 className="sr-only"
@@ -796,11 +827,6 @@ export function Users() {
                 onChange={(event) => handleFileChange('bannerPerfil', event)}
                 type="file"
               />
-              {form.bannerPerfil ? (
-                <span className="ml-auto max-w-32 truncate text-xs text-slate-500">
-                  {form.bannerPerfil.name}
-                </span>
-              ) : null}
             </label>
           </div>
 

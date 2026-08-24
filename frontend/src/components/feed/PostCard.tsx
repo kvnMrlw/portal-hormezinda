@@ -34,11 +34,11 @@ export const PostCard = memo(function PostCard({
   return (
     <motion.article
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6 rounded-[1.75rem] border border-slate-950/5 bg-portal-surface p-5 shadow-card ring-1 ring-white/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-hover sm:p-7 lg:p-8"
+      className="portal-post-card overflow-hidden transition-all duration-300"
       initial={{ opacity: 0, y: 16 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="portal-post-head flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
         <PostHeader author={post.autor} date={post.data} />
         <div className="flex shrink-0 items-center gap-1">
           {canPin ? (
@@ -65,6 +65,7 @@ export const PostCard = memo(function PostCard({
           ) : null}
         </div>
       </div>
+      <div className="portal-post-body px-5 sm:px-6">
       {post.fixado ? (
         <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-brand-blue ring-1 ring-blue-100">
           <Pin className="h-3.5 w-3.5" />
@@ -79,18 +80,21 @@ export const PostCard = memo(function PostCard({
       {post.imagens[0] ? (
         <img
           alt={post.imagens[0].alt ?? 'Imagem da publicacao'}
-          className="max-h-[52rem] w-full rounded-[1.5rem] object-cover shadow-card ring-1 ring-slate-950/5"
+          className="mt-5 max-h-[52rem] w-full object-cover ring-y-1 ring-slate-950/5"
           decoding="async"
           loading="lazy"
           src={getAssetUrl(post.imagens[0].url)}
         />
       ) : null}
+      </div>
+      <div className="portal-post-footer-wrap px-5 pb-5 sm:px-6 sm:pb-6">
       <PostFooter
         isReacting={isReacting}
         myReaction={post.minhaReacao}
         onReact={(emoji) => onReact(post.id, emoji)}
         reactions={post.reacoes}
       />
+      </div>
     </motion.article>
   );
 });

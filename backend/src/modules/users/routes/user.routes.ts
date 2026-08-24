@@ -13,7 +13,8 @@ import {
   getUserById,
   listPeople,
   listUsers,
-  updateCurrentUserProfile
+  updateCurrentUserProfile,
+  updateCurrentUserProfileMedia
 } from '../controller/user.controller';
 import { profileUpload } from '../middlewares/profile-upload.middleware';
 
@@ -45,14 +46,15 @@ router.patch(
 );
 router.patch('/admin/:id/promote-gremio', authenticate, authorizeRoles(Cargo.ADMIN), adminPromoteUser);
 router.delete('/admin/:id', authenticate, authorizeRoles(Cargo.ADMIN), adminDeleteUser);
+router.patch('/me/profile', authenticate, updateCurrentUserProfile);
 router.patch(
-  '/me/profile',
+  '/me/profile/media',
   authenticate,
   profileUpload.fields([
     { name: 'fotoPerfil', maxCount: 1 },
     { name: 'bannerPerfil', maxCount: 1 }
   ]),
-  updateCurrentUserProfile
+  updateCurrentUserProfileMedia
 );
 router.get('/:id', authenticate, getUserById);
 

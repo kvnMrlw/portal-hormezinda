@@ -29,12 +29,15 @@ export function PublicProfile() {
       try {
         setIsLoading(true);
         setHasError(false);
-        const [loadedProfile, loadedIdeas] = await Promise.all([
-          getPublicProfile(id),
-          listUserIdeas(id),
-        ]);
+        const loadedProfile = await getPublicProfile(id);
         setProfile(loadedProfile);
-        setIdeas(loadedIdeas);
+
+        try {
+          setIdeas(await listUserIdeas(id));
+        } catch {
+          // Ideias sao conteudo complementar; o perfil continua disponivel.
+          setIdeas([]);
+        }
       } catch {
         setHasError(true);
       } finally {

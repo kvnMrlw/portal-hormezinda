@@ -20,7 +20,7 @@ export function Button({
     <button
       aria-busy={isLoading || undefined}
       className={cn(
-        'relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-4 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60',
+        'portal-button relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-4 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60',
         variant === 'primary' &&
           'bg-portal-blue text-white shadow-card ring-1 ring-blue-500/20 hover:-translate-y-0.5 hover:shadow-hover focus:ring-blue-200',
         variant === 'secondary' &&

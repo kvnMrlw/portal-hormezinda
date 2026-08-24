@@ -20,9 +20,38 @@ import scheduleRoutes from './modules/schedules/routes/schedule.routes';
 import socialRoutes from './modules/social/routes/social.routes';
 import userRoutes from './modules/users/routes/user.routes';
 import healthRoutes from './routes/health.routes';
+import readinessRoutes from './routes/readiness.routes';
 import { getStaticUploadOptions } from './utils/imageUpload';
 
 const app = express();
+
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
+
+const authLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    success: false,
+    message: 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.',
+    data: {}
+  }
+});
+
+const authRefreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Muitas tentativas de renovacao de sessao.',
+    data: {}
+  }
+});
 
 app.use(
   helmet({
@@ -51,8 +80,20 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'src/uploads'), getStaticUploadOptions()));
 
 app.use('/api/health', healthRoutes);
+app.use('/api/ready', readinessRoutes);
 app.use('/api/academic', academicRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth/login', authLoginLimiter);
+app.use('/api/auth/refresh', authRefreshLimiter);
+app.use(
+  '/api/auth',
+  (_request, response, next) => {
+    response.setHeader('Cache-Control', 'no-store, max-age=0');
+    response.setHeader('Pragma', 'no-cache');
+    response.setHeader('Expires', '0');
+    return next();
+  },
+  authRoutes
+);
 app.use('/api/catalogs', catalogRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/feed', feedRoutes);

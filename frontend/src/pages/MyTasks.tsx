@@ -7,6 +7,7 @@ import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Loading } from '../components/ui/Loading';
 import { Select } from '../components/ui/Select';
+import { getApiErrorMessage } from '../lib/apiError';
 import { getAssetUrl } from '../lib/assets';
 import { formatClassName } from '../lib/classes';
 import { listTasks, submitTask } from '../services/academic';
@@ -30,10 +31,11 @@ export function MyTasks() {
   const loadTasks = useCallback(
     async (nextStatus = status): Promise<void> => {
       try {
+        setError('');
         setIsLoading(true);
         setTasks(await listTasks({ status: nextStatus }));
-      } catch {
-        setError('Nao foi possivel carregar as tarefas.');
+      } catch (error) {
+        setError(getApiErrorMessage(error, 'Nao foi possivel carregar as tarefas.'));
       } finally {
         setIsLoading(false);
       }
@@ -56,8 +58,8 @@ export function MyTasks() {
       setSavingTaskId(task.id);
       await submitTask(task.id, file);
       await loadTasks(status);
-    } catch {
-      setError('Nao foi possivel enviar a atividade.');
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Nao foi possivel enviar a atividade.'));
     } finally {
       setSavingTaskId('');
       event.target.value = '';
@@ -120,7 +122,7 @@ export function MyTasks() {
           </div>
         ) : null}
         {isLoading ? <Loading className="min-h-64" /> : null}
-        {!isLoading && !sortedTasks.length ? (
+        {!isLoading && !error && !sortedTasks.length ? (
           <EmptyState
             description="Nenhuma tarefa encontrada para o filtro atual."
             icon={Search}

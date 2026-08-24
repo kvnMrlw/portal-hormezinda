@@ -9,6 +9,7 @@ import { NoticeModal } from '../components/notices/NoticeModal';
 import { Button } from '../components/ui/Button';
 import { Spinner } from '../components/ui/Spinner';
 import { useAuth } from '../contexts/useAuth';
+import { getApiErrorMessage } from '../lib/apiError';
 import { canManageInstitutionalContent, isAdminRole } from '../lib/roles';
 import { createNotice, deleteNotice, listNotices, updateNotice } from '../services/notices';
 import type { Notice, NoticeFilters as NoticeFilterValues, NoticePayload } from '../types/notices';
@@ -40,8 +41,8 @@ export function Notices() {
       setIsLoading(true);
       const loadedNotices = await listNotices(filters);
       setNotices(loadedNotices);
-    } catch {
-      setError('Nao foi possivel carregar os avisos.');
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Nao foi possivel carregar os avisos.'));
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +181,7 @@ export function Notices() {
           <div className="flex min-h-64 items-center justify-center rounded-3xl border border-slate-950/5 bg-white shadow-card ring-1 ring-white/80">
             <Spinner />
           </div>
-        ) : notices.length ? (
+        ) : error ? null : notices.length ? (
           <div className="space-y-4">
             {notices.map((notice) => (
               <NoticeCard

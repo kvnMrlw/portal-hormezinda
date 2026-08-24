@@ -17,8 +17,8 @@ type CreateContentModalProps = {
   isOpen: boolean;
   isSubmitting: boolean;
   onClose: () => void;
-  onCreatePost: (payload: CreatePostPayload) => Promise<void>;
-  onCreateStory: (payload: CreateStoryPayload) => Promise<void>;
+  onCreatePost: (payload: CreatePostPayload) => Promise<unknown>;
+  onCreateStory: (payload: CreateStoryPayload) => Promise<unknown>;
 };
 
 const maxImageSize = 5 * 1024 * 1024;
@@ -36,6 +36,7 @@ export function CreateContentModal({
   const [text, setText] = useState('');
   const [storyBackground, setStoryBackground] = useState('#2563eb');
   const [image, setImage] = useState<File>();
+  const [imagePreview, setImagePreview] = useState<string>();
   const [localError, setLocalError] = useState<string>();
 
   useEffect(() => {
@@ -47,6 +48,18 @@ export function CreateContentModal({
       setStoryBackground('#2563eb');
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!image) {
+      setImagePreview(undefined);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(image);
+    setImagePreview(previewUrl);
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [image]);
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>): void {
     const file = event.target.files?.[0];
@@ -162,11 +175,25 @@ export function CreateContentModal({
               />
             </label>
           ) : null}
+          {imagePreview ? (
+            <div className="overflow-hidden rounded-3xl border border-blue-100 bg-slate-50 shadow-inner">
+              <img
+                alt="Previa da imagem selecionada"
+                className="max-h-80 w-full object-contain"
+                src={imagePreview}
+              />
+            </div>
+          ) : null}
           <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 transition hover:border-blue-200 hover:bg-blue-50/40">
-            <span className="flex items-center gap-3 text-sm font-semibold text-slate-600">
-              <ImagePlus className="h-5 w-5 text-brand-blue" />
-              {image ? image.name : 'Adicionar imagem'}
+            <span className="flex min-w-0 items-center gap-3 text-sm font-semibold text-slate-600">
+              <ImagePlus className="h-5 w-5 shrink-0 text-brand-blue" />
+              <span>{image ? 'Trocar imagem' : 'Adicionar imagem'}</span>
             </span>
+            {image ? (
+              <span className="max-w-48 truncate text-xs font-medium text-slate-400">
+                {image.name}
+              </span>
+            ) : null}
             <input
               accept="image/png,image/jpeg,image/webp,image/gif"
               className="sr-only"
