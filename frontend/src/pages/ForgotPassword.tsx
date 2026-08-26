@@ -17,7 +17,6 @@ import { motion } from 'framer-motion';
 import { type FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { RecaptchaCheckbox } from '../components/auth/RecaptchaCheckbox';
 import { SchoolLogo } from '../components/ui/SchoolLogo';
 import { api } from '../services/api';
 import './Login.css';
@@ -53,8 +52,6 @@ export function ForgotPassword() {
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [captchaToken, setCaptchaToken] = useState('');
-  const [captchaReset, setCaptchaReset] = useState(0);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -66,21 +63,11 @@ export function ForgotPassword() {
     return () => window.clearInterval(timer);
   }, [cooldown]);
 
-  function resetCaptcha() {
-    setCaptchaToken('');
-    setCaptchaReset((current) => current + 1);
-  }
-
   async function startRecovery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!usuario.trim()) {
       setError('Informe seu usuário.');
-      return;
-    }
-
-    if (!captchaToken) {
-      setError('Marque a opção "Não sou um robô".');
       return;
     }
 
@@ -97,7 +84,6 @@ export function ForgotPassword() {
         }>
       >('/auth/password/forgot', {
         usuario: usuario.trim(),
-        captchaToken,
       });
 
       setUsuario(usuario.trim());
@@ -105,7 +91,6 @@ export function ForgotPassword() {
       setCooldown(response.data.data.resendIn || 60);
       setStage('code');
       setSuccess('Código enviado para seu e-mail.');
-      resetCaptcha();
     } catch (requestError) {
       const response = (
         requestError as {
@@ -116,7 +101,6 @@ export function ForgotPassword() {
         }
       ).response;
 
-      resetCaptcha();
 
       if (
         response?.status === 403 &&
@@ -142,11 +126,6 @@ export function ForgotPassword() {
   async function resendCode() {
     if (busy || cooldown > 0) return;
 
-    if (!captchaToken) {
-      setError('Marque a opção "Não sou um robô" para reenviar.');
-      return;
-    }
-
     try {
       setBusy(true);
       setError('');
@@ -160,15 +139,12 @@ export function ForgotPassword() {
         }>
       >('/auth/password/forgot', {
         usuario,
-        captchaToken,
       });
 
       setEmailMascarado(response.data.data.emailMascarado);
       setCooldown(response.data.data.resendIn || 60);
       setSuccess('Novo código enviado para seu e-mail.');
-      resetCaptcha();
     } catch (requestError) {
-      resetCaptcha();
 
       setError(
         apiMessage(
@@ -320,11 +296,6 @@ export function ForgotPassword() {
                   </div>
                 </label>
 
-                <RecaptchaCheckbox
-                  onChange={setCaptchaToken}
-                  resetSignal={captchaReset}
-                />
-
                 {error ? (
                   <div className="login-v15__alert">
                     <TriangleAlert />
@@ -334,7 +305,7 @@ export function ForgotPassword() {
 
                 <button
                   className="login-v15__submit"
-                  disabled={busy || !captchaToken}
+                  disabled={busy}
                   type="submit"
                 >
                   <span>
@@ -414,20 +385,9 @@ export function ForgotPassword() {
                   )}
                 </button>
 
-                {cooldown <= 0 ? (
-                  <RecaptchaCheckbox
-                    onChange={setCaptchaToken}
-                    resetSignal={captchaReset}
-                  />
-                ) : null}
-
                 <button
                   className="auth-flow-v29__text-button"
-                  disabled={
-                    busy ||
-                    cooldown > 0 ||
-                    !captchaToken
-                  }
+                  disabled={busy || cooldown > 0}
                   onClick={() => void resendCode()}
                   type="button"
                 >
@@ -565,7 +525,7 @@ export function ForgotPassword() {
 
             <div className="login-v15__safe">
               <ShieldCheck />
-              Recuperação protegida por reCAPTCHA e código temporário
+              Recuperação protegida por código temporário
             </div>
 
             {stage !== 'success' ? (

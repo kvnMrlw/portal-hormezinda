@@ -7,11 +7,6 @@ const senhaRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const codeRegex = /^\d{6}$/;
 
-const captchaTokenSchema = z
-  .string()
-  .trim()
-  .min(20, 'Confirme que voce nao e um robo');
-
 function parseBirthDate(value: string): Date | null {
   if (!isoDateRegex.test(value)) return null;
 
@@ -57,8 +52,7 @@ export const registerSchema = z
       )
       .transform((value) => parseBirthDate(value) as Date),
     turno: z.nativeEnum(Turno),
-    turma: z.nativeEnum(Turma),
-    captchaToken: captchaTokenSchema
+    turma: z.nativeEnum(Turma)
   })
   .superRefine((data, context) => {
     if (!turmasPorTurno[data.turno].includes(data.turma)) {
@@ -72,17 +66,11 @@ export const registerSchema = z
 
 export const loginSchema = z.object({
   usuario: z.string().trim().min(1, 'Informe o usuario'),
-  senha: z.string().min(1, 'Informe a senha'),
-  captchaToken: captchaTokenSchema
+  senha: z.string().min(1, 'Informe a senha')
 });
 
 export const usuarioSchema = z.object({
   usuario: z.string().trim().min(1, 'Informe o usuario')
-});
-
-export const captchaUsuarioSchema = z.object({
-  usuario: z.string().trim().min(1, 'Informe o usuario'),
-  captchaToken: captchaTokenSchema
 });
 
 export const codeSchema = z.object({

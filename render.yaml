@@ -34,10 +34,6 @@ services:
         sync: false
       - key: MAIL_APP_PASSWORD
         sync: false
-      - key: RECAPTCHA_SECRET_KEY
-        sync: false
-      - key: RECAPTCHA_ALLOWED_HOSTNAMES
-        value: localhost,portal-hormezinda.vercel.app
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY

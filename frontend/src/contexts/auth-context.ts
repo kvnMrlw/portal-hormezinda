@@ -5,7 +5,6 @@ import type { ProfileUpdatePayload, User } from '../types/auth';
 export type LoginCredentials = {
   usuario: string;
   senha: string;
-  captchaToken: string;
 };
 
 export type RegisterPayload = {
@@ -16,7 +15,6 @@ export type RegisterPayload = {
   dataNascimento: string;
   turno: string;
   turma: string;
-  captchaToken: string;
 };
 
 export type AuthContextValue = {

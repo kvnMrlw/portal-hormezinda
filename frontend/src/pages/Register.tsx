@@ -20,7 +20,6 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ZodError } from 'zod';
 
-import { RecaptchaCheckbox } from '../components/auth/RecaptchaCheckbox';
 import { SchoolLogo } from '../components/ui/SchoolLogo';
 import { useAuth } from '../contexts/useAuth';
 import {
@@ -68,8 +67,6 @@ export function Register() {
   const [formData, setFormData] = useState<RegisterFormData>(initialFormData);
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState('');
-  const [captchaReset, setCaptchaReset] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const availableTurmas = useMemo(() => turmasPorTurno[formData.turno], [formData.turno]);
@@ -116,11 +113,6 @@ export function Register() {
       return;
     }
 
-    if (!captchaToken) {
-      setErrors({ form: 'Marque a opção "Não sou um robô".' });
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       await register({
@@ -131,12 +123,9 @@ export function Register() {
         dataNascimento: normalizeDateInput(parsedData.data.dataNascimento),
         turno: parsedData.data.turno,
         turma: parsedData.data.turma,
-        captchaToken,
       });
       navigate(`/verificar-email?usuario=${encodeURIComponent(parsedData.data.usuario)}`, { replace: true });
     } catch (error) {
-      setCaptchaToken('');
-      setCaptchaReset((current) => current + 1);
       setErrors({ form: apiMessage(error, 'Não foi possível cadastrar. Confira os dados e tente novamente.') });
     } finally {
       setIsSubmitting(false);
@@ -248,18 +237,11 @@ export function Register() {
                 </div>
               ) : null}
 
-              {step === 4 ? (
-                <RecaptchaCheckbox
-                  onChange={setCaptchaToken}
-                  resetSignal={captchaReset}
-                />
-              ) : null}
-
               {errors.form ? <div className="login-v15__alert"><TriangleAlert />{errors.form}</div> : null}
 
               <div className="register-v27__actions">
                 {step > 1 ? <button className="register-v27__back" disabled={isSubmitting} onClick={handleBack} type="button"><ArrowLeft /><span>Voltar</span></button> : <Link className="register-v27__back" to="/"><ArrowLeft /><span>Voltar</span></Link>}
-                {step < 4 ? <button className="login-v15__submit register-v27__next" disabled={isSubmitting} onClick={handleNext} type="button"><span>Continuar</span><ArrowRight /></button> : <button className="login-v15__submit register-v27__next" disabled={isSubmitting || !captchaToken} type="submit"><span>{isSubmitting ? 'Criando conta...' : 'Criar conta'}</span>{isSubmitting ? <LoaderCircle className="login-v15__spin" /> : <CheckCircle2 />}</button>}
+                {step < 4 ? <button className="login-v15__submit register-v27__next" disabled={isSubmitting} onClick={handleNext} type="button"><span>Continuar</span><ArrowRight /></button> : <button className="login-v15__submit register-v27__next" disabled={isSubmitting} type="submit"><span>{isSubmitting ? 'Criando conta...' : 'Criar conta'}</span>{isSubmitting ? <LoaderCircle className="login-v15__spin" /> : <CheckCircle2 />}</button>}
               </div>
             </form>
 

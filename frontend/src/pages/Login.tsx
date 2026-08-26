@@ -14,7 +14,6 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ZodError } from 'zod';
 
-import { RecaptchaCheckbox } from '../components/auth/RecaptchaCheckbox';
 import { SchoolLogo } from '../components/ui/SchoolLogo';
 import { useAuth } from '../contexts/useAuth';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
@@ -37,8 +36,6 @@ export function Login() {
   const [errors, setErrors] = useState<LoginErrors>({});
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState('');
-  const [captchaReset, setCaptchaReset] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated) navigate('/home', { replace: true });
@@ -52,22 +49,11 @@ export function Login() {
       setErrors(zodErrorsToFormErrors(parsedData.error));
       return;
     }
-    if (!captchaToken) {
-      setErrors({ form: 'Marque a opção "Não sou um robô".' });
-      return;
-    }
-
     try {
       setIsSubmitting(true);
-      await login({
-        ...parsedData.data,
-        captchaToken,
-      });
+      await login(parsedData.data);
       navigate('/home', { replace: true });
     } catch (error) {
-      setCaptchaToken('');
-      setCaptchaReset((current) => current + 1);
-
       const response = (
         error as { response?: { status?: number; data?: { message?: string } } }
       ).response;
@@ -168,16 +154,11 @@ export function Login() {
 
               <div className="login-v15__forgot"><Link to="/esqueci-senha">Esqueci minha senha</Link></div>
 
-              <RecaptchaCheckbox
-                onChange={setCaptchaToken}
-                resetSignal={captchaReset}
-              />
-
               {errors.form ? <div className="login-v15__alert"><TriangleAlert />{errors.form}</div> : null}
 
               <button
                 className="login-v15__submit"
-                disabled={isSubmitting || !captchaToken}
+                disabled={isSubmitting}
                 type="submit"
               >
                 <span>{isSubmitting ? 'Entrando...' : 'Entrar'}</span>
