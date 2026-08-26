@@ -5,10 +5,8 @@ import { AppError } from '../../../middlewares/error.middleware';
 import { apiResponse } from '../../../utils/apiResponse';
 import { AuthService } from '../service/auth.service';
 import { EmailAuthService } from '../service/email-auth.service';
-import { RecaptchaService } from '../service/recaptcha.service';
 import type { AuthenticatedRequest } from '../types/auth.types';
 import {
-  captchaUsuarioSchema,
   codeSchema,
   loginSchema,
   registerSchema,
@@ -18,7 +16,6 @@ import {
 
 const authService = new AuthService();
 const emailAuthService = new EmailAuthService();
-const recaptchaService = new RecaptchaService();
 
 function formatValidationError(error: ZodError): string {
   return error.issues.map((issue) => issue.message).join('; ');
@@ -36,7 +33,6 @@ export async function register(
       throw new AppError(formatValidationError(parsedBody.error), 400);
     }
 
-    await recaptchaService.verify(parsedBody.data.captchaToken);
     await emailAuthService.assertEmailAvailable(parsedBody.data.email);
 
     const result = await authService.register(parsedBody.data);
@@ -81,7 +77,6 @@ export async function login(
       throw new AppError(formatValidationError(parsedBody.error), 400);
     }
 
-    await recaptchaService.verify(parsedBody.data.captchaToken);
     await emailAuthService.assertCanLogin(parsedBody.data.usuario);
 
     const result = await authService.login(parsedBody.data);
@@ -192,13 +187,11 @@ export async function passwordRecoveryInfo(
   next: NextFunction
 ) {
   try {
-    const parsed = captchaUsuarioSchema.safeParse(request.body);
+    const parsed = usuarioSchema.safeParse(request.body);
 
     if (!parsed.success) {
       throw new AppError(formatValidationError(parsed.error), 400);
     }
-
-    await recaptchaService.verify(parsed.data.captchaToken);
 
     const result = await emailAuthService.recoveryInfo(parsed.data.usuario);
 
@@ -216,13 +209,11 @@ export async function forgotPassword(
   next: NextFunction
 ) {
   try {
-    const parsed = captchaUsuarioSchema.safeParse(request.body);
+    const parsed = usuarioSchema.safeParse(request.body);
 
     if (!parsed.success) {
       throw new AppError(formatValidationError(parsed.error), 400);
     }
-
-    await recaptchaService.verify(parsed.data.captchaToken);
 
     const result = await emailAuthService.sendPasswordResetCode(
       parsed.data.usuario
