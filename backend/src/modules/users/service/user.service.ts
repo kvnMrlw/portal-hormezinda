@@ -7,6 +7,7 @@ import { UserRepository } from '../repository/user.repository';
 import { Cargo, type AdminCreateUserData, type AdminUpdateUserData, type PublicUser, type UpdateProfileData } from '../types/user.types';
 import type { UserDocument } from '../models/user.model';
 import { canViewRole } from '../../auth/permissions/roles';
+import { EmailAuthService } from '../../auth/service/email-auth.service';
 import { FeedService } from '../../feed/service/feed.service';
 import { IdeaService } from '../../ideas/service/idea.service';
 import { NotificationService } from '../../notifications/service/notification.service';
@@ -76,6 +77,7 @@ export function toPublicUser(user: UserDocument): PublicUser {
 export class UserService {
   constructor(
     private readonly userRepository = new UserRepository(),
+    private readonly emailAuthService = new EmailAuthService(),
     private readonly feedService = new FeedService(),
     private readonly ideaService = new IdeaService(),
     private readonly notificationService = new NotificationService(),
@@ -176,6 +178,7 @@ export class UserService {
       user.cargo === Cargo.PROFESSOR ? this.scheduleRepository.deleteByProfessor(id) : Promise.resolve(),
       user.cargo === Cargo.PROFESSOR ? this.catalogRepository.removeTeacherReferences(id) : Promise.resolve(),
       this.socialService.deleteByUser(id),
+      this.emailAuthService.deleteByUser(id),
       this.userRepository.delete(id)
     ]);
     await removeUploadedFiles([

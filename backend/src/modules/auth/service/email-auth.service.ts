@@ -71,11 +71,23 @@ export class EmailAuthService {
 
   async assertEmailAvailable(emailInput: string): Promise<void> {
     const email = normalizeEmail(emailInput);
-    const exists = await AccountEmailModel.exists({ email });
+    const account = await AccountEmailModel.findOne({ email });
 
-    if (exists) {
+    if (!account) {
+      return;
+    }
+
+    const owner = await this.authRepository.findById(account.usuarioId.toString());
+
+    if (owner) {
       throw new AppError('Este e-mail ja esta vinculado a uma conta', 409);
     }
+
+    // Registro de e-mail sem usuario correspondente: sobra de uma exclusao antiga.
+    await Promise.all([
+      AuthCodeModel.deleteMany({ usuarioId: account.usuarioId }),
+      AccountEmailModel.deleteOne({ _id: account._id })
+    ]);
   }
 
   async finishRegistration(input: {
@@ -86,6 +98,22 @@ export class EmailAuthService {
   }) {
     const usuario = normalizeUsuario(input.usuario);
     const email = normalizeEmail(input.email);
+
+    // Tambem repara uma sobra antiga presa ao mesmo nome de usuario.
+    const orphanByUsuario = await AccountEmailModel.findOne({ usuario });
+
+    if (orphanByUsuario && orphanByUsuario.usuarioId.toString() !== input.usuarioId) {
+      const owner = await this.authRepository.findById(orphanByUsuario.usuarioId.toString());
+
+      if (owner) {
+        throw new AppError('Este usuario ja possui um e-mail vinculado', 409);
+      }
+
+      await Promise.all([
+        AuthCodeModel.deleteMany({ usuarioId: orphanByUsuario.usuarioId }),
+        AccountEmailModel.deleteOne({ _id: orphanByUsuario._id })
+      ]);
+    }
 
     await AccountEmailModel.create({
       usuarioId: new Types.ObjectId(input.usuarioId),
@@ -115,6 +143,15 @@ export class EmailAuthService {
       emailSent,
       resendIn: RESEND_COOLDOWN_SECONDS
     };
+  }
+
+  async deleteByUser(userId: string): Promise<void> {
+    const usuarioId = new Types.ObjectId(userId);
+
+    await Promise.all([
+      AuthCodeModel.deleteMany({ usuarioId }),
+      AccountEmailModel.deleteOne({ usuarioId })
+    ]);
   }
 
   async assertCanLogin(usuarioInput: string): Promise<void> {
